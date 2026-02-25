@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Figtree } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import ProtectedRoute from "@/components/utils/ProtectedRoute";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -25,7 +24,7 @@ export default function RootLayout({
           className={`${figtree.variable} antialiased`}
         >
           {children}
-          <Toaster position="top-right" />
+          <Toaster position="bottom-right" />
         </body>   
     </html>
   );

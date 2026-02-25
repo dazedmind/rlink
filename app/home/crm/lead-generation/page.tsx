@@ -9,58 +9,59 @@ import { PlusCircle, Table } from "lucide-react";
 import LeadsTable from "@/components/layout/LeadsTable";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
+import { toast } from "sonner";
 
+// Values must match DB enum values exactly
 const SOURCE_OPTIONS = [
-  "Ads",
-  "Organic - FB",
-  "Organic - IG",
-  "Organic - TikTok",
-  "Website",
-  "Email",
-  "Phone",
+  { value: "ads", label: "Ads" },
+  { value: "organic_fb", label: "Organic - FB" },
+  { value: "organic_ig", label: "Organic - IG" },
+  { value: "tiktok", label: "Organic - TikTok" },
+  { value: "website", label: "Website" },
+  { value: "email", label: "Email" },
 ];
 
 const STATUS_OPTIONS = [
-  "Open",
-  "In Progress",
-  "Follow-Up Needed",
-  "No Response",
-  "Won",
-  "Lost",
-  "Not Qualified",
+  { value: "open", label: "Open" },
+  { value: "ongoing", label: "In Progress" },
+  { value: "follow_up", label: "Follow-Up Needed" },
+  { value: "no_response", label: "No Response" },
+  { value: "won", label: "Won" },
+  { value: "lost", label: "Lost" },
+  { value: "ineligible", label: "Not Qualified" },
 ];
 
 const STAGE_OPTIONS = [
-  "Lead",
-  "Qualified",
-  "Presentation Completed",
-  "Viewing Completed",
-  "Proposal Sent",
-  "Negotiation",
-  "Closed Won",
-  "Closed Lost",
+  { value: "lead", label: "Lead" },
+  { value: "qualified", label: "Qualified" },
+  { value: "presented", label: "Presentation Completed" },
+  { value: "viewed", label: "Viewing Completed" },
+  { value: "proposal_sent", label: "Proposal Sent" },
+  { value: "negotiation", label: "Negotiation" },
+  { value: "closed_won", label: "Closed Won" },
+  { value: "closed_lost", label: "Closed Lost" },
 ];
 
 const NEXT_ACTION_OPTIONS = [
-  "Call Client",
-  "Send Message",
-  "Send Email",
-  "Follow Up",
-  "Schedule Presentation",
-  "Schedule Viewing / Tripping",
-  "Send Proposal / Computation",
-  "Reservation Processing",
-  "Documentation Processing",
+  { value: "call", label: "Call Client" },
+  { value: "message", label: "Send Message" },
+  { value: "email", label: "Send Email" },
+  { value: "followup", label: "Follow Up" },
+  { value: "schedule_presentation", label: "Schedule Presentation" },
+  { value: "tripping", label: "Schedule Viewing / Tripping" },
+  { value: "computation", label: "Send Proposal / Computation" },
+  { value: "reservation", label: "Reservation Processing" },
+  { value: "documentation", label: "Documentation Processing" },
 ];
 
 type FormData = {
-  clientName: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  inquiryDate: string;
   phone: string;
+  inquiryDate: string;
   profileLink: string;
   project: string;
-  lastUpdate: string;
   source: string;
   status: string;
   stage: string;
@@ -68,22 +69,27 @@ type FormData = {
   notes: string;
 };
 
+const today = new Date().toISOString().split("T")[0];
+
+const EMPTY_FORM: FormData = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  inquiryDate: today,
+  profileLink: "",
+  project: "",
+  source: "",
+  status: "open",
+  stage: "lead",
+  nextAction: "call",
+  notes: "",
+};
+
 function LeadGeneration() {
-  const [view, setView] = useState("form");
-  const [formData, setFormData] = useState<FormData>({
-    clientName: "",
-    email: "",
-    inquiryDate: new Date().toISOString().split("T")[0],
-    phone: "",
-    profileLink: "",
-    project: "",
-    lastUpdate: new Date().toISOString().split("T")[0],
-    source: "",
-    status: "",
-    stage: "",
-    nextAction: "",
-    notes: "",
-  });
+  const [view, setView] = useState<"form" | "table">("form");
+  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -96,9 +102,46 @@ function LeadGeneration() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleNext = () => {
-    // Handle form submission / next step
-    console.log(formData);
+  const handleSubmitLead = async () => {
+    if (!formData.firstName || !formData.lastName) {
+      toast.error("First name and last name are required.");
+      return;
+    }
+    if (!formData.email) {
+      toast.error("Email is required.");
+      return;
+    }
+    if (!formData.phone) {
+      toast.error("Phone number is required.");
+      return;
+    }
+    if (!formData.source) {
+      toast.error("Please select a source.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error ?? "Failed to submit lead.");
+        return;
+      }
+
+      toast.success("Lead submitted successfully!");
+      setFormData(EMPTY_FORM);
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -109,9 +152,8 @@ function LeadGeneration() {
           description="Manage your sales leads and projects here."
         />
 
-        {/* Tabs */}
+        {/* View toggle */}
         <div className="flex justify-between items-center my-4">
-          {/* TOGGLE VIEW SWITCH */}
           <div className="flex bg-[#F2F2F7] rounded-[10px] p-1 gap-1">
             {(["form", "table"] as const).map((t) => (
               <button
@@ -123,136 +165,177 @@ function LeadGeneration() {
                     : "text-[#8E8E93] hover:text-[#1C1C1E]"
                 }`}
               >
-                {t == "form" ? <PlusCircle size={18} /> : <Table size={18} />}{" "}
-                {t == "form" ? "New Leads" : "View Leads"}
+                {t === "form" ? <PlusCircle size={18} /> : <Table size={18} />}
+                {t === "form" ? "New Lead" : "View Leads"}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Form Card */}
+        {/* Form */}
         {view === "form" && (
-          <div className="rounded-xl p-6 bg-white border-border border">
-            {/* Customer Profile Section */}
-            <h2 className="text-xl font-bold text-neutral-800 mb-4">
-              Customer Profile
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-              <TextInput
-                label="First Name"
-                type="text"
-                placeholder="Enter First Name"
-                className="col-span-2 md:col-span-1"
-              />
+          <div className="flex flex-col gap-8 rounded-xl p-6 bg-white border-border border">
+            {/* Customer Profile */}
+            <div>
+              <h2 className="text-xl font-bold text-neutral-800 mb-4">
+                Customer Profile
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                <TextInput
+                  hasLabel
+                  label="First Name"
+                  name="firstName"
+                  type="text"
+                  placeholder="Enter First Name"
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.firstName}
+                />
 
-              <TextInput
-                label="Last Name"
-                type="text"
-                placeholder="Enter Last Name"
-                className="col-span-2 md:col-span-1"
-              />
+                <TextInput
+                  hasLabel
+                  label="Last Name"
+                  name="lastName"
+                  type="text"
+                  placeholder="Enter Last Name"
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.lastName}
+                />
 
-              <TextInput
+                {/* <TextInput
+                hasLabel
                 label="Inquiry Date"
+                name="inquiryDate"
                 type="date"
                 placeholder="Select Inquiry Date"
                 className="col-span-2 md:col-span-1"
-              />
+                onChange={handleInputChange}
+                value={formData.inquiryDate}
+              /> */}
 
-              <TextInput
-                label="Phone"
-                type="tel"
-                placeholder="(0960) 600-1234"
-                className="col-span-2 md:col-span-1"
-              />
+                <TextInput
+                  hasLabel
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.email}
+                />
 
-              <TextInput
-                label="Profile Link"
-                type="text"
-                placeholder="https://..."
-                className="col-span-2 md:col-span-1"
-              />
+                <TextInput
+                  hasLabel
+                  label="Phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="(0960) 600-1234"
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.phone}
+                />
 
-              <DropSelect
-                className="col-span-2 md:col-span-1"
-                label="Project"
-                selectName="project"
-                selectId="project"
-                onChange={(e) => handleSelectChange("project", e.target.value)}
-              >
-                <option value="">Select Project</option>
-                <option value="Arcoe Residences">Arcoe Residences</option>
-                <option value="Arcoe Estates">Arcoe Estates</option>
-              </DropSelect>
+                <TextInput
+                  hasLabel
+                  label="Profile Link"
+                  name="profileLink"
+                  type="text"
+                  placeholder="https://..."
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.profileLink}
+                />
+
+                <DropSelect
+                  className="col-span-2 md:col-span-1"
+                  hasLabel
+                  label="Project"
+                  selectName="project"
+                  selectId="project"
+                  onChange={(e) =>
+                    handleSelectChange("project", e.target.value)
+                  }
+                >
+                  <option value="">Select Project</option>
+                  <option value="Arcoe Residences">Arcoe Residences</option>
+                  <option value="Arcoe Estates">Arcoe Estates</option>
+                </DropSelect>
+              </div>
             </div>
 
-            <Separator className="my-6" />
+            {/* Lead Details */}
+            <div>
+              <h2 className="text-xl font-bold text-neutral-800 mb-4">
+                Lead Details
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
+                <DropSelect
+                  hasLabel
+                  label="Source"
+                  selectName="source"
+                  selectId="source"
+                  onChange={(e) => handleSelectChange("source", e.target.value)}
+                  className="col-span-2 md:col-span-1"
+                >
+                  <option value="">Select Source</option>
+                  {SOURCE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </DropSelect>
 
-            {/* Lead Details Section */}
-            <h2 className="text-xl font-bold text-neutral-800 mb-4">
-              Lead Details
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
-              <DropSelect
-                label="Source"
-                selectName="source"
-                selectId="source"
-                onChange={(e) => handleSelectChange("source", e.target.value)}
-                className="col-span-2 md:col-span-1"
-              >
-                {SOURCE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </DropSelect>
+                <DropSelect
+                  hasLabel
+                  label="Status"
+                  selectName="status"
+                  selectId="status"
+                  onChange={(e) => handleSelectChange("status", e.target.value)}
+                  className="col-span-2 md:col-span-1"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </DropSelect>
 
-              <DropSelect
-                label="Status"
-                selectName="status"
-                selectId="status"
-                onChange={(e) => handleSelectChange("status", e.target.value)}
-                className="col-span-2 md:col-span-1"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </DropSelect>
-            
-              <DropSelect
-                label="Stage"
-                selectName="stage"
-                selectId="stage"
-                onChange={(e) => handleSelectChange("stage", e.target.value)}
-                className="col-span-2 md:col-span-1"
-              >
-                {STAGE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </DropSelect>
-             
-              <DropSelect
-                label="Next Action"
-                selectName="nextAction"
-                selectId="nextAction"
-                onChange={(e) => handleSelectChange("nextAction", e.target.value)}
-                className="col-span-2 md:col-span-1"
-              >
-                {NEXT_ACTION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </DropSelect>
-            </div>
+                <DropSelect
+                  hasLabel
+                  label="Stage"
+                  selectName="stage"
+                  selectId="stage"
+                  onChange={(e) => handleSelectChange("stage", e.target.value)}
+                  className="col-span-2 md:col-span-1"
+                >
+                  {STAGE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </DropSelect>
 
-            {/* Notes + Next Button */}
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
-              <div className="space-y-1.5">
+                <DropSelect
+                  hasLabel
+                  label="Next Action"
+                  selectName="nextAction"
+                  selectId="nextAction"
+                  onChange={(e) =>
+                    handleSelectChange("nextAction", e.target.value)
+                  }
+                  className="col-span-2 md:col-span-1"
+                >
+                  {NEXT_ACTION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </DropSelect>
+              </div>
+
+              {/* Notes */}
+              <div className="mt-4 space-y-1.5">
                 <Label htmlFor="notes" className="text-xs text-neutral-600">
                   Notes
                 </Label>
@@ -260,26 +343,28 @@ function LeadGeneration() {
                   id="notes"
                   name="notes"
                   value={formData.notes}
-                  placeholder="Add Notes"
+                  placeholder="Add notes about this lead..."
                   onChange={handleInputChange}
                   className="border border-border text-sm resize-none min-h-[80px]"
                 />
               </div>
-            </div>
 
-            <span className="flex justify-end mt-4">
-              <Button
-                onClick={handleNext}
-                className="bg-blue-600 hover:bg-blue-700 px-8 self-end"
-              >
-                Next
-              </Button>
-            </span>
+              <span className="flex justify-end mt-4">
+                <Button
+                  onClick={handleSubmitLead}
+                  disabled={isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700 px-8"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Lead"}
+                </Button>
+              </span>
+            </div>
           </div>
         )}
 
-        {/* View Leads placeholder */}
-        {view === "table" && <LeadsTable table_name="Leads Table" />}
+        {view === "table" && (
+          <LeadsTable table_name="Leads Table" recentViewOnly={false} />
+        )}
       </div>
     </main>
   );

@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
-import type { auth } from './auth';
+import { auth } from './auth';
   
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
@@ -10,15 +10,8 @@ export const authClient = createAuthClient({
 export const { signIn, signOut, signUp, useSession } = authClient;
 
 export const signInWithGoogle = async () => {
-  await authClient.signIn.social({ provider: 'google' });
-};
-
-export const setPassword = async (password: string) => {
-  const { error } = await authClient.changePassword({
-    newPassword: password,
-    currentPassword: '',
-    revokeOtherSessions: false,
-  });
-  if (error) throw new Error(error.message ?? 'Failed to set password');
-  return true;
+  const { error } = await authClient.signIn.social({ provider: 'google' });
+  if (error) {
+    throw new Error(error.message ?? "Failed to sign in with Google");
+  }
 };

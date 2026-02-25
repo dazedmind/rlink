@@ -4,7 +4,6 @@ import DashboardHeader from "@/components/layout/DashboardHeader";
 import InquiryTable from "@/components/layout/InquiryTable";
 
 function Inquiries() {
-
   return (
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
       <div className="mx-auto p-8">
@@ -12,11 +11,10 @@ function Inquiries() {
           title="Inquiries"
           description="Manage your inquiries and responses."
         />
-        
+
         <div className="flex flex-col gap-8 mt-8">
           <InquiryTable table_name="Inquiries" />
         </div>
-
       </div>
     </main>
   );

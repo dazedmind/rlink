@@ -17,6 +17,12 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "email-password"],
+    },
+  },
   user: {
     additionalFields: {
       firstName:  { type: "string", required: false, defaultValue: "" },
@@ -26,7 +32,7 @@ export const auth = betterAuth({
       position:   { type: "string", required: false, defaultValue: "" },
       department: { type: "string", required: false, defaultValue: "" },
       employeeId: { type: "string", required: false, defaultValue: "" },
-      birthdate:  { type: "string", required: false, defaultValue: "" },
+      birthdate:  { type: "string", required: false, defaultValue: null },
     },
   },
 });

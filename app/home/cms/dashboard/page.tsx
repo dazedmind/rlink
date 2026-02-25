@@ -47,7 +47,7 @@ function CMSDashboard() {
           </div>
 
           {/* LEADS TABLE SECTION */}
-          <LeadsTable table_name="Recent Leads" />
+          <LeadsTable table_name="Recent Leads" recentViewOnly={true} />
         </div>
 
       </div>

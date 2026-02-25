@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { updateProfile } from "@/lib/profile";
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -53,7 +53,7 @@ function PersonalInfoTabContent() {
   };
 
   return (
-    <div>
+    <Tabs defaultValue="personal">
       <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
         <Card className="border-none shadow-sm">
           <CardHeader className="pb-4 flex flex-col gap-1">
@@ -206,7 +206,7 @@ function PersonalInfoTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
-    </div>
+    </Tabs>
   );
 }
 

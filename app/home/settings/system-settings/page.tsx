@@ -1,5 +1,5 @@
 "use client";
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 function SystemSettingsTabContent() {
 
   return (
-    <div>
+    <Tabs defaultValue="system">
       <TabsContent value="system" className="mt-0">
         <Card>
           <CardHeader className="pb-4 flex flex-col gap-1">
@@ -44,7 +44,7 @@ function SystemSettingsTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
-    </div>
+    </Tabs>
   );
 }
 

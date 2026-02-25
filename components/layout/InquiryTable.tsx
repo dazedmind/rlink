@@ -1,46 +1,47 @@
 "use client";
-import { Check, Circle, Download, EyeIcon, Mail, MailIcon, Pencil, PhoneIcon } from "lucide-react";
+import {
+  Check,
+  Circle,
+  Download,
+  EyeIcon,
+  Mail,
+  MailIcon,
+  Pencil,
+  PhoneIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dateFormatter } from "@/app/utils/dateFormatter";
+import { useEffect, useState } from "react";
+import {
+  inquirySource,
+  inquiryStatus,
+  type InquiryStatus,
+  type InquirySource,
+  inquirySubject,
+} from "@/lib/types";
 
 function InquiryTable({ table_name }: { table_name: string }) {
   // Mock data based on your specific columns
-  const data = [
-    {
-      status: "Read",
-      clientName: "Juan Dela Cruz",
-      phone: "+63 917 123 4567",
-      email: "juan.dc@example.com",
-      subject: "Inquiry about the property",
-      message: "I am interested in the property",
-      source: "Website",
-      sentOn: "2026-02-20",
-    },
-    {
-      status: "Unread",
-      clientName: "Maria Santos",
-      phone: "+63 918 987 6543",
-      email: "m.santos@company.ph",
-      subject: "Inquiry about the property",
-      message: "I am interested in the property",
-      source: "Website",
-      sentOn: "2026-02-20",
-    },
-    {
-      status: "Read",
-      clientName: "Robert Lim",
-      phone: "+63 915 555 1234",
-      email: "robert.lim@web.com",
-      subject: "Inquiry about the property",
-      message: "I am interested in the property",
-      source: "Website",
-      sentOn: "2026-02-20",
-    },
-  ];
+  const [inquiries, setInquiries] = useState<any[]>([]);
+
+  const fetchInquiries = async () => {
+    try {
+      const response = await fetch("/api/inquiries");
+      const { data } = await response.json();
+      setInquiries(data);
+    } catch (error) {
+      console.error("Error fetching inquiries:", error);
+      setInquiries([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchInquiries();
+  }, []);
 
   const statusStyles: Record<string, string> = {
-    Read: "bg-neutral-100 text-neutral-700 hover:bg-neutral-100",
-    Unread: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+    read: "bg-neutral-100 text-neutral-700 hover:bg-neutral-100",
+    unread: "bg-blue-100 text-blue-700 hover:bg-blue-100",
   };
 
   return (
@@ -79,30 +80,42 @@ function InquiryTable({ table_name }: { table_name: string }) {
           </tr>
         </thead>
         <tbody className="divide-y">
-          {data.map((row) => (
-            <tr key={row.clientName} className="hover:bg-gray-50/50">
-              <td className="px-6 py-4">{row.clientName}</td>
+          {inquiries.map((row) => (
+            <tr
+              key={row.id}
+              className={`hover:bg-gray-50/50 ${row.status === "read" ? "" : " font-bold"}`}
+            >
+              <td className="px-6 py-4">
+                {row.firstName} {row.lastName}
+              </td>
               <td className="px-6 py-4">
                 <span className="flex flex-col">
                   <span className="flex items-center gap-2 text-sm font-medium text-neutral-500">
                     <PhoneIcon size={12} /> {row.phone}
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="flex items-center gap-2 text-sm font-medium text-neutral-500">
                     <MailIcon size={12} /> {row.email}
                   </span>
                 </span>
               </td>
-              {/* <td className="px-6 py-4 text-gray-500">{row.email}</td> */}
-              <td className="px-6 py-4">{row.subject}</td>
+              <td className="px-6 py-4">
+                {inquirySubject[row.subject as keyof typeof inquirySubject]}
+              </td>
               <td className="px-6 py-4">{row.message}</td>
-              <td className="px-6 py-4">{row.source}</td>
-              <td className="px-6 py-4">{dateFormatter(row.sentOn)}</td>
+              <td className="px-6 py-4">
+                {inquirySource[row.source as keyof typeof inquirySource]}
+              </td>
+              <td className="px-6 py-4">{dateFormatter(row.createdAt)}</td>
               <td className="px-6 py-4">
                 <span
                   className={`px-2 py-1 ${statusStyles[row.status]} rounded-full text-xs font-medium flex items-center gap-2 w-fit`}
                 >
-                    {row.status == "Read" ? <Check size={12} /> : <Mail size={12} />}
-                  {row.status}
+                  {row.status === "read" ? (
+                    <Check size={12} />
+                  ) : (
+                    <Mail size={12} />
+                  )}
+                  {inquiryStatus[row.status as keyof typeof inquiryStatus]}
                 </span>
               </td>
               <td className="px-6 py-4">
@@ -115,7 +128,6 @@ function InquiryTable({ table_name }: { table_name: string }) {
                   View
                 </Button>
               </td>
- 
             </tr>
           ))}
         </tbody>

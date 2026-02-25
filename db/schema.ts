@@ -128,6 +128,27 @@ export const careerStatusEnum = pgEnum('career_status', [
   'archived',
 ])
 
+export const reservationStatusEnum = pgEnum('reservation_status', [
+  'pending',
+  'reserved',
+  'conditional',
+  'cancelled',
+  'rejected',
+  'expired',
+  'refunded',
+])
+
+export const campaignStatusEnum = pgEnum('campaign_status', [
+  'draft',
+  'scheduled',
+  'sent',
+])
+
+export const inquiryStatusEnum = pgEnum('inquiry_status', [
+  'read',
+  'unread',
+])
+
 // ─────────────────────────────────────────────
 // AUTH TABLES (better-auth)
 // ─────────────────────────────────────────────
@@ -240,7 +261,8 @@ export const userAccess = pgTable('role_access', {
  * leads — sales leads / prospects
  */
 export const leads = pgTable('leads', {
-  id:          serial('id').primaryKey(),
+  id:          integer('id').primaryKey(),
+  leadId:      text('lead_id').notNull(),
   status:      leadStatusEnum('status').notNull().default('open'),
   clientName:  text('client_name').notNull(),
   phone:       text('phone').notNull(),
@@ -259,13 +281,14 @@ export const leads = pgTable('leads', {
  * reservation — property reservation records
  */
 export const reservation = pgTable('reservation', {
-  id:            serial('id').primaryKey(),
-  clientId:      integer('client_id').notNull().references(() => leads.id, { onDelete: 'cascade' }),
+  id:            integer('id').primaryKey(),
+  reservationId: text('reservation_id').notNull(),
   firstName:     text('first_name').notNull(),
   lastName:      text('last_name').notNull(),
   email:         text('email').notNull(),
   phone:         text('phone').notNull(),
   inventoryCode: text('inventory_code').notNull(),
+  status:        reservationStatusEnum('status').notNull().default('pending'),
   projectName:   text('project_name').notNull(),
   block:         integer('block').notNull(),
   lot:           integer('lot').notNull(),
@@ -276,14 +299,16 @@ export const reservation = pgTable('reservation', {
  * inquiry — general website/form inquiries
  */
 export const inquiry = pgTable('inquiry', {
-  id:        serial('id').primaryKey(),
+  id:        integer('id').primaryKey(),
+  inquiryId: text('inquiry_id').notNull(),
   firstName: text('first_name').notNull(),
   lastName:  text('last_name').notNull(),
   email:     text('email').notNull(),
   phone:     text('phone').notNull(),
-  message:   text('message').notNull(),
   subject:   inquirySubjectEnum('subject').notNull(),
+  message:   text('message').notNull(),
   source:    inquirySourceEnum('source').notNull(),
+  status:    inquiryStatusEnum('status').notNull().default('unread'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -291,8 +316,8 @@ export const inquiry = pgTable('inquiry', {
  * projects — real estate project listings
  */
 export const projects = pgTable('projects', {
-  id:          serial('id').primaryKey(),
-  projectCode: text('project_code').notNull(),
+  id:          text('id').primaryKey(),
+  projectCode: text('project_code').notNull().unique(),
   projectName: text('project_name').notNull(),
   status:      inventoryStatusEnum('status'),
   location:    text('location'),
@@ -303,26 +328,12 @@ export const projects = pgTable('projects', {
 })
 
 /**
- * project_details — unit/lot specifications
- */
-export const projectDetails = pgTable('project_details', {
-  id:          serial('id').primaryKey(),
-  bathroom:    integer('bathroom').notNull(),
-  kitchen:     integer('kitchen').notNull(),
-  carport:     integer('carport').notNull(),
-  serviceArea: integer('service_area').notNull(),
-  livingRoom:  integer('living_room').notNull(),
-  lotArea:     integer('lot_area').notNull(),
-  floorArea:   integer('floor_area').notNull(),
-  lotClass:    text('lot_class').notNull(),
-})
-
-/**
  * project_inventory — individual inventory units
  */
 export const projectInventory = pgTable('project_inventory', {
-  id:            serial('id').primaryKey(),
-  inventoryCode: text('inventory_code').notNull(),
+  id:            text('id').primaryKey(),
+  projectCode:   text('project_code').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  inventoryCode: text('inventory_code').notNull().unique(), 
   modelName:     text('model_name').notNull(),
   block:         integer('block').notNull(),
   lot:           integer('lot').notNull(),
@@ -330,6 +341,22 @@ export const projectInventory = pgTable('project_inventory', {
   sellingPrice:  integer('selling_price').notNull(),
   createdAt:     timestamp('created_at').notNull().defaultNow(),
   updatedAt:     timestamp('updated_at').notNull().defaultNow(),
+})
+
+/**
+ * project_details — unit/lot specifications
+ */
+export const projectDetails = pgTable('project_details', {
+  id:            text('id').primaryKey(),
+  inventoryCode: text('inventory_code').notNull().unique().references(() => projectInventory.id, { onDelete: 'cascade' }),
+  bathroom:      integer('bathroom').notNull(),
+  kitchen:       integer('kitchen').notNull(),
+  carport:       integer('carport').notNull(),
+  serviceArea:   integer('service_area').notNull(),
+  livingRoom:    integer('living_room').notNull(),
+  lotArea:       integer('lot_area').notNull(),
+  floorArea:     integer('floor_area').notNull(),
+  lotClass:      text('lot_class').notNull(),
 })
 
 /**
@@ -366,6 +393,23 @@ export const newsletter = pgTable('newsletter', {
   id:        serial('id').primaryKey(),
   email:     text('email').notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+/**
+ * campaigns — email campaigns
+ */
+export const campaigns = pgTable('campaigns', {
+  id:        serial('id').primaryKey(),
+  name:      text('name').notNull(),
+  subject:   text('subject').notNull(),
+  previewLine: text('preview_line').notNull(),
+  body:      text('body').notNull(),
+  recipients: integer('recipients').notNull().default(0),
+  openRate:  integer('open_rate').notNull().default(0),
+  clickRate: integer('click_rate').notNull().default(0),
+  status:    campaignStatusEnum('status').notNull().default('draft'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
 /**

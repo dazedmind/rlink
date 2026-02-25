@@ -9,8 +9,6 @@ type LeadSource = (typeof leadSourceEnum.enumValues)[number];
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: add authentication
-    
     const { searchParams } = request.nextUrl;
     const status = searchParams.get('status') as LeadStatus | null;
     const source = searchParams.get('source') as LeadSource | null;
@@ -41,34 +39,41 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const requiredFields = ['clientName', 'phone', 'email', 'source', 'inquiryDate'];
-    const missing = requiredFields.filter((f) => !body[f]);
-    if (missing.length > 0) {
-      return NextResponse.json(
-        { error: `Missing required fields: ${missing.join(', ')}` },
-        { status: 400 },
-      );
+    const { firstName, lastName, email, phone, project, source, inquiryDate } = body;
+
+    if (!firstName || !lastName) {
+      return NextResponse.json({ error: 'First name and last name are required.' }, { status: 400 });
     }
+    if (!email)  return NextResponse.json({ error: 'Email is required.' },  { status: 400 });
+    if (!phone)  return NextResponse.json({ error: 'Phone is required.' },  { status: 400 });
+    if (!project) return NextResponse.json({ error: 'Project is required.' }, { status: 400 });
+    if (!source) return NextResponse.json({ error: 'Source is required.' }, { status: 400 });
 
-    const now = new Date().toISOString().split('T')[0];
+    // Date.now() is in ms (13 digits) and overflows an integer column.
+    // Unix timestamp in seconds fits safely within integer range (< 2.147B).
+    const count = await db.$count(leads);
+    const newId = count ? count +1 : 1;
+    const leadId = `LD-${(newId).toString().padStart(4, '0')}`;
 
-    const [newLead] = await db
+    // Drizzle excludes bigint PKs from the inferred insert type when they have
+    // no $defaultFn, so we cast to satisfy the type checker.
+    const newLead = await db
       .insert(leads)
       .values({
-        id: Date.now(),
-        leadId: Date.now(),
-        clientName: body.clientName,
-        phone: body.phone,
-        email: body.email,
-        source: body.source,
-        status: body.status ?? 'open',
-        stage: body.stage ?? 'lead',
-        nextAction: body.nextAction ?? 'call',
-        notes: body.notes ?? '',
-        inquiryDate: body.inquiryDate,
-        createdAt: now,
-        updatedAt: now,
-      })
+        id:          newId,
+        leadId:      leadId,
+        clientName:  `${firstName} ${lastName}`.trim(),
+        email,
+        phone,
+        source,
+        inquiryDate: inquiryDate ? new Date(inquiryDate).toISOString() : new Date().toISOString(),
+        status:      body.status      ?? 'open',
+        stage:       body.stage       ?? 'lead',
+        nextAction:  body.nextAction  ?? 'call',
+        project:     project,
+        notes:       body.notes       ?? '',
+
+      } as unknown as typeof leads.$inferInsert)
       .returning();
 
     return NextResponse.json(newLead, { status: 201 });

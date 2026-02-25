@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 function AppearanceTabContent() {  
   return (
-    <div>
+    <Tabs defaultValue="appearance">
       <TabsContent value="appearance" className="mt-0">
         <Card>
           <CardHeader className="flex flex-col gap-1">
@@ -45,7 +45,7 @@ function AppearanceTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
-    </div>
+    </Tabs>
   );
 }
 

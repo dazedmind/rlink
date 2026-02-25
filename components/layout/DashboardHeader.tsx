@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 // Mock data for your RLink CRM/CMS
@@ -63,8 +62,7 @@ function DashboardHeader({
 }) {
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [today, setToday] = useState('');
-  const router = useRouter();
+  const [today, setToday] = useState("");
 
   useEffect(() => {
     setToday(dateFormatter(new Date().toISOString()));
@@ -72,7 +70,7 @@ function DashboardHeader({
 
   const handleSignOut = async () => {
     await authClient.signOut();
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   return (
@@ -84,10 +82,7 @@ function DashboardHeader({
 
       <span className="flex items-center justify-center gap-4">
         <p className="text-sm text-muted-foreground">
-          Date:{" "}
-          <span className="font-bold text-blue-600">
-            {today}
-          </span>
+          Date: <span className="font-bold text-blue-600">{today}</span>
         </p>
         {/* NOTIFICATION DROPDOWN */}
         <DropdownMenu>
