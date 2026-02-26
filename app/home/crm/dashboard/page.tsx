@@ -2,23 +2,32 @@
 import React, { useState, useEffect, useMemo } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import LeadsTable from "@/components/layout/LeadsTable";
-import { FaCaretDown, FaCaretUp } from "react-icons/fa";
-import ReservationTable from "@/components/layout/ReservationTable";
+import LeadsTable from "@/components/tables/LeadsTable";
+import { FaCaretUp } from "react-icons/fa";
+import ReservationTable from "@/components/tables/ReservationTable";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import InquiryTable from "@/components/tables/InquiryTable";
+import DashboardSkeleton from "@/components/layout/skeleton/DashboardSkeleton";
 
-function CRMDashboard() {
-  // 1. Consolidated state to avoid multiple re-renders
+function CRMDashboard({
+  setActiveTab,
+}: {
+  setActiveTab: (tab: string) => void;
+}) {
   const [allLeads, setAllLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         const response = await fetch("/api/leads");
         const data = await response.json();
-        // Set all data at once
         setAllLeads(data.data || []);
       } catch (error) {
         console.error("Error fetching leads:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchLeads();
@@ -93,13 +102,14 @@ function CRMDashboard() {
           description="Track your leads, client inquiries, and sales progression."
         />
 
+        {loading ? <DashboardSkeleton /> : (
         <div className="flex flex-col gap-8">
-          {/* TOP STATS CARDS - UI remains identical */}
+          {/* TOP STATS CARDS */}
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {leadsCard.map((lead) => (
               <Card
                 key={lead.id}
-                className="flex flex-col justify-end h-[150px]"
+                className="flex flex-col justify-end h-[150px] animate-in slide-in-from-bottom-4 duration-500"
               >
                 <CardContent className="flex flex-col items-start">
                   <div className={`text-4xl font-bold ${lead.color}`}>
@@ -120,10 +130,85 @@ function CRMDashboard() {
               </Card>
             ))}
           </div>
-          
-          <LeadsTable table_name="Recent Leads" recentViewOnly={true} />
-          <ReservationTable table_name="Recent Reservations" recentViewOnly={true} />
+
+          <div className="grid grid-cols-2 gap-8">
+            <div className="flex flex-col gap-4">
+              {/* HEADER */}
+              <div className="flex justify-between items-end">
+                <span>
+                  <h3 className="font-semibold text-xl">Recent Leads</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track your recent leads and their status.
+                  </p>
+                </span>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveTab("lead-generation")}
+                  className="text-primary hover:text-primary/80 hover:bg-transparent"
+                >
+                  View All Leads <ChevronRight className="size-4" />
+                </Button>
+              </div>
+
+              {/* LEADS TABLE */}
+              <LeadsTable 
+                table_name="Leads" 
+                recentViewOnly={true} 
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {/* HEADER */}
+              <div className="flex justify-between items-end">
+                <span>
+                  <h3 className="font-semibold text-xl">Recent Reservations</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track your recent reservations and their status.
+                  </p>
+                </span>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveTab("reservation")}
+                  className="text-primary hover:text-primary/80 hover:bg-transparent"
+                >
+                  View All Reservations <ChevronRight className="size-4" />
+                </Button>
+              </div>
+
+              {/* RESERVATIONS TABLE */}
+              <ReservationTable
+                table_name="Reservations"
+                recentViewOnly={true}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+              {/* HEADER */}
+              <div className="flex justify-between items-end">
+                <span>
+                  <h3 className="font-semibold text-xl">Recent Inquiries</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track your recent inquiries and their status.
+                  </p>
+                </span>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveTab("inquiries")}
+                  className="text-primary hover:text-primary/80 hover:bg-transparent"
+                >
+                  View All Inquiries <ChevronRight className="size-4" />
+                </Button>
+              </div>
+
+              {/* RESERVATIONS TABLE */}
+              <InquiryTable table_name="Inquiries" recentViewOnly={true} />
+
+            </div>
+
         </div>
+        )}
       </div>
     </main>
   );

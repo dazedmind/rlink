@@ -170,76 +170,80 @@ export const inquiryStatusEnum = pgEnum('inquiry_status', [
  * [Inference] better-auth supports custom fields on the user table — verify this
  * against your specific better-auth version before running migrations.
  */
-export const authUser = pgTable('auth_user', {
-  // ── better-auth required ──────────────────────────────────────
-  id:            text('id').primaryKey(),      
-  name:          text('name').notNull(),                           // [better-auth]
-  email:         text('email').notNull().unique(),                        // [better-auth]
-  emailVerified: boolean('email_verified').notNull().default(false),     // [better-auth]
-  image:         text('image'),                                           // [better-auth] replaces photoUrl
-  createdAt:     timestamp('created_at').notNull().defaultNow(),         // [better-auth]
-  updatedAt:     timestamp('updated_at').notNull().defaultNow(),         // [better-auth]
+// export const authUser = pgTable('auth_user', {
+//   // ── better-auth required ──────────────────────────────────────
+//   id:            text('id').primaryKey(),      
+//   name:          text('name').notNull(),                           // [better-auth]
+//   email:         text('email').notNull().unique(),                        // [better-auth]
+//   emailVerified: boolean('email_verified').notNull().default(false),     // [better-auth]
+//   image:         text('image'),                                           // [better-auth] replaces photoUrl
+//   createdAt:     timestamp('created_at').notNull().defaultNow(),         // [better-auth]
+//   updatedAt:     timestamp('updated_at').notNull().defaultNow(),         // [better-auth]
+//   role:          text("role").default('user'),
+//   banned:        boolean("banned").default(false),
+//   banReason:     text("ban_reason").default(''),
+//   banExpires:    timestamp("ban_expires"),
 
-  // ── employee identity [profile] ──────────────────────────────
-  firstName:     text('first_name').notNull().default(''),
-  lastName:      text('last_name').notNull().default(''),
-  middleName:    text('middle_name').default(''),
+//   // ── employee identity [profile] ──────────────────────────────
+//   firstName:     text('first_name').notNull().default(''),
+//   lastName:      text('last_name').notNull().default(''),
+//   middleName:    text('middle_name').default(''),
 
-  // ── employee details [profile] ───────────────────────────────
-  employeeId:    text('employee_id'),                                     // text, not bigint
-  position:      text('position'),
-  department:    text('department'),
-  phone:         text('phone'),
-  birthdate:     date('birthdate'),
-  status:        userStatusEnum('status').notNull().default('active'),
-  access:        userAccessEnum('access').array(),
-})
+//   // ── employee details [profile] ───────────────────────────────
+//   employeeId:    text('employee_id'),                                     // text, not bigint
+//   position:      text('position'),
+//   department:    text('department'),
+//   phone:         text('phone'),
+//   birthdate:     text('birthdate'),
+//   status:        userStatusEnum('status').notNull().default('active'),
+//   access:        userAccessEnum('access').array(),
+// })
 
-/**
- * session — better-auth session management
- */
-export const session = pgTable('session', {
-  id:        text('id').primaryKey(),
-  expiresAt: timestamp('expires_at').notNull(),
-  token:     text('token').notNull().unique(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  userId:    text('user_id').notNull().references(() => authUser.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+// /**
+//  * session — better-auth session management
+//  */
+// export const session = pgTable('session', {
+//   id:        text('id').primaryKey(),
+//   expiresAt: timestamp('expires_at').notNull(),
+//   token:     text('token').notNull().unique(),
+//   ipAddress: text('ip_address'),
+//   userAgent: text('user_agent'),
+//   userId:    text('user_id').notNull().references(() => authUser.id, { onDelete: 'cascade' }),
+//   createdAt: timestamp('created_at').notNull().defaultNow(),
+//   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+// })
 
-/**
- * account — better-auth OAuth/credential accounts
- * [Unsecure] password field is managed by better-auth and should always be hashed
- */
-export const account = pgTable('account', {
-  id:                    text('id').primaryKey(),
-  accountId:             text('account_id').notNull(),
-  providerId:            text('provider_id').notNull(),
-  userId:                text('user_id').notNull().references(() => authUser.id, { onDelete: 'cascade' }),
-  accessToken:           text('access_token'),
-  refreshToken:          text('refresh_token'),
-  idToken:               text('id_token'),
-  accessTokenExpiresAt:  timestamp('access_token_expires_at'),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
-  scope:                 text('scope'),
-  password:              text('password'),                                // [Unsecure] hashed by better-auth
-  createdAt:             timestamp('created_at').notNull().defaultNow(),
-  updatedAt:             timestamp('updated_at').notNull().defaultNow(),
-})
+// /**
+//  * account — better-auth OAuth/credential accounts
+//  * [Unsecure] password field is managed by better-auth and should always be hashed
+//  */
+// export const account = pgTable('account', {
+//   id:                    text('id').primaryKey(),
+//   accountId:             text('account_id').notNull(),
+//   providerId:            text('provider_id').notNull(),
+//   userId:                text('user_id').notNull().references(() => authUser.id, { onDelete: 'cascade' }),
+//   accessToken:           text('access_token'),
+//   refreshToken:          text('refresh_token'),
+//   idToken:               text('id_token'),
+//   accessTokenExpiresAt:  timestamp('access_token_expires_at'),
+//   refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+//   scope:                 text('scope'),
+//   password:              text('password'),                                // [Unsecure] hashed by better-auth
+//   createdAt:             timestamp('created_at').notNull().defaultNow(),
+//   updatedAt:             timestamp('updated_at').notNull().defaultNow(),
+// })
 
-/**
- * verification — better-auth email/token verification
- */
-export const verification = pgTable('verification', {
-  id:         text('id').primaryKey(),
-  identifier: text('identifier').notNull(),
-  value:      text('value').notNull(),
-  expiresAt:  timestamp('expires_at').notNull(),
-  createdAt:  timestamp('created_at').notNull().defaultNow(),
-  updatedAt:  timestamp('updated_at').notNull().defaultNow(),
-})
+// /**
+//  * verification — better-auth email/token verification
+//  */
+// export const verification = pgTable('verification', {
+//   id:         text('id').primaryKey(),
+//   identifier: text('identifier').notNull(),
+//   value:      text('value').notNull(),
+//   expiresAt:  timestamp('expires_at').notNull(),
+//   createdAt:  timestamp('created_at').notNull().defaultNow(),
+//   updatedAt:  timestamp('updated_at').notNull().defaultNow(),
+// })
 
 // ─────────────────────────────────────────────
 // TABLES
@@ -250,12 +254,12 @@ export const verification = pgTable('verification', {
 /**
  * user_access — role-based access control (auth-related → uuid)
  */
-export const userAccess = pgTable('role_access', {
-  id:       uuid('id').primaryKey().defaultRandom(),
-  userId:   text('user_id').notNull().unique().references(() => authUser.id, { onDelete: 'cascade' }),
-  roleId:   uuid('role_id').notNull(),
-  accessTo: uuid('access_to').notNull(),
-})
+// export const userAccess = pgTable('role_access', {
+//   id:       uuid('id').primaryKey().defaultRandom(),
+//   userId:   text('user_id').notNull().unique().references(() => authUser.id, { onDelete: 'cascade' }),
+//   roleId:   uuid('role_id').notNull(),
+//   accessTo: uuid('access_to').notNull(),
+// })
 
 /**
  * leads — sales leads / prospects
@@ -292,6 +296,10 @@ export const reservation = pgTable('reservation', {
   projectName:   text('project_name').notNull(),
   block:         integer('block').notNull(),
   lot:           integer('lot').notNull(),
+  notes:         text('notes'),
+  recipientEmail: text('recipient_email'),
+  ccEmail:       text('cc_email'),
+  bccEmail:      text('bcc_email'),
   createdAt:     timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -337,7 +345,7 @@ export const projectInventory = pgTable('project_inventory', {
   modelName:     text('model_name').notNull(),
   block:         integer('block').notNull(),
   lot:           integer('lot').notNull(),
-  soldTo:        integer('sold_to').references(() => leads.id, { onDelete: 'set null' }),
+  soldTo:        integer('sold_to').references(() => reservation.id, { onDelete: 'set null' }),
   sellingPrice:  integer('selling_price').notNull(),
   createdAt:     timestamp('created_at').notNull().defaultNow(),
   updatedAt:     timestamp('updated_at').notNull().defaultNow(),

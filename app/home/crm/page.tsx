@@ -30,7 +30,6 @@ import Reservation from "./reservation/page";
 import LeadGeneration from "./lead-generation/page";
 import Inventory from "./inventory/page";
 import CRMDashboard from "./dashboard/page";
-import { useRouter } from "next/navigation";
 import Inquiries from "./inquiries/page";
 import Newsletter from "./newsletter/page";
 
@@ -45,7 +44,6 @@ const navItems = [
 
 export default function CrmSidebar() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const router = useRouter();
 
   // 1. Grouping Logic: Reduces navItems into an object keyed by group name
   const groupedNav = navItems.reduce((acc, item) => {
@@ -114,7 +112,7 @@ export default function CrmSidebar() {
       </Sidebar>
 
       {/* Content Area */}
-        {activeTab === "dashboard" && <CRMDashboard />}
+        {activeTab === "dashboard" && <CRMDashboard setActiveTab={(tab) => setActiveTab(tab)}/>}
         {activeTab === "reservation" && <Reservation />}
         {activeTab === "lead-generation" && <LeadGeneration />}
         {activeTab === "inventory" && <Inventory />}

@@ -9,18 +9,20 @@ import {
   FileText,
   Table,
 } from "lucide-react";
-import ReservationTable from "@/components/layout/ReservationTable";
+import ReservationTable from "@/components/tables/ReservationTable";
 import DropSelect from "@/components/ui/DropSelect";
 import { Button } from "@/components/ui/button";
 import TextInput from "@/components/ui/TextInput";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FormData {
   firstName: string;
   lastName: string;
   email: string;
-  inventoryCode: string;
   project: string;
+  inventoryCode: string;
   blockNumber: string;
   lotNumber: string;
   recipientEmail: string;
@@ -35,14 +37,29 @@ function Reservation() {
     firstName: "",
     lastName: "",
     email: "",
-    inventoryCode: "",
     project: "",
+    inventoryCode: "",
     blockNumber: "",
     lotNumber: "",
     recipientEmail: "",
     ccEmail: "",
     bccEmail: "",
   });
+
+  const resetFormData = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      project: "",
+      inventoryCode: "",
+      blockNumber: "",
+      lotNumber: "",
+      recipientEmail: "",
+      ccEmail: "",
+      bccEmail: "",
+    });
+  };
 
   const steps = [
     { id: 1, name: "Enter Details" },
@@ -137,7 +154,11 @@ function Reservation() {
                 <StepThree
                   formData={formData}
                   onBack={handleBack}
-                  onComplete={() => setView("table")}
+                  onComplete={() => {
+                    setView("table");
+                    resetFormData();
+                    setStep(1);
+                  }}
                 />
               )}
             </div>
@@ -156,8 +177,9 @@ function Reservation() {
 /** --- SUB-COMPONENTS --- **/
 
 function StepOne({ formData, onChange, onSelect, onNext }: any) {
-  const [projectsList, setProjectsList] = useState([]);
-  const [inventoryList, setInventoryList] = useState([]);
+  const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [inventoryList, setInventoryList] = useState<any[]>([]);
+  const [inventoryCode, setInventoryCode] = useState("");
 
   useEffect(() => {
     const fetchProjectsList = async () => {
@@ -177,22 +199,73 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
     fetchInventoryList();
   }, []);
 
+  // Find selected project's id to match against projectInventory.projectCode
+  const selectedProjectId =
+    projectsList.find((p: any) => p.projectName === formData.project)?.id ??
+    null;
+
+  // Filter inventory to the selected project, then deduplicate
+  const projectInventoryItems = selectedProjectId
+    ? inventoryList.filter((inv: any) => inv.projectCode === selectedProjectId)
+    : inventoryList;
+
+  const uniqueBlocks = [
+    ...new Set(projectInventoryItems.map((inv: any) => inv.block)),
+  ];
+
+  // Further filter by selected block so lots are block-specific
+  const blockFilteredItems = formData.blockNumber
+    ? projectInventoryItems.filter(
+        (inv: any) => String(inv.block) === String(formData.blockNumber),
+      )
+    : projectInventoryItems;
+
+  const uniqueLots = [
+    ...new Set(blockFilteredItems.map((inv: any) => inv.lot)),
+  ];
+
+  const reservedLots = blockFilteredItems.filter(
+    (inv: any) => inv.soldTo !== null,
+  );
+
+  useEffect(() => {
+    if (formData.project && formData.blockNumber && formData.lotNumber) {
+      const inventoryCode =
+        formData.project
+          .split(" ")
+          .map((word: string) => word[0].toUpperCase())
+          .join("") +
+        "-" +
+        formData.blockNumber +
+        formData.lotNumber;
+      setInventoryCode(inventoryCode);
+      formData.inventoryCode = inventoryCode;
+    }
+  }, [formData.project, formData.blockNumber, formData.lotNumber]);
+
   const handleNext = () => {
-    if (formData.inventoryCode === "" || formData.project === "") {
-      toast.error("Please select an inventory code and project to continue.");
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.project ||
+      !formData.blockNumber ||
+      !formData.lotNumber
+    ) {
+      toast.error("Please fill in all fields.");
       return;
     } else {
       onNext();
     }
   };
-    
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <section>
         <h3 className="text-xl font-bold mb-4 text-neutral-800">
           Customer Profile
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TextInput
             label="Client First Name"
             name="firstName"
@@ -200,7 +273,6 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.firstName}
             onChange={onChange}
             placeholder="John"
-            hasLabel
           />
           <TextInput
             label="Client Last Name"
@@ -209,7 +281,6 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.lastName}
             onChange={onChange}
             placeholder="Doe"
-            hasLabel
           />
           <TextInput
             label="Client Email"
@@ -218,9 +289,8 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.email}
             onChange={onChange}
             placeholder="john@example.com"
-            hasLabel
           />
-          
+
           <TextInput
             label="Client Phone Number"
             name="phone"
@@ -228,60 +298,94 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.phone}
             onChange={onChange}
             placeholder="(0960) 600-1234"
-            hasLabel
           />
-
-          <DropSelect
-            label="Inventory Code"
-            selectName="inventoryCode"
-            selectId="inventoryCode"
-            onChange={(e: any) => onSelect("inventoryCode", e.target.value)}
-            hasLabel
-          >
-            <option value="">Select Code</option>
-            {projectsList.map((project: any) => (
-              <option key={project.id} value={project.id}>{project.projectCode}</option>
-            ))}
-          </DropSelect>
 
           <DropSelect
             label="Project"
             selectName="project"
             selectId="project"
-            onChange={(e: any) => onSelect("project", e.target.value)}
-            hasLabel
+            value={formData.project}
+            onChange={(e: any) => {
+              onSelect("project", e.target.value);
+              onSelect("blockNumber", "");
+              onSelect("lotNumber", "");
+            }}
           >
             <option value="">Select Project</option>
-            {projectsList.map((project: any) => (
-              <option key={project.id} value={project.projectName}>{project.projectName}</option>
+            {projectsList.map((p: any) => (
+              <option key={p.id} value={p.projectName}>
+                {p.projectName} ({p.projectCode})
+              </option>
             ))}
           </DropSelect>
 
+          <span className="flex gap-2">
             <DropSelect
               label="Block"
               selectName="blockNumber"
               selectId="blockNumber"
-              onChange={(e: any) => onSelect("blockNumber", e.target.value)}
-              hasLabel
+              value={String(formData.blockNumber)}
+              onChange={(e: any) => {
+                onSelect("blockNumber", e.target.value);
+                onSelect("lotNumber", "");
+              }}
             >
               <option value="">Select Block</option>
-              {inventoryList.map((inventory: any) => (
-                <option key={inventory.id} value={inventory.block}>{inventory.block}</option>
+              {uniqueBlocks.map((b) => (
+                <option key={String(b)} value={String(b)}>
+                  {String(b)}
+                </option>
               ))}
             </DropSelect>
-
+            
             <DropSelect
               label="Lot"
               selectName="lotNumber"
               selectId="lotNumber"
+              value={String(formData.lotNumber)}
               onChange={(e: any) => onSelect("lotNumber", e.target.value)}
-              hasLabel
             >
               <option value="">Select Lot</option>
-              {inventoryList.map((inventory: any) => (
-                <option key={inventory.id} value={inventory.lot}>{inventory.lot}</option>
-              ))}
-            </DropSelect>    
+              {uniqueLots.map((l) => {
+                const isReserved = reservedLots.some((inv: any) => inv.lot === l,);
+
+                return (
+                  <option
+                    key={String(l)}
+                    value={String(l)}
+                    disabled={isReserved}
+                    className={isReserved ? "text-gray-400 bg-gray-100" : ""}
+                  >
+                    {String(l)} {isReserved ? "(Reserved)" : ""}
+                  </option>
+                );
+              })}
+            </DropSelect>
+          </span>
+
+          {/* Hidden Input for INVENTORY CODE */}
+          <input
+            type="text"
+            name="inventoryCode"
+            id="inventoryCode"
+            value={inventoryCode}
+            className="hidden"
+            readOnly
+          />
+        </div>
+
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="notes" className="text-xs text-neutral-600">
+            Notes
+          </Label>
+          <Textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            placeholder="Add additional notes..."
+            onChange={() => {}}
+            className="border border-border focus:outline-none focus:ring-0  text-sm resize-none min-h-[100px]"
+          />
         </div>
       </section>
 
@@ -297,7 +401,6 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.recipientEmail}
             onChange={onChange}
             placeholder="recipient@email.com"
-            hasLabel
           />
           <TextInput
             label="CC Email"
@@ -306,7 +409,6 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.ccEmail}
             onChange={onChange}
             placeholder="cc@email.com"
-            hasLabel
           />
           <TextInput
             label="BCC Email"
@@ -315,7 +417,6 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             value={formData.bccEmail}
             onChange={onChange}
             placeholder="bcc@email.com"
-            hasLabel
           />
         </div>
       </section>
@@ -366,26 +467,45 @@ function StepTwo({
 }
 
 function StepThree({ formData, onBack, onComplete }: any) {
-
   const handleSubmitReservation = async () => {
     try {
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.inventoryCode || !formData.project || !formData.blockNumber || !formData.lotNumber || !formData.recipientEmail || !formData.ccEmail || !formData.bccEmail) {
-        toast.error("Please fill in all fields.");
-        return;
-      }
-      const response = await fetch("/api/reservation", {
+      // 1. Create the reservation
+      const reservationRes = await fetch("/api/reservation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.error ?? "Failed to submit reservation.");
+      const reservationData = await reservationRes.json();
+
+      if (!reservationRes.ok) {
+        toast.error(reservationData.error ?? "Failed to submit reservation.");
+        return;
       }
+
+      // 2. Use the returned reservation's numeric id to mark the inventory
+      const newReservationId: number = reservationData[0]?.id;
+      await updateProjectInventory(newReservationId);
+
       toast.success("Reservation submitted successfully!");
       onComplete();
     } catch {
       toast.error("Network error. Please try again.");
+    }
+  };
+
+  const updateProjectInventory = async (reservationId: number) => {
+    const inventoryRes = await fetch("/api/projects/inventory", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inventoryCode: formData.inventoryCode,
+        soldTo: reservationId,
+      }),
+    });
+
+    if (!inventoryRes.ok) {
+      const err = await inventoryRes.json();
+      throw new Error(err.error ?? "Failed to update inventory.");
     }
   };
 
@@ -399,6 +519,10 @@ function StepThree({ formData, onBack, onComplete }: any) {
           <span className="text-gray-500">Client Name:</span>
           <span className="font-medium">
             {formData.firstName} {formData.lastName}
+          </span>
+          <span className="text-gray-500">Inventory Code:</span>
+          <span className="font-medium">
+            {formData.inventoryCode || "No Inventory Code"}
           </span>
           <span className="text-gray-500">Project:</span>
           <span className="font-medium">
@@ -415,13 +539,9 @@ function StepThree({ formData, onBack, onComplete }: any) {
             {formData.recipientEmail || "N/A"}
           </span>
           <span className="text-gray-500">CC Email:</span>
-          <span className="font-medium">
-            {formData.ccEmail || "N/A"}
-          </span>
+          <span className="font-medium">{formData.ccEmail || "N/A"}</span>
           <span className="text-gray-500">BCC Email:</span>
-          <span className="font-medium">
-            {formData.bccEmail || "N/A"}
-          </span>
+          <span className="font-medium">{formData.bccEmail || "N/A"}</span>
         </div>
       </div>
       <div className="flex justify-between items-center">

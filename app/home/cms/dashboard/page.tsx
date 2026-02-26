@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import {
   Card, CardContent } from "@/components/ui/card";
-import LeadsTable from "@/components/layout/LeadsTable";
+import LeadsTable from "@/components/tables/LeadsTable";
 
 
 function CMSDashboard() {

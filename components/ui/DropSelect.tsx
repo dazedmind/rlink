@@ -9,27 +9,26 @@ function DropSelect({
   selectName,
   selectId,
   onChange,
+  value,
   className,
-  hasLabel,
 }: {
   children: React.ReactNode;
-  label: string;
+  label?: string;
   selectName: string;
   selectId: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  value?: string;
   className?: string;
-  hasLabel?: boolean;
 }) {
   return (
-    <Field className={cn("", hasLabel && "col-span-2 md:col-span-1")}>
-      {hasLabel && (
-        <FieldLabel>{label}</FieldLabel>
-      )}
+    <Field className={cn("", "col-span-2 md:col-span-1")}>
+      <FieldLabel className="text-xs uppercase text-gray-500">{label}</FieldLabel>
       <div className="relative">
         <ChevronDownIcon className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2" />
         <select
           name={selectName}
           id={selectId}
+          value={value}
           className={cn("w-full h-10 text-sm text-black rounded-md px-2", className)}
           onChange={onChange}
         >

@@ -1,8 +1,14 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
-// birthdate is stored as TEXT (YYYY-MM-DD) to avoid timestamp/string conversion errors in Better Auth
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  date,
+} from "drizzle-orm/pg-core";
 
-export const user = pgTable("auth_user", {
+export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -13,14 +19,18 @@ export const user = pgTable("auth_user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  middleName: text("middle_name"),
-  phone: text("phone"),
+  role: text("role"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
+  firstName: text("first_name").default(""),
+  lastName: text("last_name").default(""),
+  middleName: text("middle_name").default(""),
+  phone: text("phone").default(""),
+  position: text("position").default(""),
+  department: text("department").default(""),
+  employeeId: text("employee_id").default(""),
   birthdate: text("birthdate"),
-  position:   text("position"),
-  department: text("department"),
-  employeeId: text("employee_id"),
 });
 
 export const session = pgTable(
@@ -38,6 +48,7 @@ export const session = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );

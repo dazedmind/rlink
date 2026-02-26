@@ -1,77 +1,3 @@
-// "use client";
-// import { useSession } from "@/lib/auth-client";
-// import DashboardHeader from "@/components/layout/DashboardHeader";
-// import { HiChartBar, HiComputerDesktop, HiUser } from "react-icons/hi2";
-// import Link from "next/link";
-// import ProtectedRoute from "@/components/utils/ProtectedRoute";
-// import Footer from "@/components/layout/Footer";
-// import { ChartLine, Laptop, Users } from "lucide-react";
-// import NavBar from "@/components/NavBar";
-
-// const modules = [
-//   {
-//     name: "Digital Sales Lead",
-//     icon: ChartLine,
-//     href: "/home/crm",
-//     description: "View and manage leads",
-//   },
-//   {
-//     name: "CMS",
-//     icon: Laptop,
-//     href: "/home/cms",
-//     description: "Manage website content and pages",
-//   },
-//   {
-//     name: "User Management",
-//     icon: Users,
-//     href: "/home/user-management",
-//     description: "Manage user accounts and permissions",
-//   },
-// ];
-
-// function Home() {
-//   const { data: session } = useSession();
-
-//   return (
-//     <ProtectedRoute>
-//       <div className="h-screen w-full">
-//       <main className="flex flex-col gap-8 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
-//         <DashboardHeader title="RLink" description="" />
-//           <div className="flex gap-8 flex-col h-full">
-//             <span className="flex flex-col gap-2">
-//               <h1 className="text-2xl font-bold">
-//                 Welcome, {session?.user?.name}
-//               </h1>
-//               <p className="text-sm text-muted-foreground">
-//                 Select a module to get started
-//               </p>
-//             </span>
-//             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-//               {modules.map((module) => (
-//                 <Link href={module.href} key={module.name}>
-//                   <div className="flex flex-col items-start justify-end gap-2 p-8 bg-linear-to-t from-slate-800 to-primary-fg text-white rounded-xl shadow-md hover:shadow-lg hover:translate-y-[-5px] transition-all duration-300 h-[200px] md:h-[250px] xl:h-[200px]">
-//                     <module.icon className="w-12 h-12 md:w-16 md:h-16 text-secondary" strokeWidth={1}/>
-//                     <h2 className="text-3xl font-bold">{module.name}</h2>
-//                     <p className="text-sm text-neutral-300">
-//                       {module.description}
-//                     </p>
-//                   </div>
-//                 </Link>
-//               ))}
-//             </div>
-//           </div>
-
-//           <footer>
-//             <Footer />
-//           </footer>
-//         </main>
-//       </div>
-//     </ProtectedRoute>
-//   );
-// }
-
-// export default Home;
-
 "use client";
 import { useSession } from "@/lib/auth-client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
@@ -123,7 +49,7 @@ function Home() {
                 Welcome back
               </p>
               <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">
-                {session?.user?.name ?? "User"}
+                {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
               </h1>
               <p className="text-sm text-neutral-500 mt-0.5">
                 Select a module below to get started.

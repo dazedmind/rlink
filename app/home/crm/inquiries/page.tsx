@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import InquiryTable from "@/components/layout/InquiryTable";
+import InquiryTable from "@/components/tables/InquiryTable";
 
 function Inquiries() {
   return (

@@ -1,0 +1,63 @@
+"use client";
+import React from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { MoreHorizontal, LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils"; // Assuming you have a shadcn/ui utility for classes
+
+interface MenuItem {
+  label: string;
+  icon?: LucideIcon; // Lucide icon component
+  onClick: () => void;
+  color?: string;    // e.g., "text-red-500"
+  disabled?: boolean;
+}
+
+interface ContextMenuProps {
+  menu: MenuItem[];
+  triggerIcon?: LucideIcon;
+}
+
+export default function ContextMenu({ 
+  menu, 
+  triggerIcon: TriggerIcon = MoreHorizontal 
+}: ContextMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100">
+          <TriggerIcon size={16} />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent align="end" className="w-[160px]">
+        {menu.map((item) => {
+          const Icon = item.icon;
+          return (
+            <DropdownMenuItem
+              key={item.label}
+              disabled={item.disabled}
+              className={cn(
+                "gap-2 cursor-pointer focus:bg-slate-50",
+                item.color // Applies custom colors like text-red-500
+              )}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevents row clicks if used in a table
+                item.onClick();
+              }}
+            >
+              {Icon && <Icon size={14} className="shrink-0" />}
+              <span className="flex-1">{item.label}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

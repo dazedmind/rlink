@@ -183,12 +183,12 @@ function DashboardHeader({
                       alt={session?.user?.name ?? ""}
                     />
                     <AvatarFallback>
-                      {session?.user?.name?.charAt(0) ?? ""}
+                      {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="flex flex-col">
                     <h3 className="text-sm font-bold">
-                      {session?.user?.name ?? ""}
+                      {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {session?.user?.email ?? ""}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, Table } from "lucide-react";
-import LeadsTable from "@/components/layout/LeadsTable";
+import LeadsTable from "@/components/tables/LeadsTable";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
@@ -182,7 +182,6 @@ function LeadGeneration() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                 <TextInput
-                  hasLabel
                   label="First Name"
                   name="firstName"
                   type="text"
@@ -193,7 +192,6 @@ function LeadGeneration() {
                 />
 
                 <TextInput
-                  hasLabel
                   label="Last Name"
                   name="lastName"
                   type="text"
@@ -204,7 +202,6 @@ function LeadGeneration() {
                 />
 
                 {/* <TextInput
-                hasLabel
                 label="Inquiry Date"
                 name="inquiryDate"
                 type="date"
@@ -215,7 +212,6 @@ function LeadGeneration() {
               /> */}
 
                 <TextInput
-                  hasLabel
                   label="Email"
                   name="email"
                   type="email"
@@ -226,7 +222,6 @@ function LeadGeneration() {
                 />
 
                 <TextInput
-                  hasLabel
                   label="Phone"
                   name="phone"
                   type="tel"
@@ -237,7 +232,6 @@ function LeadGeneration() {
                 />
 
                 <TextInput
-                  hasLabel
                   label="Profile Link"
                   name="profileLink"
                   type="text"
@@ -249,7 +243,6 @@ function LeadGeneration() {
 
                 <DropSelect
                   className="col-span-2 md:col-span-1"
-                  hasLabel
                   label="Project"
                   selectName="project"
                   selectId="project"
@@ -271,7 +264,6 @@ function LeadGeneration() {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
                 <DropSelect
-                  hasLabel
                   label="Source"
                   selectName="source"
                   selectId="source"
@@ -287,7 +279,6 @@ function LeadGeneration() {
                 </DropSelect>
 
                 <DropSelect
-                  hasLabel
                   label="Status"
                   selectName="status"
                   selectId="status"
@@ -302,7 +293,6 @@ function LeadGeneration() {
                 </DropSelect>
 
                 <DropSelect
-                  hasLabel
                   label="Stage"
                   selectName="stage"
                   selectId="stage"
@@ -317,7 +307,6 @@ function LeadGeneration() {
                 </DropSelect>
 
                 <DropSelect
-                  hasLabel
                   label="Next Action"
                   selectName="nextAction"
                   selectId="nextAction"
@@ -345,7 +334,7 @@ function LeadGeneration() {
                   value={formData.notes}
                   placeholder="Add notes about this lead..."
                   onChange={handleInputChange}
-                  className="border border-border text-sm resize-none min-h-[80px]"
+                  className="border border-border text-sm resize-none min-h-[120px]"
                 />
               </div>
 

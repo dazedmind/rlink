@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import NewsletterTable from "@/components/layout/NewsletterTable";
-import CampaignTable from "@/components/layout/CampaignTable";
+import NewsletterTable from "@/components/tables/NewsletterTable";
+import CampaignTable from "@/components/tables/CampaignTable";
 import ComposerModal from "@/components/layout/ComposerModal";
 
 // --- Main Component ---

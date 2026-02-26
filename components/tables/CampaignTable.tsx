@@ -95,24 +95,20 @@ function CampaignTable() {
   );
 
   return (
-    <div className="overflow-x-auto border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
+    <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="p-4 border-b bg-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">Campaigns List</h3>
         <span className="flex items-center gap-2 w-1/3">
           <TextInput
-            hasLabel={false}
-            label=""
             name="search"
             type="text"
             placeholder="Search"
             onChange={() => {""}}
             value={""}
-            className="w-1/3"
+            className="w-full"
           />
           <DropSelect
-            hasLabel={false}
-            label=""
             selectName="filter"
             selectId="filter-status"
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>

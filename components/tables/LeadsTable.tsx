@@ -9,6 +9,7 @@ import {
   PhoneIcon,
 } from "lucide-react";
 import { dateFormatter } from "@/app/utils/dateFormatter";
+import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import { useEffect, useState, useMemo } from "react";
 import {
   leadStatus,
@@ -58,6 +59,27 @@ function LeadsTable({
   const [leads, setLeads] = useState<Lead[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // 1. Define your Column Configuration
+  const columns = [
+    { label: "Lead ID", key: "leadId" },
+    { label: "Status", key: "status" },
+    { label: "Client Name", key: "clientName" },
+    { label: "Contact", key: "contact" },
+    // These columns only show if recentViewOnly is false
+    { label: "Inquiry Date", key: "inquiryDate", hideOnRecent: true },
+    { label: "Last Update", key: "updatedAt", hideOnRecent: true },
+    { label: "Stage", key: "stage", hideOnRecent: true },
+    { label: "Next Action", key: "nextAction", hideOnRecent: true },
+    { label: "", key: "actions", hideOnRecent: true },
+  ];
+
+  // 2. Filter columns based on the prop
+  const visibleColumns = useMemo(() => {
+    return recentViewOnly 
+      ? columns.filter(col => !col.hideOnRecent) 
+      : columns;
+  }, [recentViewOnly]);
 
   const fetchLeads = async () => {
     try {
@@ -94,7 +116,7 @@ function LeadsTable({
   };
 
   return (
-    <div className="overflow-x-auto border rounded-xl bg-white animate-in slide-in-from-bottom-4 duration-500">
+    <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-white animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="font-semibold text-xl">{table_name}</h3>
@@ -128,22 +150,12 @@ function LeadsTable({
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            {[
-              "Lead ID",
-              "Status",
-              "Client Name",
-              "Contact",
-              "Inquiry Date",
-              "Last Update",
-              "Stage",
-              "Next Action",
-              "",
-            ].map((label, i) => (
+            {visibleColumns.map((col, i) => (
               <TableHead
                 key={i}
                 className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
               >
-                {label}
+                {col.label}
               </TableHead>
             ))}
           </TableRow>
@@ -157,9 +169,7 @@ function LeadsTable({
               </TableCell>
 
               <TableCell className="px-6 py-4">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[row.status]}`}
-                >
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[row.status]}`}>
                   {leadStatus[row.status as keyof typeof leadStatus]}
                 </span>
               </TableCell>
@@ -177,27 +187,20 @@ function LeadsTable({
                 </span>
               </TableCell>
 
-              <TableCell className="px-6 py-4">
-                {dateFormatter(row.inquiryDate)}
-              </TableCell>
-
-              <TableCell className="px-6 py-4">
-                {dateFormatter(row.updatedAt)}
-              </TableCell>
-
-              <TableCell className="px-6 py-4">
-                {leadStage[row.stage as keyof typeof leadStage]}
-              </TableCell>
-
-              <TableCell className="px-6 py-4">
-                {leadNextAction[row.nextAction as keyof typeof leadNextAction]}
-              </TableCell>
-
-              <TableCell className="px-6 py-4 text-right">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Pencil size={14} /> Edit
-                </Button>
-              </TableCell>
+              {/* Conditional rendering for the remaining cells */}
+              {!recentViewOnly && (
+                <>
+                  <TableCell className="px-6 py-4">{dateFormatter(row.inquiryDate)}</TableCell>
+                  <TableCell className="px-6 py-4">{formatRelativeTime(row.updatedAt)}</TableCell>
+                  <TableCell className="px-6 py-4 text-primary font-medium">{leadStage[row.stage as keyof typeof leadStage]}</TableCell>
+                  <TableCell className="px-6 py-4 text-primary font-medium">{leadNextAction[row.nextAction as keyof typeof leadNextAction]}</TableCell>
+                  <TableCell className="px-6 py-4 text-right">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <Pencil size={14} /> Edit
+                    </Button>
+                  </TableCell>
+                </>
+              )}
             </TableRow>
           ))}
         </TableBody>

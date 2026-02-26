@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { inquiry } from "@/db/schema";
-import { eq, ilike, desc } from "drizzle-orm";
+import { eq, ilike, desc, max } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
 
     // Date.now() is in ms (13 digits) and overflows an integer column.
     // Unix timestamp in seconds fits safely within integer range (< 2.147B).
-    const count = await db.$count(inquiry);
-    const newId = count ? count + 1 : 1;
+    const [{ maxId }] = await db.select({ maxId: max(inquiry.id) }).from(inquiry);
+    const newId     = (maxId ?? 0) + 1;
     const inquiryId = `IN-${newId.toString().padStart(4, "0")}`;
 
     // Drizzle excludes bigint PKs from the inferred insert type when they have

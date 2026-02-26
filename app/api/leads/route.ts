@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
-import { eq, ilike, desc } from 'drizzle-orm';
+import { eq, ilike, desc, max } from 'drizzle-orm';
 import type { leadStatusEnum, leadSourceEnum } from '@/db/schema';
 
 type LeadStatus = (typeof leadStatusEnum.enumValues)[number];
@@ -49,11 +49,9 @@ export async function POST(request: NextRequest) {
     if (!project) return NextResponse.json({ error: 'Project is required.' }, { status: 400 });
     if (!source) return NextResponse.json({ error: 'Source is required.' }, { status: 400 });
 
-    // Date.now() is in ms (13 digits) and overflows an integer column.
-    // Unix timestamp in seconds fits safely within integer range (< 2.147B).
-    const count = await db.$count(leads);
-    const newId = count ? count +1 : 1;
-    const leadId = `LD-${(newId).toString().padStart(4, '0')}`;
+    const [{ maxId }] = await db.select({ maxId: max(leads.id) }).from(leads);
+    const newId  = (maxId ?? 0) + 1;
+    const leadId = `LD-${newId.toString().padStart(4, '0')}`;
 
     // Drizzle excludes bigint PKs from the inferred insert type when they have
     // no $defaultFn, so we cast to satisfy the type checker.
