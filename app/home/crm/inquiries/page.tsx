@@ -13,7 +13,7 @@ function Inquiries() {
         />
 
         <div className="flex flex-col gap-8 mt-8">
-          <InquiryTable table_name="Inquiries" />
+          <InquiryTable table_name="Inquiries" recentViewOnly={false} />
         </div>
       </div>
     </main>
