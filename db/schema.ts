@@ -149,6 +149,11 @@ export const inquiryStatusEnum = pgEnum('inquiry_status', [
   'unread',
 ])
 
+export const newsletterStatusEnum = pgEnum('newsletter_status', [
+  'subscribed',
+  'unsubscribed',
+])
+
 // ─────────────────────────────────────────────
 // AUTH TABLES (better-auth)
 // ─────────────────────────────────────────────
@@ -268,11 +273,13 @@ export const leads = pgTable('leads', {
   id:          integer('id').primaryKey(),
   leadId:      text('lead_id').notNull(),
   status:      leadStatusEnum('status').notNull().default('open'),
-  clientName:  text('client_name').notNull(),
-  phone:       text('phone').notNull(),
-  email:       text('email').notNull(),
+  firstName:   text('first_name').notNull(),
+  lastName:    text('last_name').notNull(),
+  phone:       text('phone'),
+  email:       text('email'),
   inquiryDate: date('inquiry_date').notNull(),
   project:     text('project').notNull(),
+  profileLink: text('profile_link'),
   stage:       leadStageEnum('stage').notNull().default('lead'),
   nextAction:  leadNextActionEnum('next_action').notNull().default('call'),
   source:      leadSourceEnum('source').notNull(),
@@ -400,6 +407,7 @@ export const careers = pgTable('careers', {
 export const newsletter = pgTable('newsletter', {
   id:        serial('id').primaryKey(),
   email:     text('email').notNull().unique(),
+  status:    newsletterStatusEnum('status').notNull().default('subscribed'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

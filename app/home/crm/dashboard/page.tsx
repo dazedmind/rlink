@@ -105,7 +105,7 @@ function CRMDashboard({
         {loading ? <DashboardSkeleton /> : (
         <div className="flex flex-col gap-8">
           {/* TOP STATS CARDS */}
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3 animate-fade-in-up">
             {leadsCard.map((lead) => (
               <Card
                 key={lead.id}
@@ -131,7 +131,7 @@ function CRMDashboard({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 gap-8 animate-fade-in-up">
             <div className="flex flex-col gap-4">
               {/* HEADER */}
               <div className="flex justify-between items-end">
@@ -184,7 +184,7 @@ function CRMDashboard({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 animate-fade-in-up">
               {/* HEADER */}
               <div className="flex justify-between items-end">
                 <span>

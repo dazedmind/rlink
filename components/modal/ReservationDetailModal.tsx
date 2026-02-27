@@ -14,6 +14,8 @@ import DropSelect from "../ui/DropSelect";
 import { Field } from "../ui/field";
 import TextInput from "../ui/TextInput";
 import { toast } from "sonner";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
 
 interface ReservationDetailModalProps {
   reservation: any;
@@ -227,22 +229,25 @@ export function ReservationDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-2/3 overflow-y-auto" showCloseButton={false}>
-        <DialogHeader className="border-b pb-4 flex flex-row justify-between items-center">
+      <DialogContent
+        className="max-w-3xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto p-0 scrollbar-hide border-none"
+        showCloseButton={false}
+      >
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b sticky top-0 bg-white z-10 sm:text-left">
           <div>
-            <DialogTitle className="text-2xl font-bold">
+            <DialogTitle className="text-xl sm:text-2xl font-bold">
               Reservation Details
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              {reservation.reservationId}
+            <p className="text-sm sm:text-md text-muted-foreground">
+              Reservation ID: <span className="font-bold">{reservation.reservationId}</span>
             </p>
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6">
-          {/* Left Column: Info */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-5 sm:gap-6 px-4 sm:px-6">
+          {/* Client & Reservation Info */}
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextInput
                 label="Client First Name"
                 name="firstName"
@@ -297,7 +302,7 @@ export function ReservationDetailModal({
                 ))}
               </DropSelect>
 
-              <span className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <DropSelect
                   label="Block Number"
                   selectName="block"
@@ -347,9 +352,9 @@ export function ReservationDetailModal({
                     );
                   })}
                 </DropSelect>
-              </span>
+              </div>
 
-              <span className="col-span-2">
+              <div className="col-span-full">
                 <DropSelect
                   label="Status"
                   selectName="status"
@@ -365,31 +370,30 @@ export function ReservationDetailModal({
                     </option>
                   ))}
                 </DropSelect>
-              </span>
+              </div>
             </div>
           </div>
 
-          {/* Right Column: History/Notes */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 font-semibold text-slate-800">
-              <StickyNote className="size-4" />
-              <span className="text-xs uppercase text-gray-500">Notes</span>
-            </div>
-            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-              {/* This would ideally map from reservation.history */}
-              <Field>
-                <textarea
-                  rows={5}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="border border-border text-sm resize-none p-3 rounded-lg w-full"
-                  placeholder="Add additional notes..."
-                />
-              </Field>
-            </div>
+          {/* Notes */}
+          <div className="space-y-2">
+            <Field>
+              <Label htmlFor="notes" className="text-xs uppercase text-gray-500 flex items-center gap-2">
+                <StickyNote className="size-4" />
+                Notes
+              </Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                rows={6}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="bg-slate-50 border border-border text-sm resize-none p-3 rounded-lg w-full min-h-[100px]"
+                placeholder="Add additional notes..."
+              />
+            </Field>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share className="size-4 mr-2" /> Share
             </Button>
@@ -402,7 +406,7 @@ export function ReservationDetailModal({
           </div>
         </div>
 
-        <DialogFooter className="border-t pt-4 flex flex-row justify-between items-center">
+        <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 border-t sticky bottom-0 bg-white z-10 flex-row justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

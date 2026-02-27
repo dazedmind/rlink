@@ -160,9 +160,12 @@ select {
 .scrollbar-hide {
   scrollbar-width: none;        /* Firefox */
   -ms-overflow-style: none;     /* IE / Edge */
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;                /* Chrome / Safari / Opera */
+  display: none;
 }
 
 @keyframes fade-in-up {
@@ -185,3 +188,10 @@ select {
     opacity: 1;
   }
 }
+
+
+
+/* select {
+  appearance: none;
+  background-color: #112A5C;
+} */

@@ -1,27 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { reservation } from '@/db/schema';
-import { eq, ilike, desc, max } from 'drizzle-orm';
+import { and, asc, count, desc, ilike, inArray, max, or } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
-    const search = searchParams.get('search');
     const page = Math.max(1, Number(searchParams.get('page') ?? 1));
-    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 20)));
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 10)));
     const offset = (page - 1) * limit;
 
-    let query = db.select().from(reservation).$dynamic();
+    const statusParam = searchParams.get('status');
+    const statusValues = statusParam ? statusParam.split(',').filter(Boolean) : [];
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort') ?? 'newest';
 
-    if (search) query = query.where(ilike(reservation.projectName, `%${search}%`));
+    const conditions: Parameters<typeof and>[0][] = [];
+    if (statusValues.length > 0) conditions.push(inArray(reservation.status, statusValues as any));
+    if (search) conditions.push(or(ilike(reservation.projectName, `%${search}%`), ilike(reservation.firstName, `%${search}%`), ilike(reservation.lastName, `%${search}%`))!);
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const results = await query
-      .orderBy(desc(reservation.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const orderBy = (() => {
+      switch (sort) {
+        case 'oldest': return asc(reservation.createdAt);
+        case 'name_az': return asc(reservation.firstName);
+        case 'name_za': return desc(reservation.firstName);
+        default: return desc(reservation.createdAt);
+      }
+    })();
 
-    return NextResponse.json({ data: results, page, limit });
+    const [{ total }, data] = await Promise.all([
+      db.select({ total: count() }).from(reservation).where(whereClause).then((r) => r[0]),
+      db.select().from(reservation).where(whereClause).orderBy(orderBy).limit(limit).offset(offset),
+    ]);
+
+    return NextResponse.json({ data, page, limit, total: total ?? 0 });
   } catch (error) {
     console.error('[GET /api/reservation]', error);
     return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 });

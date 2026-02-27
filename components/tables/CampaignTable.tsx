@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+"use client";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../ui/button";
-import { MoreHorizontal, Send, Eye, Pencil, Trash2 } from "lucide-react";
+import { Badge } from "../ui/badge";
+import {
+  ArrowUpDown,
+  Eye,
+  ListFilter,
+  MoreHorizontal,
+  Pencil,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 import { dateFormatter } from "@/app/utils/dateFormatter";
-import DropSelect from "../ui/DropSelect";
-import TextInput from "../ui/TextInput";
 import {
   Table,
   TableBody,
@@ -14,49 +23,36 @@ import {
 } from "@/components/ui/table";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// --- Types ---
 type Campaign = {
   id: number;
   name: string;
   subject: string;
-  status: "draft" | "sent";
+  status: "draft" | "scheduled" | "sent";
   sentAt: string;
   openRate: number;
   clickRate: number;
   recipients: number;
 };
 
-// --- Mock Data ---
-const MOCK_CAMPAIGNS: Campaign[] = [
-  { id: 1, name: "March Launch Announcement", subject: "🚀 Something big is here",       status: "sent",  sentAt: "2025-03-05", openRate: 62.4, clickRate: 18.1, recipients: 1240 },
-  { id: 2, name: "Weekly Digest #12",         subject: "Your weekly roundup",              status: "sent",  sentAt: "2025-02-28", openRate: 48.7, clickRate: 9.3,  recipients: 1198 },
-  { id: 3, name: "April Product Update",      subject: "What's new this April",            status: "draft", sentAt: "2025-04-01", openRate: 0,    clickRate: 0,    recipients: 0    },
-  { id: 4, name: "Summer Sale Teaser",        subject: "☀️ Something exciting coming...", status: "draft", sentAt: "2025-06-01", openRate: 0,    clickRate: 0,    recipients: 0    },
-];
-
-// --- Status Badge ---
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, string> = {
-    draft: "bg-slate-100 text-slate-600 border border-slate-200",
-    sent:  "bg-blue-50 text-blue-700 border border-blue-200",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${styles[status] ?? ""}`}
-    >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
+const statusMeta: Record<string, { label: string; className: string }> = {
+  draft: { label: "Draft", className: "bg-slate-100 text-slate-600 border border-slate-200" },
+  scheduled: { label: "Scheduled", className: "bg-yellow-50 text-yellow-700 border border-yellow-200" },
+  sent:  { label: "Sent",  className: "bg-blue-50 text-blue-700 border border-blue-200" },
 };
 
-// --- Action Menu ---
-const ActionMenu = ({ status }: { status: "draft" | "sent" }) => (
+const ActionMenu = ({ status }: { status: "draft" | "scheduled" | "sent" }) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -87,39 +83,173 @@ const ActionMenu = ({ status }: { status: "draft" | "sent" }) => (
   </DropdownMenu>
 );
 
-function CampaignTable() {
-  const [statusFilter, setStatusFilter] = useState("all");
+const ITEMS_PER_PAGE = 10;
 
-  const filteredCampaigns = MOCK_CAMPAIGNS.filter(
-    (campaign) => statusFilter === "all" || campaign.status === statusFilter
+function CampaignTable() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Filter state
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState("newest");
+
+  const activeFilterCount = filterStatus.length;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+
+  // Build API URL from current state
+  const buildUrl = useCallback(
+    (page: number, limit = ITEMS_PER_PAGE) => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        sort: sortOption,
+      });
+      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+      return `/api/newsletter/campaigns?${params}`;
+    },
+    [filterStatus, sortOption],
   );
+  
+  const fetchCampaigns = useCallback(async (page: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(buildUrl(page));
+      const { data, total: responseTotal } = await response.json();
+      setCampaigns(data ?? []);
+      setTotal(responseTotal ?? 0);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+      setCampaigns([]);
+      setTotal(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [buildUrl]);
+
+  useEffect(() => {
+    fetchCampaigns(currentPage);
+  }, [currentPage, fetchCampaigns]);
+
+  const toggleFilter = (
+    value: string,
+    current: string[],
+    setter: (v: string[]) => void,
+  ) => {
+    setter(
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value],
+    );
+  };
+
+  const clearFilters = () => {
+    setFilterStatus([]);
+    setSortOption("newest");
+  };
+
+  const filteredCampaigns = useMemo(() => {
+    let result = [...campaigns];
+
+    if (filterStatus.length > 0)
+      result = result.filter((c) => filterStatus.includes(c.status));
+
+    switch (sortOption) {
+      case "newest":
+        result.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+        break;
+      case "name_az":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name_za":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+    }
+
+    return result;
+  }, [filterStatus, sortOption]);
 
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="p-4 border-b bg-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">Campaigns List</h3>
-        <span className="flex items-center gap-2 w-1/3">
-          <TextInput
-            name="search"
-            type="text"
-            placeholder="Search"
-            onChange={() => {""}}
-            value={""}
-            className="w-full"
-          />
-          <DropSelect
-            selectName="filter"
-            selectId="filter-status"
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setStatusFilter(e.target.value)
-            }
-          >
-            <option value="all">All</option>
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-          </DropSelect>
-        </span>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="relative">
+              <ListFilter className="size-4 mr-2" />
+              Filter
+              {activeFilterCount > 0 && (
+                <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            {/* Sort */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-sm">
+                <ArrowUpDown className="size-3.5" /> Sort
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup
+                  value={sortOption}
+                  onValueChange={setSortOption}
+                >
+                  <DropdownMenuRadioItem value="newest">Date: Newest first</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="oldest">Date: Oldest first</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name_az">Name: A → Z</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name_za">Name: Z → A</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuSeparator />
+
+            {/* Status */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-sm">
+                Status
+                {filterStatus.length > 0 && (
+                  <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                    {filterStatus.length}
+                  </Badge>
+                )}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {Object.entries(statusMeta).map(([key, { label }]) => (
+                  <DropdownMenuCheckboxItem
+                    key={key}
+                    checked={filterStatus.includes(key)}
+                    onCheckedChange={() => toggleFilter(key, filterStatus, setFilterStatus)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            {activeFilterCount > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <button
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                  onClick={clearFilters}
+                >
+                  <X className="size-3" /> Clear all filters
+                </button>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Table */}
@@ -134,13 +264,13 @@ function CampaignTable() {
                 >
                   {label}
                 </TableHead>
-              )
+              ),
             )}
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {filteredCampaigns.map((row) => (
+          {campaigns.map((row) => (
             <TableRow key={row.id} className="hover:bg-gray-50/50">
               <TableCell className="px-6 py-4">
                 <p className="font-medium text-sm">{row.name}</p>
@@ -148,7 +278,11 @@ function CampaignTable() {
               </TableCell>
 
               <TableCell className="px-6 py-4">
-                <StatusBadge status={row.status} />
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusMeta[row.status]?.className ?? ""}`}
+                >
+                  {statusMeta[row.status]?.label}
+                </span>
               </TableCell>
 
               <TableCell className="px-6 py-4">
@@ -158,20 +292,14 @@ function CampaignTable() {
               <TableCell className="px-6 py-4 min-w-[100px]">
                 <span className="text-sm">{row.openRate ? `${row.openRate}%` : "—"}</span>
                 <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
-                  <div
-                    className="h-full bg-blue-500 rounded-full"
-                    style={{ width: `${row.openRate}%` }}
-                  />
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${row.openRate}%` }} />
                 </div>
               </TableCell>
 
               <TableCell className="px-6 py-4 min-w-[100px]">
                 <span className="text-sm">{row.clickRate ? `${row.clickRate}%` : "—"}</span>
                 <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
-                  <div
-                    className="h-full bg-purple-500 rounded-full"
-                    style={{ width: `${row.clickRate}%` }}
-                  />
+                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${row.clickRate}%` }} />
                 </div>
               </TableCell>
 
@@ -186,6 +314,14 @@ function CampaignTable() {
           ))}
         </TableBody>
       </Table>
+
+      <div className="px-6 py-3 border-t bg-white">
+        <p className="text-sm text-gray-600">
+          {activeFilterCount > 0
+            ? `${campaigns.length} of ${total} campaigns`
+            : `${campaigns.length} campaigns total`}
+        </p>
+      </div>
     </div>
   );
 }

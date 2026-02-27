@@ -1,34 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
-import { eq, ilike, desc, max } from 'drizzle-orm';
-import type { leadStatusEnum, leadSourceEnum } from '@/db/schema';
-
-type LeadStatus = (typeof leadStatusEnum.enumValues)[number];
-type LeadSource = (typeof leadSourceEnum.enumValues)[number];
+import { and, asc, count, desc, ilike, inArray, max, or } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const status = searchParams.get('status') as LeadStatus | null;
-    const source = searchParams.get('source') as LeadSource | null;
-    const search = searchParams.get('search');
     const page = Math.max(1, Number(searchParams.get('page') ?? 1));
-    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 20)));
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 10)));
     const offset = (page - 1) * limit;
 
-    let query = db.select().from(leads).$dynamic();
+    const statusParam = searchParams.get('status');
+    const statusValues = statusParam ? statusParam.split(',').filter(Boolean) : [];
+    const stageParam = searchParams.get('stage');
+    const stageValues = stageParam ? stageParam.split(',').filter(Boolean) : [];
+    const nextActionParam = searchParams.get('nextAction');
+    const nextActionValues = nextActionParam ? nextActionParam.split(',').filter(Boolean) : [];
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort') ?? 'newest';
 
-    if (status) query = query.where(eq(leads.status, status));
-    if (source) query = query.where(eq(leads.source, source));
-    if (search) query = query.where(ilike(leads.clientName, `%${search}%`));
+    const conditions: Parameters<typeof and>[0][] = [];
+    if (statusValues.length > 0) conditions.push(inArray(leads.status, statusValues as any));
+    if (stageValues.length > 0) conditions.push(inArray(leads.stage, stageValues as any));
+    if (nextActionValues.length > 0) conditions.push(inArray(leads.nextAction, nextActionValues as any));
+    if (search) conditions.push(or(ilike(leads.firstName, `%${search}%`), ilike(leads.lastName, `%${search}%`), ilike(leads.email, `%${search}%`))!);
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const results = await query
-      .orderBy(desc(leads.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const orderBy = (() => {
+      switch (sort) {
+        case 'oldest': return asc(leads.inquiryDate);
+        case 'updated_newest': return desc(leads.updatedAt);
+        case 'updated_oldest': return asc(leads.updatedAt);
+        case 'name_az': return asc(leads.firstName);
+        case 'name_za': return desc(leads.firstName);
+        default: return desc(leads.inquiryDate);
+      }
+    })();
 
-    return NextResponse.json({ data: results, page, limit });
+    const [{ total }, data] = await Promise.all([
+      db.select({ total: count() }).from(leads).where(whereClause).then((r) => r[0]),
+      db.select().from(leads).where(whereClause).orderBy(orderBy).limit(limit).offset(offset),
+    ]);
+
+    return NextResponse.json({ data, page, limit, total: total ?? 0 });
   } catch (error) {
     console.error('[GET /api/leads]', error);
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
@@ -39,7 +53,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { firstName, lastName, email, phone, project, source, inquiryDate } = body;
+    const { firstName, lastName, email, phone, project, source, inquiryDate, stage, nextAction, profileLink } = body;
 
     if (!firstName || !lastName) {
       return NextResponse.json({ error: 'First name and last name are required.' }, { status: 400 });
@@ -60,14 +74,16 @@ export async function POST(request: NextRequest) {
       .values({
         id:          newId,
         leadId:      leadId,
-        clientName:  `${firstName} ${lastName}`.trim(),
+        firstName:   firstName,
+        lastName:    lastName,
         email,
         phone,
         source,
         inquiryDate: inquiryDate ? new Date(inquiryDate).toISOString() : new Date().toISOString(),
         status:      body.status      ?? 'open',
         stage:       body.stage       ?? 'lead',
-        nextAction:  body.nextAction  ?? 'call',
+        nextAction:  nextAction      ?? 'call',
+        profileLink: profileLink,
         project:     project,
         notes:       body.notes       ?? '',
 

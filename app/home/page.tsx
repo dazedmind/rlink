@@ -59,7 +59,7 @@ function Home() {
             {/* Module Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {modules.map((module, i) => (
-                <Link href={module.href} key={module.name} className="group">
+                <Link href={module.href} key={module.name} className="group animate-fade-in-up">
                   <div className="relative flex flex-col justify-between h-52 rounded-2xl border border-border bg-white p-6 overflow-hidden transition-all duration-300 hover:shadow-sm hover:-translate-y-1">
                     {/* Top row: tag + arrow */}
                     <div className="flex items-center justify-end">

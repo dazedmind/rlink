@@ -1,6 +1,12 @@
 "use client";
-import React, { useState, useRef, useCallback } from "react";
-import { Button } from "../ui/button";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Bold,
   Italic,
@@ -11,18 +17,17 @@ import {
   Quote,
   Code,
   Heading2,
-  Minus,
   X,
   Send,
   FileText,
   Eye,
   Edit3,
+  Mail,
 } from "lucide-react";
 
-// --- Polished Markdown preview renderer ---
+// --- Markdown Renderer ---
 function renderMarkdown(md: string): string {
   if (!md) return "";
-
   let html = md
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -33,14 +38,12 @@ function renderMarkdown(md: string): string {
   html = html.replace(/^# (.*$)/gm, "<h1 style='font-size: 24px; font-weight: 600;'>$1</h1>");
   html = html.replace(/^---$/gm, "<hr />");
   html = html.replace(/^&gt;[ ]?(.*$)/gm, "<blockquote>$1</blockquote>");
-
   html = html.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
   html = html.replace(/~~(.*?)~~/g, "<s>$1</s>");
   html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1 rounded text-pink-600 font-mono text-xs">$1</code>');
   html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 underline">$1</a>');
-
   html = html.replace(/^\-[ ]?(.*$)/gm, "<li>$1</li>");
   html = html.replace(/^\d+\.[ ]?(.*$)/gm, "<li>$1</li>");
   html = html.replace(/(<li>(?:.|\n)*?<\/li>)/g, '<ul class="list-disc pl-5 my-2">$1</ul>');
@@ -70,7 +73,7 @@ const ToolbarBtn = ({ onClick, title, children }: { onClick: () => void; title: 
 
 const Divider = () => <span className="w-px h-5 bg-slate-200 mx-0.5" />;
 
-function ComposerModal({ onClose }: { onClose: () => void }) {
+function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ subject: "", preview: "", body: "" });
   const [tab, setTab] = useState<"write" | "preview">("write");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -105,37 +108,38 @@ function ComposerModal({ onClose }: { onClose: () => void }) {
   const wordCount = form.body.trim() ? form.body.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col h-full max-h-[90vh] overflow-hidden border border-slate-200">
-        
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent 
+        className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden border-slate-200 gap-0"
+        showCloseButton={false}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <h2 className="text-xl font-semibold text-slate-900 leading-none">New Campaign</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-            <X size={18} />
-          </button>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-slate-900 leading-none">
+              New Campaign
+            </DialogTitle>
+          </DialogHeader>
         </div>
 
-        {/* Form Body - We use flex-1 here to push the footer down */}
-        <div className="flex flex-col flex-1 overflow-y-auto px-6 py-4 gap-4">
-          
+        {/* Scrollable Form Body */}
+        <div className="flex flex-col flex-1 overflow-y-auto px-6 py-4 gap-4 bg-white scrollbar-hide">
           {/* Static Fields */}
           <div className="flex flex-col gap-3 shrink-0">
-            <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5">
+            <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:border-blue-400 transition-colors">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider w-16 shrink-0">Subject</label>
               <input className="flex-1 text-sm text-slate-800 bg-transparent focus:outline-none" placeholder="Enter email subject..." value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} />
             </div>
-            <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5">
+            <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:border-blue-400 transition-colors">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider w-16 shrink-0">Preview</label>
               <input className="flex-1 text-sm text-slate-800 bg-transparent focus:outline-none" placeholder="Short preview shown in inbox..." value={form.preview} onChange={(e) => setForm((f) => ({ ...f, preview: e.target.value }))} />
             </div>
           </div>
 
-          {/* Editor Container - We give this a large height to ensure the Write view is big */}
-          <div className="flex flex-col flex-1 min-h-[500px] border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
-            
+          {/* Editor Container */}
+          <div className="flex flex-col flex-1 min-h-[400px] border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/30 transition-all bg-white mb-2">
             {/* Toolbar */}
-            <div className="flex items-center gap-0.5 px-3 py-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
+            <div className="flex items-center gap-0.5 px-3 py-2 border-b border-slate-100 bg-slate-50/80 shrink-0 flex-wrap">
               <ToolbarBtn title="Bold" onClick={() => wrapSelection("**")}><Bold size={14} /></ToolbarBtn>
               <ToolbarBtn title="Italic" onClick={() => wrapSelection("*")}><Italic size={14} /></ToolbarBtn>
               <ToolbarBtn title="Strikethrough" onClick={() => wrapSelection("~~")}><Strikethrough size={14} /></ToolbarBtn>
@@ -156,7 +160,7 @@ function ComposerModal({ onClose }: { onClose: () => void }) {
             </div>
 
             {/* Editor Input Area */}
-            <div className="flex-1 bg-white overflow-hidden relative">
+            <div className="flex-1 bg-white relative">
               {tab === "write" ? (
                 <textarea
                   ref={textareaRef}
@@ -167,10 +171,7 @@ function ComposerModal({ onClose }: { onClose: () => void }) {
                 />
               ) : (
                 <div
-                  className="w-full h-full p-6 text-sm text-slate-800 overflow-y-auto absolute inset-0 
-                             prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4
-                             prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3
-                             prose-blockquote:border-l-4 prose-blockquote:border-slate-200 prose-blockquote:pl-4 prose-blockquote:italic"
+                  className="w-full h-full p-6 text-sm text-slate-800 overflow-y-auto absolute inset-0 prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4 prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3 prose-blockquote:border-l-4 prose-blockquote:border-slate-200 prose-blockquote:pl-4 prose-blockquote:italic"
                   dangerouslySetInnerHTML={{
                     __html: form.body ? renderMarkdown(form.body) : '<p class="text-slate-300 italic">Preview will appear here...</p>',
                   }}
@@ -191,11 +192,11 @@ function ComposerModal({ onClose }: { onClose: () => void }) {
           <Button variant="ghost" onClick={onClose} className="text-slate-500 font-medium">Cancel</Button>
           <div className="flex gap-2">
             <Button variant="outline" className="text-slate-700 border-slate-200 font-medium">Save as Draft</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-lg shadow-blue-500/20 px-6 font-semibold"><Send size={14} /> Send Campaign</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-6 font-semibold"><Mail size={14} /> Send Campaign</Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

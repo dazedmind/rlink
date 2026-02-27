@@ -74,3 +74,17 @@ export const inquirySource = {
 } as const;
 
 export type InquirySource = (typeof inquirySource)[keyof typeof inquirySource];
+
+
+export type Lead = {
+    id: number;
+    leadId: string;
+    status: LeadStatus;
+    clientName: string;
+    phone: string;
+    email: string;
+    inquiryDate: string;
+    project: string;
+    stage: LeadStage;
+    nextAction: LeadNextAction;
+}

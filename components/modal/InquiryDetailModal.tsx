@@ -8,8 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Calendar, Globe, Mail, Printer } from "lucide-react";
+import { Calendar, Globe, Mail, Phone, Printer, User } from "lucide-react";
 import { InquiryStatus, inquirySource, inquirySubject } from "@/lib/types";
 import { dateFormatter } from "@/app/utils/dateFormatter";
 
@@ -27,7 +26,6 @@ export function InquiryDetailModal({
   onStatusChange,
 }: InquiryDetailModalProps) {
   const [status, setStatus] = useState<InquiryStatus>(inquiry?.status);
-  const [notes, setNotes] = useState<string>(inquiry?.notes);
 
   useEffect(() => {
     if (isOpen && inquiry?.id && inquiry?.status === "unread") {
@@ -37,7 +35,7 @@ export function InquiryDetailModal({
         body: JSON.stringify({ status: "read" }),
       })
         .then(() => {
-          setStatus("Read");
+          setStatus("Read" as any);
           onStatusChange?.(inquiry.id, "read");
         })
         .catch(console.error);
@@ -51,89 +49,87 @@ export function InquiryDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-2/3 overflow-y-auto" showCloseButton={false}>
-        <DialogHeader className="border-b pb-4 flex flex-row justify-between items-center">
-          <div>
-            <DialogTitle className="text-2xl font-bold">
-              {inquirySubject[inquiry.subject as keyof typeof inquirySubject]}
-            </DialogTitle>
-          </div>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-6">
-          {/* Left Column: Info */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs uppercase text-gray-500">
-                    Client Name
-                  </Label>
-                  <p className="font-bold text-lg">
-                    {inquiry.firstName} {inquiry.lastName}
-                  </p>
-                  <p className="text-sm">{inquiry.phone}</p>
-                  <p className="text-sm">{inquiry.email}</p>
-                </div>
-                <div>
-                  <Label className="text-xs uppercase text-gray-500">
-                    Subject
-                  </Label>
-                  <p className="text-md">
-                    {
-                      inquirySubject[
-                        inquiry.subject as keyof typeof inquirySubject
-                      ]
-                    }
-                  </p>
+      <DialogContent
+        className="max-w-3xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-hidden p-0 flex flex-col border-none shadow-2xl"
+        showCloseButton={false}
+      >
+        {/* HEADER SECTION */}
+        <DialogHeader className="px-6 py-5 border-b sticky top-0 bg-white z-10">
+          <div className="flex justify-between items-start w-full">
+            <div className="space-y-1">
+              <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">
+                {inquirySubject[inquiry.subject as keyof typeof inquirySubject]}
+              </DialogTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="bg-slate-100 px-2 py-0.5 rounded font-mono font-bold text-slate-600">
+                  {inquiry.inquiryId}
+                </span>
+                <span>•</span>
+                <div className="flex items-center gap-2">
+                <Calendar size={14} />
+                <span className="text-slate-700 capitalize">
+                   {dateFormatter(inquiry.createdAt)}
+                </span>
+                <span>•</span>
+                <div className="flex items-center gap-2">
+                <Globe size={14} />
+                <span className="text-slate-700 capitalize">
+                   {inquirySource[inquiry.source as keyof typeof inquirySource] || inquiry.source}
+                </span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <div>
-                  <span className="flex text-xs gap-1 text-gray-500">
-                    <Globe className="size-4" />{" "}
-                    <p className="font-medium">
-                      {
-                        inquirySource[
-                          inquiry.source as keyof typeof inquirySource
-                        ]
-                      }
-                    </p>
-                  </span>
-                </div>
-                <div>
-                  <span className="flex text-xs gap-1 text-gray-500">
-                    <Calendar className="size-4" />{" "}
-                    <p className="font-medium">
-                      {dateFormatter(inquiry.createdAt)}
-                    </p>
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs uppercase text-gray-500 mb-1.5">
-                  Message
-                </Label>
-                <p className=" text-base p-2 bg-neutral-50 rounded-md">
-                  {inquiry.message}
-                </p>
               </div>
             </div>
           </div>
+        </DialogHeader>
+
+        {/* SCROLLABLE CONTENT */}
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 px-6 py-2 space-y-6">
+          {/* SENDER INFORMATION CARD */}
+          <div className="rounded-xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full aspect-square bg-primary/10 flex items-center justify-center text-primary">
+                <User size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {inquiry.firstName} {inquiry.lastName}
+                </h3>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                  <a href={`tel:${inquiry.phone}`} className="text-sm text-blue-600 hover:underline flex items-center gap-1.5">
+                    <Phone size={14} /> {inquiry.phone}
+                  </a>
+                  <a href={`mailto:${inquiry.email}`} className="text-sm text-blue-600 hover:underline flex items-center gap-1.5">
+                    <Mail size={14} /> {inquiry.email}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MESSAGE CONTENT */}
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500 font-medium uppercase">Message Content</p>
+            <div className="bg-white border rounded-xl p-4 min-h-[200px] leading-relaxed text-slate-800">
+              {inquiry.message}
+            </div>
+          </div>
+
         </div>
 
-        <DialogFooter className="border-t pt-4 flex flex-row justify-between items-center">
+        {/* FOOTER SECTION */}
+        <DialogFooter className="px-6 py-4 border-t bg-white flex flex-row justify-between items-center">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
-
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="size-4 mr-2" /> Print
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleEmail}>
-            <Mail className="size-4 mr-2" /> Email
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="size-4 mr-2" /> Print
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleEmail}>
+              <Mail className="size-4 mr-2" /> Reply via Email
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,17 +1,21 @@
-import React, { useEffect, useMemo, useState } from "react";
+"use client";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpDown,
   Download,
-  MailIcon,
-  PhoneIcon,
-  Pencil,
   EllipsisVertical,
-  Trash2,
-  Send,
+  ListFilter,
   Mail,
+  MailIcon,
+  Pencil,
+  PhoneIcon,
+  Trash2,
+  X,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import { ReservationStatus, reservationStatus } from "@/lib/types";
 import {
   Table,
@@ -21,7 +25,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
+import { dateFormatter } from "@/app/utils/dateFormatter";
 import { ReservationDetailModal } from "../modal/ReservationDetailModal";
 import ContextMenu from "../layout/ContextMenu";
 import { toast } from "sonner";
@@ -50,6 +67,8 @@ const statusStyles: Record<string, string> = {
   refunded: "bg-purple-100 text-purple-700",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 function ReservationTable({
   table_name,
   recentViewOnly,
@@ -58,12 +77,37 @@ function ReservationTable({
   recentViewOnly: boolean;
 }) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Filter state
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState("newest");
+
+  const activeFilterCount = filterStatus.length;
+
+  const toggleFilter = (
+    value: string,
+    current: string[],
+    setter: (v: string[]) => void,
+  ) => {
+    setter(
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value],
+    );
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilterStatus([]);
+    setSortOption("newest");
+    setCurrentPage(1);
+  };
 
   const handleRowClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
@@ -75,24 +119,19 @@ function ReservationTable({
       const response = await fetch(`/api/reservation/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        throw new Error("Failed to delete reservation");
-      }
+      if (!response.ok) throw new Error("Failed to delete reservation");
       fetchReservations();
       toast.success("Reservation deleted successfully");
     } catch (error) {
       console.error("Error deleting reservation:", error);
+      toast.error("Failed to delete reservation");
     }
   };
 
-  const menuItems = (row: Reservation) => [
+  const actionMenu = (row: Reservation) => [
+    { label: "Send Email", icon: Mail, onClick: () => console.log("Sent!") },
     {
-      label: "Send Email",
-      icon: Mail,
-      onClick: () => console.log("Sent!"),
-    },
-    {
-      label: "Edit",
+      label: "Edit Reservation",
       icon: Pencil,
       onClick: () => handleRowClick(row),
     },
@@ -104,7 +143,6 @@ function ReservationTable({
     },
   ];
 
-  // 1. Define your Column Configuration
   const columns = [
     { label: "ID", key: "id" },
     { label: "Status", key: "status" },
@@ -117,55 +155,209 @@ function ReservationTable({
     { label: "", key: "actions", hideOnRecent: true },
   ];
 
-  // 2. Filter columns based on the prop
-  const visibleColumns = useMemo(() => {
-    return recentViewOnly
-      ? columns.filter((col) => !col.hideOnRecent)
-      : columns;
-  }, [recentViewOnly]);
+  const visibleColumns = useMemo(
+    () =>
+      recentViewOnly ? columns.filter((col) => !col.hideOnRecent) : columns,
+    [recentViewOnly],
+  );
 
-  const fetchReservations = async () => {
+  const buildUrl = useCallback(
+    (page: number, limit = ITEMS_PER_PAGE) => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        sort: sortOption,
+      });
+      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+      return `/api/reservation?${params}`;
+    },
+    [filterStatus, sortOption],
+  );
+
+  const fetchReservations = useCallback(async () => {
     try {
-      const response = await fetch("/api/reservation");
-      const { data } = await response.json();
-      setReservations(data);
+      const limit = recentViewOnly ? 3 : ITEMS_PER_PAGE;
+      const response = await fetch(buildUrl(currentPage, limit));
+      const { data, total: responseTotal } = await response.json();
+      setReservations(data ?? []);
+      setTotal(responseTotal ?? 0);
     } catch (error) {
       console.error("Error fetching reservation:", error);
       setReservations([]);
+      setTotal(0);
     }
-  };
+  }, [buildUrl, currentPage, recentViewOnly]);
 
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [fetchReservations]);
 
-  // Pagination Logic
-  const totalPages = Math.ceil(reservations.length / itemsPerPage);
-  const paginatedReservations = recentViewOnly
-    ? reservations.slice(0, 3)
-    : reservations.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage,
+  const totalPages = recentViewOnly
+    ? 1
+    : Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await fetch(buildUrl(1, 10000));
+      const { data } = await response.json();
+      const rows: Reservation[] = data ?? [];
+
+      const headers = [
+        "Reservation ID",
+        "Status",
+        "First Name",
+        "Last Name",
+        "Email",
+        "Phone",
+        "Project",
+        "Block",
+        "Lot",
+        "Date Reserved",
+      ];
+      const csvRows = rows.map((r) => [
+        r.reservationId,
+        reservationStatus[r.status as keyof typeof reservationStatus] ||
+          r.status,
+        r.firstName,
+        r.lastName,
+        r.email,
+        r.phone,
+        r.projectName,
+        r.block,
+        r.lot,
+        dateFormatter(r.createdAt),
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) =>
+          row
+            .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+            .join(","),
+        ),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `Reservations_Export_${new Date().toISOString().split("T")[0]}.csv`,
       );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(`Exported ${rows.length} reservations`);
+    } catch {
+      toast.error("Failed to export CSV");
+    }
+  };
 
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="p-4 border-b bg-white flex justify-between items-center ">
+      <div className="p-4 border-b bg-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">{table_name}</h3>
-        <span>
+
+        <span className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="relative">
+                <ListFilter className="size-4 mr-2" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48">
+              {/* Sort */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  <ArrowUpDown className="size-3.5" /> Sort
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={sortOption}
+                    onValueChange={(v) => {
+                      setSortOption(v);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="newest">
+                      Date: Newest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">
+                      Date: Oldest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_az">
+                      Name: A → Z
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_za">
+                      Name: Z → A
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+
+              {/* Status */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  Status
+                  {filterStatus.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStatus.length}
+                    </Badge>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.entries(reservationStatus).map(([key, label]) => (
+                    <DropdownMenuCheckboxItem
+                      key={key}
+                      checked={filterStatus.includes(key)}
+                      onCheckedChange={() =>
+                        toggleFilter(key, filterStatus, setFilterStatus)
+                      }
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {activeFilterCount > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <button
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                    onClick={clearFilters}
+                  >
+                    <X className="size-3" /> Clear all filters
+                  </button>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
             variant="default"
             size="sm"
             className="bg-blue-600 text-primary-foreground hover:brightness-110"
+            onClick={handleExportCSV}
           >
-            <Download className="size-4" />
+            <Download className="size-4 mr-2" />
             Export to CSV
           </Button>
         </span>
       </div>
 
-      {/* shadcn/ui Table */}
+      {/* Table */}
       <Table className="rounded-xl overflow-x-auto scrollbar-hide scroll-smooth">
         <TableHeader className="bg-gray-50">
           <TableRow>
@@ -181,10 +373,10 @@ function ReservationTable({
         </TableHeader>
 
         <TableBody>
-          {paginatedReservations.map((row) => (
+          {reservations.map((row) => (
             <TableRow
               key={row.id}
-              className="hover:bg-gray-50/50 cursor-pointer"
+              className="hover:bg-blue-600/10 cursor-pointer"
               onClick={() => handleRowClick(row)}
             >
               <TableCell className="px-6 py-4 font-medium text-neutral-500">
@@ -220,7 +412,6 @@ function ReservationTable({
 
               <TableCell className="px-6 py-4">{row.projectName}</TableCell>
 
-              {/* Conditional Data Cells */}
               {!recentViewOnly && (
                 <>
                   <TableCell className="px-6 py-4">{row.block}</TableCell>
@@ -230,7 +421,7 @@ function ReservationTable({
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <ContextMenu
-                      menu={menuItems(row)}
+                      menu={actionMenu(row)}
                       triggerIcon={EllipsisVertical}
                     />
                   </TableCell>
@@ -245,25 +436,26 @@ function ReservationTable({
       {!recentViewOnly && (
         <div className="flex justify-between items-center bg-white px-6 py-4 border-t">
           <p className="text-sm text-gray-600">
-            Total {reservations.length} reservations found
+            {activeFilterCount > 0
+              ? `${total} matching reservations`
+              : `${total} reservations total`}
           </p>
 
           <div className="flex items-center gap-2">
-            {currentPage > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ArrowLeft size={16} />
-              </Button>
-            )}
-
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">
                 Showing {currentPage} of {totalPages} pages
               </span>
+              {currentPage > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ArrowLeft size={16} />
+                </Button>
+              )}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (pageNum) => (
                   <Button
@@ -277,16 +469,17 @@ function ReservationTable({
                   </Button>
                 ),
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ArrowRight size={16} />
+              </Button>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              <ArrowRight size={16} />
-            </Button>
           </div>
         </div>
       )}

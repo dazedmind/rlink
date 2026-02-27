@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import InquiryTable from "@/components/tables/InquiryTable";
 
@@ -12,7 +11,7 @@ function Inquiries() {
           description="Manage your inquiries and responses."
         />
 
-        <div className="flex flex-col gap-8 mt-8">
+        <div className="flex flex-col gap-8 mt-8 animate-fade-in-up">
           <InquiryTable table_name="Inquiries" recentViewOnly={false} />
         </div>
       </div>

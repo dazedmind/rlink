@@ -107,12 +107,8 @@ function LeadGeneration() {
       toast.error("First name and last name are required.");
       return;
     }
-    if (!formData.email) {
-      toast.error("Email is required.");
-      return;
-    }
-    if (!formData.phone) {
-      toast.error("Phone number is required.");
+    if (!formData.email && !formData.phone) {
+      toast.error("Email or phone number is required.");
       return;
     }
     if (!formData.source) {
@@ -137,6 +133,7 @@ function LeadGeneration() {
 
       toast.success("Lead submitted successfully!");
       setFormData(EMPTY_FORM);
+      setView("table");
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
@@ -174,7 +171,7 @@ function LeadGeneration() {
 
         {/* Form */}
         {view === "form" && (
-          <div className="flex flex-col gap-8 rounded-xl p-6 bg-white border-border border">
+          <div className="flex flex-col gap-8 rounded-xl p-6 bg-white border-border border animate-fade-in-up">
             {/* Customer Profile */}
             <div>
               <h2 className="text-xl font-bold text-neutral-800 mb-4">
@@ -212,6 +209,16 @@ function LeadGeneration() {
               /> */}
 
                 <TextInput
+                  label="Profile Link"
+                  name="profileLink"
+                  type="text"
+                  placeholder="https://..."
+                  className="col-span-2 md:col-span-1"
+                  onChange={handleInputChange}
+                  value={formData.profileLink}
+                />
+
+                <TextInput
                   label="Email"
                   name="email"
                   type="email"
@@ -229,16 +236,6 @@ function LeadGeneration() {
                   className="col-span-2 md:col-span-1"
                   onChange={handleInputChange}
                   value={formData.phone}
-                />
-
-                <TextInput
-                  label="Profile Link"
-                  name="profileLink"
-                  type="text"
-                  placeholder="https://..."
-                  className="col-span-2 md:col-span-1"
-                  onChange={handleInputChange}
-                  value={formData.profileLink}
                 />
 
                 <DropSelect

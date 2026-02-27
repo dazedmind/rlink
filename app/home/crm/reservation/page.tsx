@@ -109,7 +109,7 @@ function Reservation() {
         </div>
 
         {view === "form" ? (
-          <div className="mx-auto space-y-8">
+          <div className="mx-auto space-y-8 animate-fade-in-up">
             <nav className="flex items-center mt-8 px-2">
               {steps.map((s, i) => (
                 <React.Fragment key={s.id}>
@@ -164,10 +164,10 @@ function Reservation() {
             </div>
           </div>
         ) : (
-          <ReservationTable
-            table_name="Reservation Table"
-            recentViewOnly={false}
-          />
+            <ReservationTable
+              table_name="Reservations Table"
+              recentViewOnly={false}
+            />
         )}
       </div>
     </main>

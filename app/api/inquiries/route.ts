@@ -1,28 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { inquiry } from "@/db/schema";
-import { eq, ilike, desc, max } from "drizzle-orm";
+import { and, asc, count, desc, ilike, inArray, max, or } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
-    const search = searchParams.get("search");
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(
-      100,
-      Math.max(1, Number(searchParams.get("limit") ?? 20)),
-    );
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 10)));
     const offset = (page - 1) * limit;
 
-    let query = db.select().from(inquiry).$dynamic();
+    const statusParam = searchParams.get("status");
+    const statusValues = statusParam ? statusParam.split(",").filter(Boolean) : [];
+    const subjectParam = searchParams.get("subject");
+    const subjectValues = subjectParam ? subjectParam.split(",").filter(Boolean) : [];
+    const sourceParam = searchParams.get("source");
+    const sourceValues = sourceParam ? sourceParam.split(",").filter(Boolean) : [];
+    const search = searchParams.get("search");
+    const sort = searchParams.get("sort") ?? "newest";
 
-    const results = await query
-      .orderBy(desc(inquiry.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const conditions: Parameters<typeof and>[0][] = [];
+    if (statusValues.length > 0) conditions.push(inArray(inquiry.status, statusValues as any));
+    if (subjectValues.length > 0) conditions.push(inArray(inquiry.subject, subjectValues as any));
+    if (sourceValues.length > 0) conditions.push(inArray(inquiry.source, sourceValues as any));
+    if (search) conditions.push(or(ilike(inquiry.firstName, `%${search}%`), ilike(inquiry.lastName, `%${search}%`), ilike(inquiry.email, `%${search}%`), ilike(inquiry.message, `%${search}%`))!);
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    return NextResponse.json({ data: results, page, limit });
+    const orderBy = (() => {
+      switch (sort) {
+        case "oldest": return asc(inquiry.createdAt);
+        case "name_az": return asc(inquiry.firstName);
+        case "name_za": return desc(inquiry.firstName);
+        default: return desc(inquiry.createdAt);
+      }
+    })();
+
+    const [{ total }, data] = await Promise.all([
+      db.select({ total: count() }).from(inquiry).where(whereClause).then((r) => r[0]),
+      db.select().from(inquiry).where(whereClause).orderBy(orderBy).limit(limit).offset(offset),
+    ]);
+
+    return NextResponse.json({ data, page, limit, total: total ?? 0 });
   } catch (error) {
     console.error("[GET /api/inquiries]", error);
     return NextResponse.json(

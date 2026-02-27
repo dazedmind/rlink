@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+"use client";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { Eye } from "lucide-react";
+import { Badge } from "../ui/badge";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpDown,
+  Download,
+  Eye,
+  ListFilter,
+  X,
+} from "lucide-react";
 import { dateFormatter } from "@/app/utils/dateFormatter";
-import DropSelect from "../ui/DropSelect";
-import TextInput from "../ui/TextInput";
 import {
   Table,
   TableBody,
@@ -12,132 +20,335 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
-// --- Types ---
 type Subscriber = {
   id: number;
-  name: string;
   email: string;
   status: "subscribed" | "unsubscribed";
-  joinedAt: string;
+  createdAt: string;
 };
 
-// --- Mock Data ---
-const MOCK_SUBSCRIBERS: Subscriber[] = [
-  { id: 1, name: "Alice Nguyen",  email: "alice@example.com",  status: "subscribed",   joinedAt: "2025-01-10" },
-  { id: 2, name: "Marcus Bell",   email: "marcus@example.com", status: "subscribed",   joinedAt: "2025-02-03" },
-  { id: 3, name: "Sofia Reyes",   email: "sofia@example.com",  status: "unsubscribed", joinedAt: "2024-11-22" },
-  { id: 4, name: "James Okafor",  email: "james@example.com",  status: "subscribed",   joinedAt: "2025-01-28" },
-  { id: 5, name: "Priya Shah",    email: "priya@example.com",  status: "unsubscribed", joinedAt: "2024-12-15" },
-  { id: 6, name: "Lena Müller",   email: "lena@example.com",   status: "subscribed",   joinedAt: "2025-02-14" },
-  { id: 7, name: "David Kim",     email: "david@example.com",  status: "subscribed",   joinedAt: "2025-03-01" },
-];
+const ITEMS_PER_PAGE = 10;
 
-// --- Status Badge ---
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, string> = {
-    subscribed:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    unsubscribed: "bg-slate-100 text-slate-500 border border-slate-200",
-    sent:         "bg-blue-50 text-blue-700 border border-blue-200",
-    scheduled:    "bg-amber-50 text-amber-700 border border-amber-200",
-    draft:        "bg-slate-100 text-slate-600 border border-slate-200",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${styles[status] ?? ""}`}
-    >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
+const statusMeta: Record<string, { label: string; className: string }> = {
+  subscribed:   { label: "Subscribed",   className: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  unsubscribed: { label: "Unsubscribed", className: "bg-slate-100 text-slate-500 border border-slate-200" },
 };
 
 function NewsletterTable() {
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredSubscribers = MOCK_SUBSCRIBERS.filter(
-    (subscriber) => statusFilter === "all" || subscriber.status === statusFilter
+  // Filter state
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState("newest");
+
+  const activeFilterCount = filterStatus.length;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+
+  // Build API URL from current state
+  const buildUrl = useCallback(
+    (page: number, limit = ITEMS_PER_PAGE) => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        sort: sortOption,
+      });
+      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+      return `/api/newsletter/subscriptions?${params}`;
+    },
+    [filterStatus, sortOption],
   );
+
+  const fetchSubscribers = useCallback(async (page: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(buildUrl(page));
+      const { data, total: responseTotal } = await response.json();
+      setSubscribers(data ?? []);
+      setTotal(responseTotal ?? 0);
+    } catch (error) {
+      console.error("Error fetching subscribers:", error);
+      setSubscribers([]);
+      setTotal(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [buildUrl]);
+
+  // Re-fetch whenever page, filters, or sort changes
+  useEffect(() => {
+    fetchSubscribers(currentPage);
+  }, [currentPage, fetchSubscribers]);
+
+  const toggleFilter = (
+    value: string,
+    current: string[],
+    setter: (v: string[]) => void,
+  ) => {
+    setter(
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value],
+    );
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOption(value);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilterStatus([]);
+    setSortOption("newest");
+    setCurrentPage(1);
+  };
+
+  // CSV exports ALL filtered records (separate unbounded fetch)
+  const handleExportCSV = async () => {
+    try {
+      const response = await fetch(buildUrl(1, 10000));
+      const { data } = await response.json();
+      const rows: Subscriber[] = data ?? [];
+
+      const headers = ["Email", "Status", "Joined At"];
+      const csvRows = rows.map((s) => [
+        s.email,
+        statusMeta[s.status]?.label ?? s.status,
+        dateFormatter(s.createdAt),
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) =>
+          row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","),
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Subscribers_Export_${new Date().toISOString().split("T")[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Exported ${rows.length} subscribers`);
+    } catch {
+      toast.error("Failed to export CSV");
+    }
+  };
 
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="p-4 border-b bg-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">Subscribers List</h3>
-        <span className="flex items-center gap-2 w-1/3">
-          <TextInput
-            label=""
-            name="search"
-            type="text"
-            placeholder="Search"
-            onChange={() => {""}}
-            value={""}
-            className="w-full"
-          />
-          <DropSelect
-            label=""
-            selectName="filter"
-            selectId="filter-status"
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setStatusFilter(e.target.value)
-            }
+
+        <span className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="relative">
+                <ListFilter className="size-4 mr-2" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48">
+              {/* Sort */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  <ArrowUpDown className="size-3.5" /> Sort
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup value={sortOption} onValueChange={handleSortChange}>
+                    <DropdownMenuRadioItem value="newest">Joined: Newest first</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">Joined: Oldest first</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="email_az">Email: A → Z</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="email_za">Email: Z → A</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+
+              {/* Status */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  Status
+                  {filterStatus.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStatus.length}
+                    </Badge>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.entries(statusMeta).map(([key, { label }]) => (
+                    <DropdownMenuCheckboxItem
+                      key={key}
+                      checked={filterStatus.includes(key)}
+                      onCheckedChange={() => toggleFilter(key, filterStatus, setFilterStatus)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {activeFilterCount > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <button
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                    onClick={clearFilters}
+                  >
+                    <X className="size-3" /> Clear all filters
+                  </button>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-blue-600 text-primary-foreground hover:brightness-110"
+            onClick={handleExportCSV}
           >
-            <option value="all">All</option>
-            <option value="subscribed">Subscribed</option>
-            <option value="unsubscribed">Unsubscribed</option>
-          </DropSelect>
+            <Download className="size-4 mr-2" />
+            Export to CSV
+          </Button>
         </span>
       </div>
 
-      {/* shadcn/ui Table */}
+      {/* Table */}
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            {["", "Client Name", "Email", "Status", "Joined", ""].map(
-              (label, i) => (
-                <TableHead
-                  key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
-                >
-                  {label}
-                </TableHead>
-              )
-            )}
+            {["", "Email", "Status", "Joined", ""].map((label, i) => (
+              <TableHead
+                key={i}
+                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+              >
+                {label}
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {filteredSubscribers.map((row) => (
-            <TableRow key={row.id} className="hover:bg-gray-50/50">
-              <TableCell className="px-6 py-4 w-10">
-                <input type="checkbox" className="rounded border-slate-300" />
-              </TableCell>
-
-              <TableCell className="px-6 py-4">{row.name}</TableCell>
-
-              <TableCell className="px-6 py-4">{row.email}</TableCell>
-
-              <TableCell className="px-6 py-4">
-                <StatusBadge status={row.status} />
-              </TableCell>
-
-              <TableCell className="px-6 py-4">
-                {dateFormatter(row.joinedAt)}
-              </TableCell>
-
-              <TableCell className="px-6 py-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 w-full px-2"
-                >
-                  <Eye size={18} />
-                  View
-                </Button>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+                Loading…
               </TableCell>
             </TableRow>
-          ))}
+          ) : subscribers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+                No subscribers found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            subscribers.map((row) => (
+              <TableRow key={row.id} className="hover:bg-gray-50/50">
+                <TableCell className="px-6 py-4 w-10">
+                  <input type="checkbox" className="rounded border-slate-300" />
+                </TableCell>
+
+                <TableCell className="px-6 py-4">{row.email}</TableCell>
+
+                <TableCell className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusMeta[row.status]?.className ?? ""}`}
+                  >
+                    {statusMeta[row.status]?.label}
+                  </span>
+                </TableCell>
+
+                <TableCell className="px-6 py-4">
+                  {dateFormatter(row.createdAt)}
+                </TableCell>
+
+                <TableCell className="px-6 py-4">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full px-2">
+                    <Eye size={18} />
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
+
+      {/* Footer — count + pagination */}
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
+        <p className="text-sm text-gray-600">
+          {activeFilterCount > 0
+            ? `${total} matching subscribers`
+            : `${total} subscribers total`}
+        </p>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ArrowLeft size={16} />
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "ghost"}
+                  size="sm"
+                  className={currentPage === pageNum ? "bg-blue-600 min-w-8" : "min-w-8"}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ArrowRight size={16} />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

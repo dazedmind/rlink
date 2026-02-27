@@ -43,3 +43,28 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update inquiry" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const numericId = Number(id);
+
+    if (isNaN(numericId)) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
+    const [deleted] = await db
+      .delete(inquiry)
+      .where(eq(inquiry.id, numericId))
+      .returning();
+
+    if (!deleted) {
+      return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
+    }
+
+  return NextResponse.json({ message: "Inquiry deleted successfully" });
+  } catch (error) {
+    console.error("[DELETE /api/inquiries/:id]", error);
+    return NextResponse.json({ error: "Failed to delete inquiry" }, { status: 500 });
+  }
+}

@@ -121,7 +121,7 @@ function DashboardHeader({
                     key={n.id}
                     className="flex items-start gap-4 p-4 cursor-pointer focus:bg-zinc-50"
                   >
-                    <div className="mt-1 flex-shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <div className="mt-1 shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
                       {n.icon}
                     </div>
                     <div className="flex flex-col gap-1">

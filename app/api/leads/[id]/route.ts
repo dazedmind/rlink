@@ -45,8 +45,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
-    body.updatedAt = new Date().toISOString().split('T')[0];
-
     const [updated] = await db
       .update(leads)
       .set(body)
