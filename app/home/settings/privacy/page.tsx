@@ -87,7 +87,7 @@ function PrivacyTabContent() {
   return (
     <Tabs defaultValue="privacy">
       <TabsContent value="privacy" className="mt-0 focus-visible:outline-none">
-        <Card className="border-none shadow-sm">
+        <Card className="border-border border">
           <CardHeader className="flex flex-col gap-1">
             <CardTitle className="text-xl font-bold">
               Privacy & Security

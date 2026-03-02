@@ -1,22 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { authClient, useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import ProtectedRoute from "@/components/utils/ProtectedRoute";
-import Footer from "@/components/layout/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import {
   User,
   Shield,
@@ -26,7 +14,6 @@ import {
   Menu,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -65,29 +52,6 @@ function Settings() {
   useEffect(() => {
     console.log(formData);
   }, [formData]);
-
-  const handleSaveProfile = async () => {
-    const { error } = await authClient.updateUser({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      middleName: formData.middleName,
-      phone: formData.phone,
-      position: formData.position,
-      department: formData.department,
-      employeeId: formData.employeeId,
-      birthdate: formData.birthdate,
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Profile updated successfully');
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
 
   return (
     <ProtectedRoute>
@@ -149,16 +113,16 @@ function Settings() {
               </span>
               <Tabs
                 defaultValue="personal"
-                orientation={window.innerWidth >= 1280 ? "vertical" : "horizontal" as "horizontal" | "vertical"}
-                className="flex flex-row md:flex-col xl:flex-row gap-4 w-full h-full"
+                orientation="horizontal"
+                className="flex flex-row md:flex-col xl:flex-row gap-0  w-full h-full"
               >
                 {/* LEFT SIDEBAR SELECTOR - hidden on mobile */}
-                <TabsList className="hidden md:flex h-auto bg-transparent gap-1 items-start border-none p-0">
+                <TabsList className="hidden md:flex h-auto bg-transparent items-start border-none p-0">
                   {navigation.map((item) => (
                     <TabsTrigger
                       key={item.value}
                       value={item.value}
-                      className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 rounded-lg transition-all"
+                      className="w-full text-sm justify-start gap-3 px-4 py-3 data-[state=active]:bg-neutral-50 data-[state=active]:text-neutral-950 data-[state=active]:font-bold data-[state=active]:border-neutral-200 rounded-b-none transition-all cursor-pointer"
                       onClick={() => setTab(item.value)}
                     >
                       <item.icon className="size-4" />
