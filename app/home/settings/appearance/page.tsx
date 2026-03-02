@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
+import Footer from "@/components/layout/Footer";
 
 function AppearanceTabContent() {  
   return (
@@ -45,6 +45,9 @@ function AppearanceTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
+      <footer>
+        <Footer />
+      </footer>
     </Tabs>
   );
 }

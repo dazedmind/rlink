@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,48 +17,26 @@ import {
   Quote,
   Code,
   Heading2,
-  X,
-  Send,
   FileText,
   Eye,
   Edit3,
   Mail,
+  Clock,
+  Check,
+  Send,
+  CircleDashed,
 } from "lucide-react";
-
-// --- Markdown Renderer ---
-function renderMarkdown(md: string): string {
-  if (!md) return "";
-  let html = md
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  html = html.replace(/^### (.*$)/gm, "<h3 style='font-size: 18px; font-weight: 600;'>$1</h3>");
-  html = html.replace(/^## (.*$)/gm, "<h2 style='font-size: 20px; font-weight: 600;'>$1</h2>");
-  html = html.replace(/^# (.*$)/gm, "<h1 style='font-size: 24px; font-weight: 600;'>$1</h1>");
-  html = html.replace(/^---$/gm, "<hr />");
-  html = html.replace(/^&gt;[ ]?(.*$)/gm, "<blockquote>$1</blockquote>");
-  html = html.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
-  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
-  html = html.replace(/~~(.*?)~~/g, "<s>$1</s>");
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1 rounded text-pink-600 font-mono text-xs">$1</code>');
-  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 underline">$1</a>');
-  html = html.replace(/^\-[ ]?(.*$)/gm, "<li>$1</li>");
-  html = html.replace(/^\d+\.[ ]?(.*$)/gm, "<li>$1</li>");
-  html = html.replace(/(<li>(?:.|\n)*?<\/li>)/g, '<ul class="list-disc pl-5 my-2">$1</ul>');
-  html = html.replace(/<\/ul>\s*<ul class="list-disc pl-5 my-2">/g, "");
-
-  return html
-    .split(/\n\n+/)
-    .map((para) => {
-      const trimmed = para.trim();
-      if (!trimmed) return "";
-      if (/^<(h1|h2|h3|ul|li|blockquote|hr)/i.test(trimmed)) return trimmed;
-      return `<p class="mb-3">${trimmed.replace(/\n/g, "<br />")}</p>`;
-    })
-    .join("");
-}
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { renderMarkdown } from "@/app/utils/markdown";
 
 const ToolbarBtn = ({ onClick, title, children }: { onClick: () => void; title: string; children: React.ReactNode }) => (
   <button
@@ -73,10 +51,61 @@ const ToolbarBtn = ({ onClick, title, children }: { onClick: () => void; title: 
 
 const Divider = () => <span className="w-px h-5 bg-slate-200 mx-0.5" />;
 
-function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ subject: "", preview: "", body: "" });
-  const [tab, setTab] = useState<"write" | "preview">("write");
+export type ComposerCampaign = {
+  id: number;
+  name: string;
+  subject: string;
+  previewLine?: string;
+  body?: string;
+  status?: string;
+};
+
+type ComposerModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  /** "create" = new campaign, "view" = same as edit but opens on Preview tab, "edit" = opens on Write tab */
+  mode?: "create" | "view" | "edit";
+  /** Campaign data for view/edit mode */
+  campaign?: ComposerCampaign | null;
+};
+
+function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }: ComposerModalProps) {
+  const defaultTab = mode === "view" ? "preview" : "write";
+  const isEdit = mode === "edit" || mode === "view";
+  const isCreate = mode === "create";
+
+  const [form, setForm] = useState({ name: "", subject: "", preview: "", body: "", status: "" });
+  const [tab, setTab] = useState<"write" | "preview">(defaultTab);
+  const [schedulePopoverOpen, setSchedulePopoverOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState<Date | undefined>();
+  const [scheduleTime, setScheduleTime] = useState("10:00");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (campaign) {
+      setForm({
+        name: campaign.name ?? "",
+        subject: campaign.subject ?? "",
+        preview: campaign.previewLine ?? "",
+        body: campaign.body ?? "",
+        status: campaign.status ?? "",
+      });
+      setTab(defaultTab);
+    } else if (isCreate) {
+      setForm({ name: "", subject: "", preview: "", body: "", status: "" });
+      setTab("write");
+    }
+  }, [campaign, defaultTab, isCreate]);
+
+  const buildScheduledAt = useCallback(() => {
+    if (!scheduleDate) return undefined;
+    const [h, m] = scheduleTime.split(":").map(Number);
+    const d = new Date(scheduleDate);
+    d.setHours(h ?? 10, m ?? 0, 0, 0);
+    return d.toISOString();
+  }, [scheduleDate, scheduleTime]);
 
   const wrapSelection = useCallback((before: string, after: string = before) => {
     const el = textareaRef.current;
@@ -107,6 +136,118 @@ function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
   const wordCount = form.body.trim() ? form.body.trim().split(/\s+/).length : 0;
 
+  const submitCampaign = useCallback(
+    async (status: "draft" | "scheduled" | "sent", scheduledAt?: string) => {
+      if (!form.name.trim()) {
+        toast.error("Campaign name is required");
+        return;
+      }
+      if (!form.subject.trim()) {
+        toast.error("Subject is required");
+        return;
+      }
+      if (!form.body.trim()) {
+        toast.error("Body is required");
+        return;
+      }
+      if (status === "scheduled" && !scheduledAt) {
+        toast.error("Please select a date and time");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        if (status === "sent" && isEdit && campaign) {
+          const patchRes = await fetch(`/api/newsletter/campaigns/${campaign.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              name: form.name.trim(),
+              subject: form.subject.trim(),
+              previewLine: form.preview.trim(),
+              body: form.body.trim(),
+            }),
+          });
+          if (!patchRes.ok) {
+            const d = await patchRes.json();
+            throw new Error(d.error ?? "Failed to save changes");
+          }
+          const sendRes = await fetch(`/api/newsletter/campaigns/${campaign.id}/send`, {
+            method: "POST",
+            credentials: "include",
+          });
+          const data = await sendRes.json();
+          if (!sendRes.ok) throw new Error(data.error ?? "Failed to send campaign");
+          toast.success("Campaign sent successfully");
+        } else {
+          const payload = {
+            name: form.name.trim(),
+            subject: form.subject.trim(),
+            previewLine: form.preview.trim(),
+            body: form.body.trim(),
+            status,
+            ...(status === "scheduled" && scheduledAt && { scheduledAt: new Date(scheduledAt).toISOString() }),
+          };
+
+          const url = isEdit && campaign ? `/api/newsletter/campaigns/${campaign.id}` : "/api/newsletter/campaigns";
+          const method = isEdit ? "PATCH" : "POST";
+
+          const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error ?? "Failed to save campaign");
+          }
+
+          const action =
+            status === "draft" ? "saved as draft" : status === "scheduled" ? "scheduled" : "sent";
+          toast.success(`Campaign ${action} successfully`);
+        }
+
+        setSchedulePopoverOpen(false);
+        setScheduleDate(undefined);
+        setScheduleTime("10:00");
+        setForm({ name: "", subject: "", preview: "", body: "", status: "" });
+        onClose();
+        onSuccess?.();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to save campaign");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [form, onClose, onSuccess, isEdit, campaign]
+  );
+
+  const handleSaveDraft = () => submitCampaign("draft");
+
+  const handleConfirmSchedule = () => {
+    const scheduledAt = buildScheduledAt();
+    if (!scheduledAt) {
+      toast.error("Please select a date");
+      return;
+    }
+    if (new Date(scheduledAt).getTime() <= Date.now()) {
+      toast.error("Scheduled time must be in the future");
+      return;
+    }
+    submitCampaign("scheduled", scheduledAt);
+  };
+  const handleSendNow = () => submitCampaign("sent");
+
+  const statusBadge = {
+    draft: "bg-slate-100 border-slate-200 border text-slate-700 p-1 px-3 rounded-full w-fit",
+    scheduled: "bg-yellow-50 border-yellow-200 border text-yellow-700 p-1 px-3 rounded-full w-fit",
+    sent: "bg-blue-50 border-blue-200 border text-blue-700 p-1 px-3 rounded-full w-fit",
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
@@ -114,18 +255,33 @@ function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
         showCloseButton={false}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-slate-50">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 leading-none">
-              New Campaign
+              {isEdit ? "Edit Campaign" : "New Campaign"}
             </DialogTitle>
           </DialogHeader>
+          
+          <span>
+              {form.status && 
+              <span className={`flex items-center gap-1 text-xs ${statusBadge[form.status as keyof typeof statusBadge]}`}>
+                  {form.status === "draft" && <CircleDashed size={12} className="text-slate-700" />}
+                  {form.status === "scheduled" && <Clock size={12} className="text-yellow-700" />}
+                  {form.status === "sent" && <Check size={12} className="text-blue-700" />}
+                  {form.status.toUpperCase()}
+                </span>
+              }
+          </span>
         </div>
 
         {/* Scrollable Form Body */}
         <div className="flex flex-col flex-1 overflow-y-auto px-6 py-4 gap-4 bg-white scrollbar-hide">
           {/* Static Fields */}
           <div className="flex flex-col gap-3 shrink-0">
+            <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:border-blue-400 transition-colors">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider w-16 shrink-0">Name</label>
+              <input className="flex-1 text-sm text-slate-800 bg-transparent focus:outline-none" placeholder="Campaign name (e.g. March Newsletter)" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            </div>
             <div className="flex items-center gap-3 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:border-blue-400 transition-colors">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider w-16 shrink-0">Subject</label>
               <input className="flex-1 text-sm text-slate-800 bg-transparent focus:outline-none" placeholder="Enter email subject..." value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} />
@@ -160,7 +316,7 @@ function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             </div>
 
             {/* Editor Input Area */}
-            <div className="flex-1 bg-white relative">
+            <div className="flex-1 min-h-[200px] bg-white relative">
               {tab === "write" ? (
                 <textarea
                   ref={textareaRef}
@@ -171,9 +327,11 @@ function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
                 />
               ) : (
                 <div
-                  className="w-full h-full p-6 text-sm text-slate-800 overflow-y-auto absolute inset-0 prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4 prose-h2:text-xl prose-h2:font-bold prose-h2:mb-3 prose-blockquote:border-l-4 prose-blockquote:border-slate-200 prose-blockquote:pl-4 prose-blockquote:italic"
+                  className="w-full h-full p-6 text-sm text-slate-800 overflow-y-auto absolute inset-0 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_blockquote]:border-l-4 [&_blockquote]:border-slate-200 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:rounded [&_code]:text-pink-600 [&_code]:font-mono [&_code]:text-xs [&_a]:text-blue-600 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_p]:mb-3"
                   dangerouslySetInnerHTML={{
-                    __html: form.body ? renderMarkdown(form.body) : '<p class="text-slate-300 italic">Preview will appear here...</p>',
+                    __html: form.body.trim()
+                      ? renderMarkdown(form.body)
+                      : '<p class="text-slate-300 italic">Preview will appear here...</p>',
                   }}
                 />
               )}
@@ -189,10 +347,59 @@ function ComposerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
-          <Button variant="ghost" onClick={onClose} className="text-slate-500 font-medium">Cancel</Button>
+          <Button variant="ghost" onClick={onClose} className="text-slate-500 font-medium" disabled={isSubmitting}>Cancel</Button>
+          
           <div className="flex gap-2">
-            <Button variant="outline" className="text-slate-700 border-slate-200 font-medium">Save as Draft</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-6 font-semibold"><Mail size={14} /> Send Campaign</Button>
+            <Button variant="outline" className="text-slate-700 border-slate-200 font-medium" onClick={handleSaveDraft} disabled={isSubmitting}>
+              Save as Draft
+            </Button>
+
+            <Popover open={schedulePopoverOpen} onOpenChange={setSchedulePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="text-slate-700 border-slate-200 font-medium gap-2" disabled={isSubmitting}>
+                  <Clock size={14} /> Schedule Send
+                  {scheduleDate && (
+                    <span className="text-xs text-slate-500">
+                      {format(scheduleDate, "MMM d")} {scheduleTime}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end" side="top" sideOffset={8}>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Date</Label>
+                    <Calendar
+                      mode="single"
+                      selected={scheduleDate}
+                      onSelect={setScheduleDate}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Time</Label>
+                    <Input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => setSchedulePopoverOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={handleConfirmSchedule}>
+                      Schedule
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-6 font-semibold" onClick={handleSendNow} disabled={isSubmitting}>
+              <Mail size={14} /> {isSubmitting ? "Sending…" : "Send Campaign"}
+            </Button>
           </div>
         </div>
       </DialogContent>

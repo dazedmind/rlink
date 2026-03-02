@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { newsletter } from "@/db/schema";
-import { asc, count, desc, inArray } from "drizzle-orm";
+import { asc, count, desc, eq, inArray } from "drizzle-orm";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const { searchParams } = request.nextUrl;
+    
     const page  = Math.max(1, Number(searchParams.get("page")  ?? 1));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 10)));
     const offset = (page - 1) * limit;
@@ -29,12 +34,21 @@ export async function GET(request: NextRequest) {
       }
     })();
 
-    const [{ total }, subscribers] = await Promise.all([
+    const [{ total }, { totalSubscribed }, { totalUnsubscribed }, subscribers] = await Promise.all([
       db.select({ total: count() }).from(newsletter).where(whereClause).then((r) => r[0]),
+      db.select({ totalSubscribed: count() }).from(newsletter).where(eq(newsletter.status, "subscribed")).then((r) => r[0]),
+      db.select({ totalUnsubscribed: count() }).from(newsletter).where(eq(newsletter.status, "unsubscribed")).then((r) => r[0]),
       db.select().from(newsletter).where(whereClause).orderBy(orderBy).limit(limit).offset(offset),
     ]);
 
-    return NextResponse.json({ data: subscribers, page, limit, total });
+    return NextResponse.json({
+      data: subscribers,
+      page,
+      limit,
+      total,
+      totalSubscribed,
+      totalUnsubscribed,
+    });
   } catch (error) {
     console.error("[GET /api/newsletter/subscriptions]", error);
     return NextResponse.json({ error: "Failed to fetch subscribers" }, { status: 500 });

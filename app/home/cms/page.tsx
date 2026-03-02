@@ -9,7 +9,8 @@ import {
   Box, 
   List, 
   ChevronRight, 
-  Code
+  Code,
+  Menu
 } from "lucide-react";
 
 import {
@@ -27,6 +28,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -35,7 +39,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import CMSDashboard from "./dashboard/page";
@@ -81,9 +84,103 @@ const navItems = [
   },
 ];
 
+function CmsNavContent({
+  groupedNav,
+  activeTab,
+  setActiveTab,
+}: {
+  groupedNav: Record<string, typeof navItems>;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleNavClick = (url: string) => {
+    setActiveTab(url);
+    if (isMobile) setOpenMobile(false);
+  };
+
+  return (
+    <>
+      {Object.entries(groupedNav).map(([groupName, items]) => (
+        <SidebarGroup key={groupName}>
+          <SidebarGroupLabel className="text-xs font-bold uppercase">
+            {groupName}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const hasSubItems = item.items && item.items.length > 0;
+
+                if (!hasSubItems) {
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        isActive={activeTab === item.url}
+                        onClick={() => handleNavClick(item.url)}
+                        className={`transition-all ${
+                          activeTab === item.url
+                            ? "bg-white border border-border shadow-sm font-medium"
+                            : "hover:bg-neutral-200"
+                        }`}
+                      >
+                        <item.icon className="size-5" />
+                        <span className="text-sm">{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                return (
+                  <Collapsible
+                    key={item.title}
+                    asChild
+                    defaultOpen={activeTab.startsWith(item.url)}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          className="hover:bg-neutral-200"
+                        >
+                          <item.icon className="size-5" />
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items?.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={activeTab === subItem.url}
+                                className={activeTab === subItem.url ? "font-medium text-black" : ""}
+                              >
+                                <button onClick={() => handleNavClick(subItem.url)}>
+                                  <span>{subItem.title}</span>
+                                </button>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ))}
+    </>
+  );
+}
+
 export default function CmsSidebar() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const router = useRouter();
 
   const groupedNav = navItems.reduce((acc, item) => {
     if (!acc[item.group]) acc[item.group] = [];
@@ -105,82 +202,11 @@ export default function CmsSidebar() {
         </SidebarHeader>
 
         <SidebarContent>
-          {Object.entries(groupedNav).map(([groupName, items]) => (
-            <SidebarGroup key={groupName}>
-              <SidebarGroupLabel className="text-xs font-bold uppercase">
-                {groupName}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {items.map((item) => {
-                    const hasSubItems = item.items && item.items.length > 0;
-
-                    if (!hasSubItems) {
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            tooltip={item.title}
-                            isActive={activeTab === item.url}
-                            onClick={() => {
-                              setActiveTab(item.url);
-                              // router.push(`/${item.url}`);
-                            }}
-                            className={`transition-all ${
-                              activeTab === item.url
-                                ? "bg-white border border-border shadow-sm font-medium"
-                                : "hover:bg-neutral-200"
-                            }`}
-                          >
-                            <item.icon className="size-5" />
-                            <span className="text-sm">{item.title}</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    }
-
-                    return (
-                      <Collapsible
-                        key={item.title}
-                        asChild
-                        defaultOpen={activeTab.startsWith(item.url)}
-                        className="group/collapsible"
-                      >
-                        <SidebarMenuItem>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton 
-                              tooltip={item.title}
-                              className="hover:bg-neutral-200"
-                            >
-                              <item.icon className="size-5" />
-                              <span>{item.title}</span>
-                              <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              {item.items?.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    isActive={activeTab === subItem.url}
-                                    className={activeTab === subItem.url ? "font-medium text-black" : ""}
-                                  >
-                                    <button onClick={() => setActiveTab(subItem.url)}>
-                                      <span>{subItem.title}</span>
-                                    </button>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        </SidebarMenuItem>
-                      </Collapsible>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+          <CmsNavContent
+            groupedNav={groupedNav}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
         </SidebarContent>
         <SidebarFooter className="border-t p-4">
           <SidebarMenu>
@@ -196,11 +222,19 @@ export default function CmsSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      {activeTab === "dashboard" && <CMSDashboard />}
-      {activeTab === "page-manager" && <PageManager />}
+      <SidebarInset className="bg-neutral-100">
+        {/* Mobile menu bar - visible only on small screens */}
+        <header className="sticky bg-white top-0 z-40 flex md:hidden items-center gap-3 border-b px-4 py-3">
+          <SidebarTrigger className="size-9">
+            <Menu className="size-5" />
+          </SidebarTrigger>
+          <Image src={rlandLogo} alt="RLand" width={60} height={32} className="object-contain" />
+        </header>
 
+        {activeTab === "dashboard" && <CMSDashboard />}
+        {activeTab === "page-manager" && <PageManager />}
+ 
+      </SidebarInset>
     </SidebarProvider>
-
-    
   );
 }

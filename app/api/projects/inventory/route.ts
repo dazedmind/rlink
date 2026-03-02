@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { projectInventory } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireAuth } from '@/lib/api-auth';
+import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const inventoryList = await db.select().from(projectInventory).$dynamic();
 
@@ -18,6 +23,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 60);
+
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await request.json();
     const { inventoryCode, soldTo } = body;

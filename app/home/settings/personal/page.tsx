@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { User, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
+import Footer from "@/components/layout/Footer";
 
 function PersonalInfoTabContent() {
   const { data: session } = useSession();
@@ -206,6 +207,9 @@ function PersonalInfoTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
+      <footer>
+        <Footer />
+      </footer>
     </Tabs>
   );
 }

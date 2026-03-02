@@ -1,18 +1,25 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
   ArrowUpDown,
   Eye,
   ListFilter,
-  MoreHorizontal,
   Pencil,
   Send,
   Trash2,
   X,
+  ArrowLeft,
+  ArrowRight,
+  EllipsisVertical,
+  SendHorizontal,
+  Clock,
+  Check,
+  CircleDashed,
 } from "lucide-react";
-import { dateFormatter } from "@/app/utils/dateFormatter";
+import { toast } from "sonner";
+import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import {
   Table,
   TableBody,
@@ -25,7 +32,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -34,16 +40,21 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ContextMenu from "../layout/ContextMenu";
 
 type Campaign = {
   id: number;
   name: string;
   subject: string;
   status: "draft" | "scheduled" | "sent";
-  sentAt: string;
+  sentAt: string | null;
+  scheduledAt: string | null;
+  createdAt: string;
   openRate: number;
   clickRate: number;
   recipients: number;
+  body?: string;
+  previewLine?: string;
 };
 
 const statusMeta: Record<string, { label: string; className: string }> = {
@@ -52,40 +63,14 @@ const statusMeta: Record<string, { label: string; className: string }> = {
   sent:  { label: "Sent",  className: "bg-blue-50 text-blue-700 border border-blue-200" },
 };
 
-const ActionMenu = ({ status }: { status: "draft" | "scheduled" | "sent" }) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon" className="h-8 w-8">
-        <MoreHorizontal size={16} />
-        <span className="sr-only">Open menu</span>
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      {status === "draft" && (
-        <>
-          <DropdownMenuItem className="gap-2 cursor-pointer">
-            <Send size={14} /> Send Now
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-        </>
-      )}
-      <DropdownMenuItem className="gap-2 cursor-pointer">
-        <Eye size={14} /> View
-      </DropdownMenuItem>
-      <DropdownMenuItem className="gap-2 cursor-pointer">
-        <Pencil size={14} /> Edit
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem className="gap-2 cursor-pointer text-red-600 focus:text-red-600">
-        <Trash2 size={14} /> Delete
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
 
 const ITEMS_PER_PAGE = 10;
 
-function CampaignTable() {
+type CampaignTableProps = {
+  onOpenComposer?: (mode: "view" | "edit", campaign: Campaign) => void;
+};
+
+function CampaignTable({ onOpenComposer }: CampaignTableProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,7 +100,7 @@ function CampaignTable() {
   const fetchCampaigns = useCallback(async (page: number) => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildUrl(page));
+      const response = await fetch(buildUrl(page), { credentials: "include" });
       const { data, total: responseTotal } = await response.json();
       setCampaigns(data ?? []);
       setTotal(responseTotal ?? 0);
@@ -131,6 +116,49 @@ function CampaignTable() {
   useEffect(() => {
     fetchCampaigns(currentPage);
   }, [currentPage, fetchCampaigns]);
+
+  const handleDelete = useCallback(async (id: number) => {
+    try {
+      const res = await fetch(`/api/newsletter/campaigns/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to delete");
+      toast.success("Campaign deleted");
+      fetchCampaigns(currentPage);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete campaign");
+    }
+  }, [currentPage, fetchCampaigns]);
+
+  const handleSendNow = useCallback(async (row: Campaign) => {
+    try {
+      const res = await fetch(`/api/newsletter/campaigns/${row.id}/send`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to send");
+      toast.success("Campaign sent successfully");
+      fetchCampaigns(currentPage);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send campaign");
+    }
+  }, [currentPage, fetchCampaigns]);
+
+  const buildActionMenu = useCallback((row: Campaign) => {
+    const items: { label: string; icon: typeof SendHorizontal; onClick: () => void; separator?: boolean; color?: string }[] = [];
+    if (row.status !== "sent") {
+      items.push({ label: "Send Now", icon: SendHorizontal, onClick: () => handleSendNow(row) },
+      { label: "Edit Campaign", icon: Pencil, onClick: () => onOpenComposer?.("edit", row) },);
+    }
+    items.push(
+      { label: "View Campaign", icon: Eye, onClick: () => onOpenComposer?.("view", row) },
+      { label: "Delete", icon: Trash2, color: "text-red-600 focus:text-red-600 focus:bg-red-50", onClick: () => { if (confirm(`Delete "${row.name}"?`)) handleDelete(row.id); }, separator: true }
+    );
+    return items;
+  }, [handleSendNow, handleDelete, onOpenComposer]);
 
   const toggleFilter = (
     value: string,
@@ -149,29 +177,6 @@ function CampaignTable() {
     setSortOption("newest");
   };
 
-  const filteredCampaigns = useMemo(() => {
-    let result = [...campaigns];
-
-    if (filterStatus.length > 0)
-      result = result.filter((c) => filterStatus.includes(c.status));
-
-    switch (sortOption) {
-      case "newest":
-        result.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
-        break;
-      case "oldest":
-        result.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
-        break;
-      case "name_az":
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name_za":
-        result.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-    }
-
-    return result;
-  }, [filterStatus, sortOption]);
 
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
@@ -256,7 +261,7 @@ function CampaignTable() {
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            {["Campaign", "Status", "Recipients", "Open Rate", "Click Rate", "Date", ""].map(
+            {["Campaign", "Status", "Recipients", "Open Rate", "Click Rate", "Date", "Sent", ""].map(
               (label, i) => (
                 <TableHead
                   key={i}
@@ -279,8 +284,11 @@ function CampaignTable() {
 
               <TableCell className="px-6 py-4">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusMeta[row.status]?.className ?? ""}`}
-                >
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium gap-1 ${statusMeta[row.status]?.className ?? ""}`}
+                > 
+                  {row.status === "draft" && <CircleDashed size={12} className="text-slate-700" />}
+                  {row.status === "scheduled" && <Clock size={12} className="text-yellow-700" />}
+                  {row.status === "sent" && <Check size={12} className="text-blue-700" />}
                   {statusMeta[row.status]?.label}
                 </span>
               </TableCell>
@@ -304,23 +312,71 @@ function CampaignTable() {
               </TableCell>
 
               <TableCell className="px-6 py-4">
-                {dateFormatter(row.sentAt)}
+                {shortDateFormatter(row.createdAt)}
+              </TableCell>
+
+              <TableCell className="px-6 py-4">
+                {row.status === "scheduled" && row.scheduledAt
+                  ? shortDateFormatter(row.scheduledAt)
+                  : row.sentAt
+                    ? shortDateFormatter(row.sentAt)
+                    : "—"}
               </TableCell>
 
               <TableCell className="px-6 py-4 text-right">
-                <ActionMenu status={row.status} />
+                <ContextMenu
+                  menu={buildActionMenu(row)}
+                  triggerIcon={EllipsisVertical}
+                />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      <div className="px-6 py-3 border-t bg-white">
+         {/* Footer — count + pagination */}
+         <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
         <p className="text-sm text-gray-600">
           {activeFilterCount > 0
-            ? `${campaigns.length} of ${total} campaigns`
-            : `${campaigns.length} campaigns total`}
+            ? `${total} matching campaigns`
+            : `${total} campaigns total`}
         </p>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ArrowLeft size={16} />
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "ghost"}
+                  size="sm"
+                  className={currentPage === pageNum ? "bg-blue-600 min-w-8" : "min-w-8"}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ArrowRight size={16} />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

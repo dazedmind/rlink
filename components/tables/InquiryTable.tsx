@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { dateFormatter } from "@/app/utils/dateFormatter";
 import { useCallback, useEffect, useState } from "react";
 import { inquirySource, inquiryStatus, inquirySubject } from "@/lib/types";
 import {
@@ -44,6 +43,7 @@ import {
 import ContextMenu from "../layout/ContextMenu";
 import { InquiryDetailModal } from "../modal/InquiryDetailModal";
 import { toast } from "sonner";
+import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -173,7 +173,7 @@ function InquiryTable({
       i.message,
       inquirySource[i.source as keyof typeof inquirySource] || i.source,
       inquiryStatus[i.status as keyof typeof inquiryStatus] || i.status,
-      dateFormatter(i.createdAt),
+      shortDateFormatter(i.createdAt),
     ]);
     const csvContent = [
       headers.join(","),
@@ -426,7 +426,7 @@ function InquiryTable({
               </TableCell>
 
               <TableCell className="px-6 py-4 whitespace-nowrap font-normal">
-                {dateFormatter(row.createdAt)}
+                {shortDateFormatter(row.createdAt)}
               </TableCell>
 
               <TableCell className="px-6 py-4">

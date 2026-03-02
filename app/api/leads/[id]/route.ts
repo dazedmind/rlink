@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireAuth } from '@/lib/api-auth';
+import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteContext) {
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
     const leadId = Number(id);
@@ -28,6 +33,12 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 60);
+
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
     const leadId = Number(id);
@@ -38,16 +49,21 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     const body = await request.json();
 
-    const disallowed = ['id', 'leadId', 'createdAt'];
-    disallowed.forEach((key) => delete body[key]);
+    const allowedFields = ['status', 'firstName', 'lastName', 'phone', 'email', 'project', 'profileLink', 'stage', 'nextAction', 'source', 'notes'] as const;
+    const updates: Partial<typeof leads.$inferInsert> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) (updates as Record<string, unknown>)[field] = body[field];
+    }
 
-    if (Object.keys(body).length === 0) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
+    updates.updatedAt = new Date();
+
     const [updated] = await db
       .update(leads)
-      .set(body)
+      .set(updates)
       .where(eq(leads.id, leadId))
       .returning();
 
@@ -62,7 +78,13 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 30);
+
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
     const leadId = Number(id);

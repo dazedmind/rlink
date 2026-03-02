@@ -10,6 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import Footer from "@/components/layout/Footer";
 
 function SystemSettingsTabContent() {
 
@@ -44,6 +45,9 @@ function SystemSettingsTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
+      <footer>
+        <Footer />
+      </footer>
     </Tabs>
   );
 }

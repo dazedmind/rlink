@@ -38,10 +38,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
-import { dateFormatter } from "@/app/utils/dateFormatter";
 import { ReservationDetailModal } from "../modal/ReservationDetailModal";
 import ContextMenu from "../layout/ContextMenu";
 import { toast } from "sonner";
+import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 
 type Reservation = {
   id: number;
@@ -225,7 +225,7 @@ function ReservationTable({
         r.projectName,
         r.block,
         r.lot,
-        dateFormatter(r.createdAt),
+        shortDateFormatter(r.createdAt),
       ]);
       const csvContent = [
         headers.join(","),

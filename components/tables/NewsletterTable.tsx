@@ -9,9 +9,11 @@ import {
   Download,
   Eye,
   ListFilter,
+  Trash2,
+  UserMinus,
+  UserPlus,
   X,
 } from "lucide-react";
-import { dateFormatter } from "@/app/utils/dateFormatter";
 import {
   Table,
   TableBody,
@@ -33,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 
 type Subscriber = {
   id: number;
@@ -131,7 +134,7 @@ function NewsletterTable() {
       const csvRows = rows.map((s) => [
         s.email,
         statusMeta[s.status]?.label ?? s.status,
-        dateFormatter(s.createdAt),
+        shortDateFormatter(s.createdAt),
       ]);
       const csvContent = [
         headers.join(","),
@@ -156,11 +159,71 @@ function NewsletterTable() {
     }
   };
 
+  const subscriptionUrl = useCallback((email: string) => {
+    return `/api/newsletter/subscriptions/${encodeURIComponent(email)}`;
+  }, []);
+
+  const handleUnsubscribe = async (email: string) => {
+    try {
+      const response = await fetch(subscriptionUrl(email), {
+        method: "PATCH",
+        body: JSON.stringify({ email, status: "unsubscribed" }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to unsubscribe");
+      }
+      toast.info("Subscription Deactivated for " + email);
+      fetchSubscribers(currentPage);
+    }
+    catch (error) {
+      console.error("Error unsubscribing:", error);
+      toast.error("Failed to unsubscribe");
+    }
+  };
+
+  const handleSubscribe = async (email: string) => {
+    try {
+      const response = await fetch(subscriptionUrl(email), {
+        method: "PATCH",
+        body: JSON.stringify({ email, status: "subscribed" }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to subscribe");
+      }
+      toast.success("Subscription Reactivated for " + email);
+      fetchSubscribers(currentPage);
+    }
+    catch (error) {
+      console.error("Error subscribing:", error);
+      toast.error("Failed to subscribe");
+    }
+  };
+
+  const handleRemove = async (email: string) => {
+    try {
+      const response = await fetch(subscriptionUrl(email), {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to remove");
+      }
+      toast.success("Subscriber removed successfully");
+      fetchSubscribers(currentPage);
+    }
+    catch (error) {
+      console.error("Error removing:", error);
+      toast.error("Failed to remove");
+    }
+  };
+  
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="p-4 border-b bg-white flex justify-between items-center">
-        <h3 className="font-semibold text-xl">Subscribers List</h3>
+        <h3 className="font-semibold text-xl">Newsletter Subscribers List</h3>
 
         <span className="flex items-center gap-2">
           <DropdownMenu>
@@ -191,7 +254,7 @@ function NewsletterTable() {
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-
+              
               <DropdownMenuSeparator />
 
               {/* Status */}
@@ -262,13 +325,13 @@ function NewsletterTable() {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+              <TableCell colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
                 Loading…
               </TableCell>
             </TableRow>
           ) : subscribers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+              <TableCell colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
                 No subscribers found.
               </TableCell>
             </TableRow>
@@ -290,14 +353,28 @@ function NewsletterTable() {
                 </TableCell>
 
                 <TableCell className="px-6 py-4">
-                  {dateFormatter(row.createdAt)}
+                  {shortDateFormatter(row.createdAt)}
                 </TableCell>
 
                 <TableCell className="px-6 py-4">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2 w-full px-2">
-                    <Eye size={18} />
-                    View
-                  </Button>
+                  <span className="flex items-center gap-2">
+                    {row.status === "subscribed" && (
+                      <Button onClick={() => handleUnsubscribe(row.email)} variant="outline" size="sm" className="flex flex-1 items-center gap-2 px-2">
+                        <UserMinus size={18} />
+                        Unsubscribe
+                      </Button>
+                    )}
+                    {row.status === "unsubscribed" && (
+                      <Button onClick={() => handleSubscribe(row.email)} variant="outline" size="sm" className="flex flex-1 items-center gap-2 px-2">
+                        <UserPlus size={18} />
+                        Subscribe
+                      </Button>
+                    )}
+                    <Button onClick={() => handleRemove(row.email)} variant="outline" size="sm" className="flex flex-1 items-center gap-2 px-2 text-red-600 hover:text-red-600 hover:bg-red-50">
+                      <Trash2 size={18} />
+                      Remove
+                    </Button>
+                  </span>
                 </TableCell>
               </TableRow>
             ))

@@ -12,7 +12,6 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { dateFormatter } from "@/app/utils/dateFormatter";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
@@ -49,6 +48,7 @@ import { LeadDetailModal } from "@/components/modal/LeadDetailModal";
 import ContextMenu from "../layout/ContextMenu";
 import { toast } from "sonner";
 import Link from "next/link";
+import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 
 type Lead = {
   id: number;
@@ -239,7 +239,7 @@ function LeadsTable({
         lead.project,
         leadStage[lead.stage as keyof typeof leadStage] || lead.stage,
         leadNextAction[lead.nextAction as keyof typeof leadNextAction] || lead.nextAction,
-        dateFormatter(lead.inquiryDate),
+        shortDateFormatter(lead.inquiryDate),
       ]);
       const csvContent = [
         headers.join(","),
@@ -263,7 +263,7 @@ function LeadsTable({
       toast.error("Failed to export CSV");
     }
   };
-
+  
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-white animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
@@ -314,9 +314,7 @@ function LeadsTable({
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              {/* Status */}
           
-
               <DropdownMenuSeparator />
 
               {/* Stage */}
@@ -426,7 +424,7 @@ function LeadsTable({
               {/* Conditional rendering for the remaining cells */}
               {!recentViewOnly && (
                 <>
-                  <TableCell className="px-6 py-4">{dateFormatter(row.inquiryDate)}</TableCell>
+                  <TableCell className="px-6 py-4">{shortDateFormatter(row.inquiryDate)}</TableCell>
                   <TableCell className="px-6 py-4">{formatRelativeTime(row.updatedAt)}</TableCell>
                   <TableCell className="px-6 py-4 text-primary font-medium">{leadStage[row.stage as keyof typeof leadStage]}</TableCell>
                   <TableCell className="px-6 py-4 text-primary font-medium">{leadNextAction[row.nextAction as keyof typeof leadNextAction]}</TableCell>

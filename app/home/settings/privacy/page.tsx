@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { setPasswordAction } from "@/lib/setpassword";
+import Footer from "@/components/layout/Footer";
 
 function PrivacyTabContent() {
   const [newPassword, setNewPassword] = useState("");
@@ -66,12 +67,7 @@ function PrivacyTabContent() {
         setErrorMsg(e instanceof Error ? e.message : "Failed to set password.");
       }
     } else {
-      // Credential user: update existing password via client
-      // if (!currentPassword) {
-      //   setErrorMsg("Please enter your current password.");
-      //   setLoading(false);
-      //   return;
-      // }
+
       const { error } = await authClient.changePassword({
         currentPassword,
         newPassword,
@@ -159,6 +155,9 @@ function PrivacyTabContent() {
           </CardContent>
         </Card>
       </TabsContent>
+      <footer>
+        <Footer />
+      </footer>
     </Tabs>
   );
 }

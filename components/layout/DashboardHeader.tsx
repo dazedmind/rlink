@@ -81,7 +81,7 @@ function DashboardHeader({
       </span>
 
       <span className="flex items-center justify-center gap-4">
-        <p className="text-sm text-muted-foreground">
+        <p className="hidden md:block text-sm text-muted-foreground">
           Date: <span className="font-bold text-blue-600">{today}</span>
         </p>
         {/* NOTIFICATION DROPDOWN */}
@@ -168,7 +168,7 @@ function DashboardHeader({
                   alt={session?.user?.name ?? ""}
                 />
                 <AvatarFallback>
-                  {session?.user?.name?.charAt(0) ?? ""}
+                  {session?.user?.firstName?.charAt(0) ?? ""}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -183,7 +183,7 @@ function DashboardHeader({
                       alt={session?.user?.name ?? ""}
                     />
                     <AvatarFallback>
-                      {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
+                      {session?.user?.firstName?.charAt(0) ?? ""}
                     </AvatarFallback>
                   </Avatar>
                   <span className="flex flex-col">

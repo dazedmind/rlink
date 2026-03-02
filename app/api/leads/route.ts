@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
 import { and, asc, count, desc, ilike, inArray, max, or } from 'drizzle-orm';
+import { requireAuth } from '@/lib/api-auth';
+import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, Number(searchParams.get('page') ?? 1));
@@ -33,7 +38,7 @@ export async function GET(request: NextRequest) {
         case 'updated_oldest': return asc(leads.updatedAt);
         case 'name_az': return asc(leads.firstName);
         case 'name_za': return desc(leads.firstName);
-        default: return desc(leads.inquiryDate);
+        default: return desc(leads.createdAt);
       }
     })();
 
@@ -50,6 +55,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 30);
+
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await request.json();
 

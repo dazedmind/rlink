@@ -53,7 +53,7 @@ function Home() {
               </h1>
               <p className="text-sm text-neutral-500 mt-0.5">
                 Select a module below to get started.
-              </p>
+            </p>
             </div>
 
             {/* Module Grid */}

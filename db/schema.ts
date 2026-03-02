@@ -424,6 +424,8 @@ export const campaigns = pgTable('campaigns', {
   openRate:  integer('open_rate').notNull().default(0),
   clickRate: integer('click_rate').notNull().default(0),
   status:    campaignStatusEnum('status').notNull().default('draft'),
+  scheduledAt: timestamp('scheduled_at'),
+  sentAt:    timestamp('sent_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

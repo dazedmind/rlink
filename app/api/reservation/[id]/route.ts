@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { reservation } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAuth } from "@/lib/api-auth";
+import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> },
   ) {
+    const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
+    if (!limitResult.success) return rateLimit429(limitResult, 60);
+
+    const authResult = await requireAuth();
+    if (authResult.error) return authResult.error;
+
     try {
       const { id } = await params;
       const numericId = parseInt(id, 10);
@@ -55,6 +63,12 @@ export async function PATCH(
   }
 
   export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+    if (!limitResult.success) return rateLimit429(limitResult, 30);
+
+    const authResult = await requireAuth();
+    if (authResult.error) return authResult.error;
+
     try {
       const { id } = await params;
       const numericId = parseInt(id, 10);

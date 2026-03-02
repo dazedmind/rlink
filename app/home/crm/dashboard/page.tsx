@@ -6,7 +6,7 @@ import LeadsTable from "@/components/tables/LeadsTable";
 import { FaCaretUp } from "react-icons/fa";
 import ReservationTable from "@/components/tables/ReservationTable";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
 import InquiryTable from "@/components/tables/InquiryTable";
 import DashboardSkeleton from "@/components/layout/skeleton/DashboardSkeleton";
 
@@ -17,6 +17,8 @@ function CRMDashboard({
 }) {
   const [allLeads, setAllLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalReservations, setTotalReservations] = useState(0);
+  const [loadingReservations, setLoadingReservations] = useState(true);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -31,6 +33,21 @@ function CRMDashboard({
       }
     };
     fetchLeads();
+  }, []);
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch("/api/reservation?limit=1000");
+        const data = await response.json();
+        setTotalReservations(data.total ?? 0);
+      } catch (error) {
+        console.error("Error fetching reservations:", error);
+      } finally {
+        setLoadingReservations(false);
+      }
+    };
+    fetchReservations();
   }, []);
 
   // 2. Memoized calculations for performance and reliability
@@ -74,23 +91,31 @@ function CRMDashboard({
       id: 2,
       leads: leadsLastMonth,
       label: "Leads Last Month",
-      hasIncrease: leadsLastMonth > leadsThisMonth,
+      hasIncrease: false,
       color: "text-neutral-500",
-      increase: leadsLastMonth - leadsThisMonth,
+      increase: 0
     },
     {
       id: 3,
       leads: totalLeads,
-      label: "Total Accumulated Leads",
-      hasIncrease: totalLeads > leadsThisMonth + leadsLastMonth,
+      label: "Total Leads Generated",
+      hasIncrease: false,
       color: "text-primary",
-      increase: totalLeads - (leadsThisMonth + leadsLastMonth),
+      increase: 0,
+    },
+    {
+      id: 4,
+      leads: totalReservations,
+      label: "Total Reservations",
+      hasIncrease: false,
+      color: "text-purple-600",
+      increase: 0,
     },
   ];
 
   const increasePercentage = (increase: number) => {
     // Added safety check to prevent NaN if leadsThisMonth is 0
-    if (leadsThisMonth === 0) return 0;
+    if (leadsThisMonth === 0) return null;
     return ((increase / leadsThisMonth) * 100).toFixed(0);
   };
 
@@ -105,7 +130,7 @@ function CRMDashboard({
         {loading ? <DashboardSkeleton /> : (
         <div className="flex flex-col gap-8">
           {/* TOP STATS CARDS */}
-          <div className="mt-8 grid gap-4 md:grid-cols-3 animate-fade-in-up">
+          <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 animate-fade-in-up">
             {leadsCard.map((lead) => (
               <Card
                 key={lead.id}
@@ -131,7 +156,7 @@ function CRMDashboard({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-8 animate-fade-in-up">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-fade-in-up">
             <div className="flex flex-col gap-4">
               {/* HEADER */}
               <div className="flex justify-between items-end">
