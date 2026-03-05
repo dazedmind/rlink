@@ -4,13 +4,11 @@ import Image from "next/image";
 import rlandLogo from "@/public/rland-logo.png";
 import { 
   LayoutDashboard, 
-  Calendar, 
-  User, 
-  Box, 
   List, 
   ChevronRight, 
   Code,
-  Menu
+  Menu,
+  Film
 } from "lucide-react";
 
 import {
@@ -43,24 +41,15 @@ import Link from "next/link";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import CMSDashboard from "./dashboard/page";
 import PageManager from "./page-manager/page";
+import ProjectsManager from "./listings/projects/page";
+import CareersManager from "./listings/careers/page";
+import PromosManager from "./listings/promos/page";
+import NewsManager from "./listings/news/page";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "CMS Menu" },
   { title: "Page Management", icon: LayoutDashboard, url: "page-manager", group: "CMS Menu" },
-  { title: "Media Content", icon: User, url: "media-content", group: "Content Management", 
-    items: [
-    { title: "Blogs", url: "media-content/blogs" },
-    { title: "Videos", url: "media-content/videos" },
-    { title: "Photos", url: "media-content/photos" },
-    { title: "Links", url: "media-content/links" },
-  ] },
-  { title: "Forms", icon: User, url: "forms", group: "Content Management",
-    items: [
-      { title: "Inquiries", url: "forms/contact-form" },
-      { title: "Reservations", url: "forms/reservation-form" },
-      { title: "Newsletter", url: "forms/subscription-form" },
-    ]
-   },
+
   { 
     title: "Listings", 
     icon: List, 
@@ -70,15 +59,20 @@ const navItems = [
       { title: "Projects", url: "listings/projects" },
       { title: "Careers", url: "listings/careers" },
       { title: "Promos", url: "listings/promos" },
-      { title: "Articles", url: "listings/articles" },
+      { title: "News Articles", url: "listings/news" },
     ]
   },
-  { title: "Internal", icon: User, url: "internal", group: "Content Management" },
+  { title: "Media Content", icon: Film, url: "media-content", group: "Content Management", 
+    items: [
+    { title: "Videos", url: "media-content/videos" },
+    { title: "Photos", url: "media-content/photos" },
+    { title: "Links", url: "media-content/links" },
+  ] },
+  // { title: "Internal", icon: User, url: "internal", group: "Content Management" },
   { title: "Developer Tools", icon: Code, url: "developer-tools", group: "Configuration", 
     items: [
       { title: "SEO Tools", url: "developer-tools/seo-tools" },
       { title: "Analytics Tools", url: "developer-tools/analytics-tools" },
-      { title: "Performance Tools", url: "developer-tools/performance-tools" },
       { title: "Security Tools", url: "developer-tools/security-tools" },
     ]
   },
@@ -233,7 +227,11 @@ export default function CmsSidebar() {
 
         {activeTab === "dashboard" && <CMSDashboard />}
         {activeTab === "page-manager" && <PageManager />}
- 
+        {activeTab === "listings/projects" && <ProjectsManager />}
+        {activeTab === "listings/careers" && <CareersManager />}
+        {activeTab === "listings/promos" && <PromosManager />}  
+        {activeTab === "listings/news" && <NewsManager />}
+
       </SidebarInset>
     </SidebarProvider>
   );

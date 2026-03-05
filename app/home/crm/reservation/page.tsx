@@ -9,7 +9,7 @@ import {
   FileText,
   Table,
 } from "lucide-react";
-import ReservationTable from "@/components/tables/ReservationTable";
+import ReservationTable from "@/components/tables/crm/ReservationTable";
 import DropSelect from "@/components/ui/DropSelect";
 import { Button } from "@/components/ui/button";
 import TextInput from "@/components/ui/TextInput";
@@ -199,14 +199,11 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
     fetchInventoryList();
   }, []);
 
-  // Find selected project's id to match against projectInventory.projectCode
   const selectedProjectId =
-    projectsList.find((p: any) => p.projectName === formData.project)?.id ??
-    null;
+    projectsList.find((p: any) => p.projectName === formData.project)?.id ?? null;
 
-  // Filter inventory to the selected project, then deduplicate
   const projectInventoryItems = selectedProjectId
-    ? inventoryList.filter((inv: any) => inv.projectCode === selectedProjectId)
+    ? inventoryList.filter((inv: any) => inv.projectId === selectedProjectId)
     : inventoryList;
 
   const uniqueBlocks = [

@@ -5,12 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2026-03-05
+
+### Added
+- API Routes for Content Management System
+- Created the UI for the CMS and basic CRUD 
+- Fixed the Reservation and Inventory from the recent database changes
+
 ## [0.0.4] - 2026-03-02
 
 ### Added
 - Security & Middleware Layer: Implemented a robust security architecture including global authentication middleware and server-side rate limiting to prevent API abuse and brute-force attempts.
 - Campaign Management Engine: Completed the Newsletter and Marketing Campaigns module, featuring a full CRUD lifecycle and a polished Markdown-based composer for high-fidelity communication.
 - Access Control: Integrated secure route protection to ensure sensitive CRM data (Leads, Inquiries) is strictly accessible via authenticated admin sessions.
+- Inventory Page: Added the inventory management for checking and viewing available or sold units.
 
 ### Changed
 - UI/UX Polish: Refined the Newsletter dashboard and campaign preview layouts for improved mobile responsiveness and administrative workflow efficiency.

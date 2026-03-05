@@ -1,6 +1,6 @@
 "use client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import InquiryTable from "@/components/tables/InquiryTable";
+import InquiryTable from "@/components/tables/crm/InquiryTable";
 
 function Inquiries() {
   return (

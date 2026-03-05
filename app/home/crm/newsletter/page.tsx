@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import NewsletterTable from "@/components/tables/NewsletterTable";
-import CampaignTable from "@/components/tables/CampaignTable";
-import ComposerModal from "@/components/modal/ComposerModal";
+import NewsletterTable from "@/components/tables/crm/NewsletterTable";
+import CampaignTable from "@/components/tables/crm/CampaignTable";
+import ComposerModal from "@/components/modal/crm/ComposerModal";
 import { Megaphone, PlusCircle, User } from "lucide-react";
 
 type Campaign = {
@@ -140,7 +140,6 @@ function Newsletter() {
                 onClick={() => { setComposerMode("create"); setComposerCampaign(null); setShowCompose(true); }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-slate-700 transition-colors"
               >
-                {/* <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> */}
                 <PlusCircle size={16} />
                 New Campaign
               </Button>

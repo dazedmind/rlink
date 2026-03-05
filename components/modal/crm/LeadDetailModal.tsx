@@ -9,14 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LeadStatus } from "@/lib/types";
-import TextInput from "../ui/TextInput";
+import TextInput from "../../ui/TextInput";
 import { toast } from "sonner";
-import DropSelect from "../ui/DropSelect";
+import DropSelect from "../../ui/DropSelect";
 import { StickyNote } from "lucide-react";
-import { Separator } from "../ui/separator";
-import { Field } from "../ui/field";
-import { Textarea } from "../ui/textarea";
-import { Label } from "../ui/label";
+import { Separator } from "../../ui/separator";
+import { Field } from "../../ui/field";
+import { Textarea } from "../../ui/textarea";
+import { Label } from "../../ui/label";
 
 const SOURCE_OPTIONS = [
   { value: "ads", label: "Ads" },

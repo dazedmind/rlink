@@ -7,32 +7,11 @@ import arcoeResidenceLogo from "@/public/project-logo/ar-logo.png";
 import arcoeEstatesLogo from "@/public/project-logo/ae-logo.png";
 import ProjectDetailsView from "@/components/inventory/ProjectDetailsView";
 import InventorySkeleton from "@/components/layout/skeleton/InventorySkeleton";
-
-type Project = { id: string; projectCode: string; projectName: string };
-type InventoryItem = {
-  id: string;
-  projectCode: string;
-  inventoryCode: string;
-  block: number;
-  lot: number;
-  soldTo: number | null;
-};
+import type { Project, InventoryItem, Reservation } from "@/lib/types";
 
 const LOGO_MAP: Record<string, typeof arcoeResidenceLogo> = {
   ar: arcoeResidenceLogo,
   ae: arcoeEstatesLogo,
-};
-
-type Reservation = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  inventoryCode: string;
-  projectName: string;
-  block: number;
-  lot: number;
 };
 
 function Inventory() {
@@ -66,7 +45,7 @@ function Inventory() {
   }, []);
 
   const projectInventory = selectedProject
-    ? inventory.filter((inv) => inv.projectCode === selectedProject.id)
+    ? inventory.filter((inv) => inv.projectId === selectedProject.id)
     : [];
 
   // Pass all reservations to resolve soldTo (reservation id) for inventory items

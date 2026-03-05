@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, Table } from "lucide-react";
-import LeadsTable from "@/components/tables/LeadsTable";
+import LeadsTable from "@/components/tables/crm/LeadsTable";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";

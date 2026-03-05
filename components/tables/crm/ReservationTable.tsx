@@ -14,8 +14,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
 import { ReservationStatus, reservationStatus } from "@/lib/types";
 import {
   Table,
@@ -38,8 +38,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
-import { ReservationDetailModal } from "../modal/ReservationDetailModal";
-import ContextMenu from "../layout/ContextMenu";
+import { ReservationDetailModal } from "../../modal/crm/ReservationDetailModal";
+import ContextMenu from "../../layout/ContextMenu";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 

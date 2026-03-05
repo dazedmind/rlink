@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, Box, Info } from "lucide-react";
+import { ArrowLeft, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, FileCheck, CreditCard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,28 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "../ui/dropdown-menu";
-
-type Project = { id: string; projectCode: string; projectName: string };
-type InventoryItem = {
-  id: string;
-  projectCode: string;
-  inventoryCode: string;
-  block: number;
-  lot: number;
-  soldTo: number | null;
-};
-
-type Reservation = {
-  id: number | string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  inventoryCode: string;
-  projectName: string;
-  block: number;
-  lot: number;
-};
+import type { Project, InventoryItem, Reservation } from "@/lib/types";
 
 type ProjectDetailsViewProps = {
   project: Project;

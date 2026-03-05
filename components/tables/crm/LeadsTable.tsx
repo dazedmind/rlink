@@ -44,8 +44,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LeadDetailModal } from "@/components/modal/LeadDetailModal";
-import ContextMenu from "../layout/ContextMenu";
+import { LeadDetailModal } from "@/components/modal/crm/LeadDetailModal";
+import ContextMenu from "../../layout/ContextMenu";
 import { toast } from "sonner";
 import Link from "next/link";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";

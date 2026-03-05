@@ -39,9 +39,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import ContextMenu from "../layout/ContextMenu";
-import { InquiryDetailModal } from "../modal/InquiryDetailModal";
+} from "../../ui/dropdown-menu";
+import ContextMenu from "../../layout/ContextMenu";
+import { InquiryDetailModal } from "../../modal/crm/InquiryDetailModal";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 

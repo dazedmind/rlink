@@ -75,6 +75,14 @@ export const inquirySource = {
 
 export type InquirySource = (typeof inquirySource)[keyof typeof inquirySource];
 
+export const Career = {
+    hiring: 'Hiring',
+    closed: 'Closed',
+    archived: 'Archived',
+} as const;
+
+export type CareerStatus = (typeof Career)[keyof typeof Career];
+
 
 export type Lead = {
     id: number;
@@ -88,3 +96,61 @@ export type Lead = {
     stage: LeadStage;
     nextAction: LeadNextAction;
 }
+
+/** Project from projects table (id is text/uuid) */
+export type Project = {
+    id: string;
+    projectCode: string;
+    projectName: string;
+    status?: string;
+    location?: string;
+    stage?: string;
+    type?: string;
+    photoUrl?: string;
+    accentColor?: string;
+    description?: string;
+    amenities?: unknown[];
+    landmarks?: unknown[];
+};
+
+/** Inventory item from project_inventory (references projects.id via projectId) */
+export type InventoryItem = {
+    id: string;
+    projectId: string;
+    modelId: string;
+    inventoryCode: string;
+    block: number;
+    lot: number;
+    soldTo: number | null;
+    sellingPrice: number;
+    isFeatured?: boolean;
+};
+
+/** Reservation record for display/lookup (soldTo on inventory references reservation.id) */
+export type Reservation = {
+    id: number;
+    reservationId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    inventoryCode: string;
+    projectName: string;
+    block: number;
+    lot: number;
+    status?: string;
+};
+
+export type Career = {
+    id: number;
+    position: string;
+    location: string;
+    jobDescription: string;
+    purpose: string;
+    responsibilities: string;
+    qualifications: string;
+    requiredSkills: string;
+    status: CareerStatus;
+    createdAt: string;
+    updatedAt: string;
+};

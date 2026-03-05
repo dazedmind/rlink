@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
 import {
   ArrowUpDown,
   Eye,
@@ -40,7 +40,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ContextMenu from "../layout/ContextMenu";
+import ContextMenu from "../../layout/ContextMenu";
 
 type Campaign = {
   id: number;

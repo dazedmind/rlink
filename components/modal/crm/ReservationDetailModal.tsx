@@ -10,12 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Mail, Printer, Share, StickyNote } from "lucide-react";
 import { ReservationStatus, reservationStatus } from "@/lib/types";
-import DropSelect from "../ui/DropSelect";
-import { Field } from "../ui/field";
-import TextInput from "../ui/TextInput";
+import DropSelect from "../../ui/DropSelect";
+import { Field } from "../../ui/field";
+import TextInput from "../../ui/TextInput";
 import { toast } from "sonner";
-import { Textarea } from "../ui/textarea";
-import { Label } from "../ui/label";
+import { Textarea } from "../../ui/textarea";
+import { Label } from "../../ui/label";
 
 interface ReservationDetailModalProps {
   reservation: any;
@@ -97,13 +97,11 @@ export function ReservationDetailModal({
     fetchInventoryList();
   }, []);
 
-  // Find selected project's id to match against projectInventory.projectCode
   const selectedProjectId =
     projectsList.find((p: any) => p.projectName === project)?.id ?? null;
 
-  // Filter inventory to the selected project, then deduplicate
   const projectInventoryItems = selectedProjectId
-    ? inventoryList.filter((inv: any) => inv.projectCode === selectedProjectId)
+    ? inventoryList.filter((inv: any) => inv.projectId === selectedProjectId)
     : inventoryList;
 
   const uniqueBlocks = [
@@ -174,13 +172,7 @@ export function ReservationDetailModal({
     }
   };
 
-  /**
-   * Un-reserves the OLD inventory slot and reserves the NEW one.
-   * Looks up inventory items by projectCode + block + lot from the already-
-   * fetched inventoryList so we always use the correct inventoryCode.
-   */
   const transferInventory = async () => {
-    // Derive the project ID for the original reservation's project
     const oldProjectId =
       projectsList.find((p: any) => p.projectName === reservation.projectName)?.id ?? null;
     const newProjectId = selectedProjectId;
@@ -188,15 +180,15 @@ export function ReservationDetailModal({
     const oldInventory = inventoryList.find(
       (inv: any) =>
         String(inv.block) === String(reservation.block) &&
-        String(inv.lot)   === String(reservation.lot)   &&
-        inv.projectCode   === oldProjectId,
+        String(inv.lot) === String(reservation.lot) &&
+        inv.projectId === oldProjectId,
     );
 
     const newInventory = inventoryList.find(
       (inv: any) =>
         String(inv.block) === String(block) &&
-        String(inv.lot)   === String(lot)   &&
-        inv.projectCode   === newProjectId,
+        String(inv.lot) === String(lot) &&
+        inv.projectId === newProjectId,
     );
 
     // Un-reserve the previous slot

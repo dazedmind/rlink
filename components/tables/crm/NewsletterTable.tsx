@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
 import {
   ArrowLeft,
   ArrowRight,

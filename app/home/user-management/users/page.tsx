@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import LeadsTable from "@/components/tables/LeadsTable";
+import LeadsTable from "@/components/tables/crm/LeadsTable";
 
 function Users() {
   const [leadsThisMonth, setLeadsThisMonth] = useState(24450);
