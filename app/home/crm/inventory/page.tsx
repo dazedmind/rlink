@@ -97,7 +97,7 @@ function Inventory() {
                 className="flex items-center justify-center hover:scale-95 transition-all duration-300 cursor-pointer h-auto aspect-video rounded-xl border bg-white shadow-sm hover:shadow-md hover:border-primary/30"
               >
                 <Image
-                  src={getProjectLogo(project)}
+                  src={project.logoUrl ?? getProjectLogo(project)}
                   alt={project.projectName}
                   width={150}
                   height={150}

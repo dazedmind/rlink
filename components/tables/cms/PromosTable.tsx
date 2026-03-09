@@ -49,15 +49,15 @@ const STATUS_OPTIONS = [
 const statusMeta: Record<string, { label: string; className: string }> = {
   draft: {
     label: "Draft",
-    className: "bg-slate-100 text-slate-600 border border-slate-200",
+    className: "bg-slate-500 text-white border border-slate-200",
   },
   active: {
     label: "Active",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    className: "bg-emerald-500 text-white border border-emerald-200",
   },
   expired: {
     label: "Expired",
-    className: "bg-red-50 text-red-400 border border-red-100",
+    className: "bg-red-500 text-white border border-red-100",
   },
 };
 

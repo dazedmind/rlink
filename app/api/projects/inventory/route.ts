@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { projectInventory } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, desc, asc} from 'drizzle-orm';
 import { requireAuth } from '@/lib/api-auth';
 import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (authResult.error) return authResult.error;
 
   try {
-    const inventoryList = await db.select().from(projectInventory).$dynamic();
+    const inventoryList = await db.select().from(projectInventory).orderBy(desc(projectInventory.createdAt)).$dynamic();
 
     const uniqueBlocks = [...new Set(inventoryList.map((inventory: any) => inventory.block))];
     const uniqueLots = [...new Set(inventoryList.map((inventory: any) => inventory.lot))];

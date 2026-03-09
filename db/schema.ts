@@ -155,6 +155,20 @@ export const newsletterStatusEnum = pgEnum('newsletter_status', [
   'unsubscribed',
 ])
 
+export const departmentEnum = pgEnum('department', [
+  'marketing',
+  'executive',
+  'engineering',
+  'design',
+  'hr',
+  'finance',
+  'it',
+  'legal',
+  'operations',
+  'customer_service',
+  'product'
+])
+
 /**
  * leads — sales leads / prospects
  */
@@ -225,6 +239,8 @@ export const projects = pgTable('projects', {
   stage:       inventoryStageEnum('stage'),
   type:        inventoryTypeEnum('type').notNull(),
   photoUrl:    text('photo_url'),
+  logoUrl:     text('logo_url'),
+  mapLink:     text('map_link'),
   accentColor: text('accent_color'),
   description: text('description'),
   amenities: jsonb('amenities').notNull().default([]),

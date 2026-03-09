@@ -14,6 +14,7 @@ const modules = [
     description: "View and manage leads",
     accent: "#2563eb",
     tag: "CRM",
+    permission: ["admin", "user"],
   },
   {
     name: "CMS",
@@ -22,6 +23,7 @@ const modules = [
     description: "Manage website content and pages",
     accent: "#2563eb",
     tag: "Content",
+    permission: ["admin", "user"],
   },
   {
     name: "User Management",
@@ -30,11 +32,13 @@ const modules = [
     description: "Manage user accounts and permissions",
     accent: "#2563eb",
     tag: "Admin",
+    permission: ["admin"],
   },
 ];
 
 function Home() {
   const { data: session } = useSession();
+  const permissions = session?.user.role?.split(",") || [];
 
   return (
     <ProtectedRoute>
@@ -57,8 +61,8 @@ function Home() {
             </div>
 
             {/* Module Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {modules.map((module, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {modules.filter((module) => module.permission.some((permission) => permissions.includes(permission))).map((module, i) => (
                 <Link href={module.href} key={module.name} className="group animate-fade-in-up">
                   <div className="relative flex flex-col justify-between h-52 rounded-2xl border border-border bg-white p-6 overflow-hidden transition-all duration-300 hover:shadow-sm hover:-translate-y-1">
                     {/* Top row: tag + arrow */}

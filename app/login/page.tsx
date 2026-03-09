@@ -50,7 +50,9 @@ function LoginPage() {
   };
 
   const handleValidateEmail = () => {
-    if (!email.includes("@rland.ph") && email.trim() !== "") {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    if (trimmedEmail !== "" && !trimmedEmail.endsWith("@rland.ph")) {
       setErrorMsg("Invalid email. Please use your employee email.");
     } else {
       setErrorMsg("");

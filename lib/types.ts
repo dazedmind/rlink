@@ -55,6 +55,22 @@ export const inquiryStatus = {
 
 export type InquiryStatus = (typeof inquiryStatus)[keyof typeof inquiryStatus];
 
+export const department = {
+    marketing: 'Sales & Marketing Department',
+    executive: 'Executive Department',
+    engineering: 'Engineering Department',
+    design: 'Design Department',
+    hr: 'Human Resources Department',
+    finance: 'Finance Department',
+    it: 'Information Technology Department',
+    legal: 'Legal Department',
+    operations: 'Operations Department',
+    customer_service: 'Customer Service Department',
+    product: 'Product Management Department',
+}
+
+export type Department = (typeof department)[keyof typeof department];
+
 export const inquirySubject = {
     buying: 'Buying a Property',
     assistance: 'Customer Care',
@@ -102,6 +118,7 @@ export type Project = {
     id: string;
     projectCode: string;
     projectName: string;
+    logoUrl?: string;
     status?: string;
     location?: string;
     stage?: string;

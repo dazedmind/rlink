@@ -5,14 +5,8 @@ import Link from "next/link";
 import rlandLogo from "@/public/rland-logo.png";
 import { 
   LayoutDashboard, 
-  Calendar, 
   User, 
-  Box, 
-  MessageCircle, 
-  Mail,
   Menu,
-  UserCog,
-  UserRoundKey,
 } from "lucide-react";
 
 import {
@@ -33,13 +27,11 @@ import {
 } from "@/components/ui/sidebar";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import UserManagementDashboard from "./dashboard/page";
-import Users from "./users/page";
+import ManageUsers from "./manage-users/page";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "User Management" },
-  { title: "Users", icon: User, url: "users", group: "User Management" },
-  { title: "Roles", icon: UserCog, url: "roles", group: "User Management" },
-  { title: "Permissions", icon: UserRoundKey, url: "permissions", group: "User Management" },
+  { title: "Manage Users", icon: User, url: "manage-users", group: "User Management" },
 ];
     
 function UserManagementNavContent({
@@ -146,7 +138,7 @@ export default function UserManagementSidebar() {
 
         {/* Content Area */}
         {activeTab === "dashboard" && <UserManagementDashboard />}
-        {activeTab === "users" && <Users />}
+        {activeTab === "manage-users" && <ManageUsers />}
       </SidebarInset>
     </SidebarProvider>
   );

@@ -8,7 +8,6 @@ import {
   ChevronRight, 
   Code,
   Menu,
-  Film
 } from "lucide-react";
 
 import {
@@ -45,11 +44,10 @@ import ProjectsManager from "./listings/projects/page";
 import CareersManager from "./listings/careers/page";
 import PromosManager from "./listings/promos/page";
 import NewsManager from "./listings/news/page";
+import SecurityToolsManager from "./developer-tools/security-tools/page";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "CMS Menu" },
-  { title: "Page Management", icon: LayoutDashboard, url: "page-manager", group: "CMS Menu" },
-
   { 
     title: "Listings", 
     icon: List, 
@@ -62,12 +60,6 @@ const navItems = [
       { title: "News Articles", url: "listings/news" },
     ]
   },
-  { title: "Media Content", icon: Film, url: "media-content", group: "Content Management", 
-    items: [
-    { title: "Videos", url: "media-content/videos" },
-    { title: "Photos", url: "media-content/photos" },
-    { title: "Links", url: "media-content/links" },
-  ] },
   // { title: "Internal", icon: User, url: "internal", group: "Content Management" },
   { title: "Developer Tools", icon: Code, url: "developer-tools", group: "Configuration", 
     items: [
@@ -226,12 +218,13 @@ export default function CmsSidebar() {
         </header>
 
         {activeTab === "dashboard" && <CMSDashboard />}
-        {activeTab === "page-manager" && <PageManager />}
+        
         {activeTab === "listings/projects" && <ProjectsManager />}
         {activeTab === "listings/careers" && <CareersManager />}
         {activeTab === "listings/promos" && <PromosManager />}  
         {activeTab === "listings/news" && <NewsManager />}
 
+        {activeTab === "developer-tools/security-tools" && <SecurityToolsManager />}
       </SidebarInset>
     </SidebarProvider>
   );

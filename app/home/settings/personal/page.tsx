@@ -56,7 +56,7 @@ function PersonalInfoTabContent() {
   return (
     <Tabs defaultValue="personal">
       <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-        <Card className="border-border border md:rounded-tl-none">
+        <Card className="border-border border">
           <CardHeader className="pb-4 flex flex-col gap-1">
             <CardTitle className="text-xl font-bold">
               Personal Information

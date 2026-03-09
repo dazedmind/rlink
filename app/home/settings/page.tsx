@@ -62,7 +62,7 @@ function Settings() {
           <div className="flex gap-8 flex-col justify-between h-full">
             <div className="flex gap-8 flex-col h-full">
               {/* Mobile menu bar - visible only on small screens */}
-              <header className="sticky top-0 z-40 flex md:hidden items-center gap-3 border-b bg-white px-4 py-3 -mx-8 mb-4">
+              <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 -mx-8 mb-4">
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="size-9">
@@ -95,7 +95,7 @@ function Settings() {
                     </nav>
                   </SheetContent>
                 </Sheet>
-                <span className="text-lg font-bold">Settings</span>
+                <span className="text-lg font-bold">{navigation.find(item => item.value === tab)?.label}</span>
               </header>
 
               <span className="flex flex-col gap-2">
@@ -113,16 +113,16 @@ function Settings() {
               </span>
               <Tabs
                 defaultValue="personal"
-                orientation="horizontal"
-                className="flex flex-row md:flex-col xl:flex-row gap-0  w-full h-full"
+                orientation="vertical"
+                className="flex flex-row xl:flex-row gap-4  w-full h-full"
               >
                 {/* LEFT SIDEBAR SELECTOR - hidden on mobile */}
-                <TabsList className="hidden md:flex h-auto bg-transparent items-start border-none p-0">
+                <TabsList className="hidden lg:flex h-auto bg-transparent items-start border-none p-0">
                   {navigation.map((item) => (
                     <TabsTrigger
                       key={item.value}
                       value={item.value}
-                      className="w-full text-sm justify-start gap-3 px-4 py-3 data-[state=active]:bg-neutral-50 data-[state=active]:text-neutral-950 data-[state=active]:font-bold data-[state=active]:border-neutral-200 rounded-b-none transition-all cursor-pointer"
+                      className="w-full text-sm justify-start gap-3 px-4 py-3 data-[state=active]:text-blue-600 data-[state=active]:font-bold data-[state=active]:bg-blue-500/5 transition-all cursor-pointer"
                       onClick={() => setTab(item.value)}
                     >
                       <item.icon className="size-4" />
