@@ -1,0 +1,266 @@
+"use client";
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Star, Plus, X, Calendar as CalendarIcon } from "lucide-react";
+import TextInput from "@/components/ui/TextInput";
+import DropSelect from "@/components/ui/DropSelect";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+
+const TYPE_OPTIONS = [
+  { value: "news", label: "News" },
+  { value: "blog", label: "Blog" },
+];
+
+function TagInput({
+  label,
+  placeholder,
+  values,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  values: string[];
+  onChange: (updated: string[]) => void;
+}) {
+  const [input, setInput] = useState("");
+
+  const add = () => {
+    const trimmed = input.trim();
+    if (!trimmed || values.includes(trimmed)) return;
+    onChange([...values, trimmed]);
+    setInput("");
+  };
+
+  const remove = (i: number) => onChange(values.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        {label}
+      </Label>
+      {values.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1">
+          {values.map((v, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
+            >
+              {v}
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="hover:text-red-500 transition-colors"
+              >
+                <X size={10} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          placeholder={placeholder}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          className="h-10 w-full rounded-md border border-border bg-transparent px-4 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={add}
+          className="shrink-0 h-10 px-3"
+        >
+          <Plus size={14} />
+        </Button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Press Enter or click + to add.
+      </p>
+    </div>
+  );
+}
+
+type ArticleMetadataSidebarProps = {
+  headline: string;
+  setHeadline: (v: string) => void;
+  type: "news" | "blog";
+  setType: (v: "news" | "blog") => void;
+  publishDate: string;
+  setPublishDate: (v: string) => void;
+  tags: string[];
+  setTags: (v: string[]) => void;
+  photoUrl: string;
+  setPhotoUrl: (v: string) => void;
+  isFeatured: boolean;
+  setIsFeatured: (v: boolean) => void;
+  isSubmitting: boolean;
+  isEdit: boolean;
+  onSubmit: () => void;
+  onCancel: () => void;
+};
+
+export default function ArticleMetadataSidebar({
+  headline,
+  setHeadline,
+  type,
+  setType,
+  publishDate,
+  setPublishDate,
+  tags,
+  setTags,
+  photoUrl,
+  setPhotoUrl,
+  isFeatured,
+  setIsFeatured,
+  isSubmitting,
+  isEdit,
+  onSubmit,
+  onCancel,
+}: ArticleMetadataSidebarProps) {
+  const [schedulePopoverOpen, setSchedulePopoverOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState<Date | undefined>(undefined);
+  const [scheduleTime, setScheduleTime] = useState<string>("");
+
+  const handleConfirmSchedule = () => {
+    setSchedulePopoverOpen(false);
+  };
+
+  return (
+    <div className="xl:col-span-2">
+      <div className="border border-border rounded-xl p-5 flex flex-col gap-4">
+        <FileUpload
+          label="Article Photo"
+          value={photoUrl}
+          onChange={setPhotoUrl}
+        />
+        <TextInput
+          label="Headline"
+          name="headline"
+          type="text"
+          placeholder="e.g. The latest news from the Philippines"
+          value={headline}
+          onChange={(e) => setHeadline(e.target.value)}
+          required={true}
+        />
+
+        <DropSelect
+          label="Type"
+          selectName="type"
+          selectId="article-type"
+          value={type}
+          onChange={(e) => setType(e.target.value as "news" | "blog")}
+          required={true}
+        >
+          {TYPE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </DropSelect>
+
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Publish Date <span className="text-red-500">*</span>
+          </Label>
+          <Popover open={schedulePopoverOpen} onOpenChange={setSchedulePopoverOpen}>
+            <PopoverTrigger className="w-full text-start flex items-center justify-between" asChild>
+              <Button variant="outline" className="border-slate-200 font-medium gap-2" disabled={isSubmitting}>
+                {/* <CalendarIcon size={14} /> Select Publish Date */}
+                {scheduleDate ? (
+                  <span className="text-sm">
+                    {format(scheduleDate, "MMM d, yyyy")} {scheduleTime}
+                  </span>
+                ) : (
+                  <div className="flex items-center text-neutral-500 gap-2">
+                    <CalendarIcon size={14} />
+                    <p>Select Publish Date</p>
+                  </div>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start" side="top" sideOffset={8}>
+              <div className="p-4 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Date</Label>
+                  <Calendar
+                    mode="single"
+                    selected={scheduleDate}
+                    onSelect={setScheduleDate}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setSchedulePopoverOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={handleConfirmSchedule}>
+                    Confirm
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      
+        <TagInput
+          label="Tags"
+          placeholder="e.g. property, investment"
+          values={tags}
+          onChange={setTags}
+        />
+
+        <label className="flex items-center gap-3 cursor-pointer w-fit">
+          <div
+            role="switch"
+            aria-checked={isFeatured}
+            onClick={() => setIsFeatured(!isFeatured)}
+            className={`relative h-5 w-9 rounded-full transition-colors cursor-pointer ${isFeatured ? "bg-primary" : "bg-slate-200"}`}
+          >
+            <span
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${isFeatured ? "translate-x-4" : "translate-x-0.5"}`}
+            />
+          </div>
+          <span className="text-sm font-medium select-none">
+            Featured article
+          </span>
+          {isFeatured && (
+            <Star size={13} className="text-yellow-500 fill-yellow-400" />
+          )}
+        </label>
+
+        <div className="flex gap-2 pt-2 border-t border-border justify-end">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting
+              ? isEdit
+                ? "Saving..."
+                : "Publishing..."
+              : isEdit
+                ? "Save Changes"
+                : "Publish Article"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -8,7 +8,8 @@ import { ChartLine, Laptop, Users, ArrowUpRight } from "lucide-react";
 
 const modules = [
   {
-    name: "Digital Sales Lead",
+    name: "Digital Sales Lead Tracker",
+    shortName: "CRM",
     icon: ChartLine,
     href: "/home/crm",
     description: "View and manage leads",
@@ -17,7 +18,8 @@ const modules = [
     permission: ["admin", "user"],
   },
   {
-    name: "CMS",
+    name: "Content Studio Manager",
+    shortName: "CMS",
     icon: Laptop,
     href: "/home/cms",
     description: "Manage website content and pages",
@@ -26,7 +28,8 @@ const modules = [
     permission: ["admin", "user"],
   },
   {
-    name: "User Management",
+    name: "Identity & Access Management",
+    shortName: "IAM",
     icon: Users,
     href: "/home/user-management",
     description: "Manage user accounts and permissions",
@@ -83,6 +86,9 @@ function Home() {
                         />
                       </div>
                       <div>
+                        <p className="text-sm font-bold text-primary mt-0.5">
+                          {module.shortName}
+                        </p>
                         <h2 className="text-2xl font-bold text-neutral-800 leading-tight">
                           {module.name}
                         </h2>

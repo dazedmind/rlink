@@ -26,7 +26,7 @@ function CMSDashboard() {
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl h-full bg-white">
       <div className="mx-auto p-8">
         <DashboardHeader
-          title="CMS Dashboard"
+          title="Content Studio Manager"
           description="Track your leads, client inquiries, and sales progression."
         />
         
@@ -46,8 +46,7 @@ function CMSDashboard() {
             ))}
           </div>
 
-          {/* LEADS TABLE SECTION */}
-          <LeadsTable table_name="Recent Leads" recentViewOnly={true} />
+          {/*  TABLE SECTION */}
         </div>
 
       </div>

@@ -17,6 +17,7 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { setPasswordAction } from "@/lib/setpassword";
 import Footer from "@/components/layout/Footer";
+import TextInput from "@/components/ui/TextInput";
 
 function PrivacyTabContent() {
   const [newPassword, setNewPassword] = useState("");
@@ -101,28 +102,30 @@ function PrivacyTabContent() {
             <div className="grid gap-4 max-w-md">
               {!isPasswordSet ? (
                 <div className="space-y-2">
-                  <Label>Set Your Password</Label>
-                  <Input
+                  <TextInput
+                    label="Set Your Password"
+                    name="newPassword"
                     type="password"
-                    placeholder="Enter New Password"
+                    placeholder="Enter Your Password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label>Current Password</Label>
-                    <Input
+                  <div className="space-y-4">
+                    <TextInput
+                      label="Current Password"
+                      name="currentPassword"
                       type="password"
                       placeholder="Enter Current Password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>New Password</Label>
-                    <Input
+
+                    <TextInput
+                      label="New Password"
+                      name="newPassword"
                       type="password"
                       placeholder="Enter New Password"
                       value={newPassword}
@@ -134,8 +137,8 @@ function PrivacyTabContent() {
               {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
               <Button
                 onClick={handleChangePassword}
-                variant="outline"
-                className="w-fit"
+                variant="default"
+                className="w-fit bg-blue-600 hover:bg-blue-700"
               >
                 {isPasswordSet ? "Change Password" : "Set Password"}
               </Button>

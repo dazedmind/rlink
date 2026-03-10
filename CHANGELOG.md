@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2026-03-10
+
+### Added
+- User Management: added activity logs and logging for user changes
+- CMS: Added subpages (seo, analytics, security) for the Developer Tools sidebar
+- Added a toggle group for the Article Editor on News Articles tabs
+- Added show as password/plain text button for all password inputs
+ 
+### Changes
+- CMS: Refactored the codebase for Projects fixing long waiting time 
+- Re-arranged the Project subpage's layout 
+- Refactored the codebase for News article page to lessen confusion
+
+### Fixes
+- Fixed the layout shift when opening modals/popups
+
 ## [0.0.6] - 2026-03-09
 
 ### Added

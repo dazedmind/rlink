@@ -102,6 +102,16 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* PREVENT LAYOUT SHIFT WHEN OPENING MODALS */
+:root {
+  scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  overflow: visible !important;
+  margin-right: 0px !important; /* Prevents margin added by Radix to simulate scrollbar space */
+}
+
 body {
   font-family: 'Figtree', sans-serif;
 }

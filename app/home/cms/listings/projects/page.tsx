@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
-import ProjectFormModal from "@/components/modal/cms/ProjectFormModal";
 import ProjectsTable, { type Project } from "@/components/tables/cms/ProjectsTable";
+import ProjectDetailPage from "./ProjectDetailPage";
 import { toast } from "sonner";
 
 function ProjectsManager() {
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [view, setView] = useState<"list" | "detail">("list");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleDelete = async () => {
@@ -37,13 +38,59 @@ function ProjectsManager() {
     }
   };
 
-  const handleSuccess = useCallback(() => {
+  const goToDetail = (project: Project) => {
+    setSelectedProjectId(project.id);
+    setView("detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goBackToList = () => {
+    setView("list");
+    setSelectedProjectId(null);
     setRefreshTrigger((t) => t + 1);
-  }, []);
+  };
+
+  const handleAdd = async () => {
+    setIsAdding(true);
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectCode: "NEW",
+          projectName: "New Project",
+          type: "houselot",
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error ?? "Failed to create project.");
+        return;
+      }
+      const created = await response.json();
+      toast.success("Project created.");
+      setSelectedProjectId(String(created.id));
+      setView("detail");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  if (view === "detail" && selectedProjectId) {
+    return (
+      <>
+        <ProjectDetailPage projectId={selectedProjectId} onBack={goBackToList} />
+      </>
+    );
+  }
 
   return (
-    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
-      <div className="mx-auto p-8">
+    <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto m-4 border-border border rounded-xl bg-white">
+      <div className="mx-auto p-8 w-full max-w-full min-w-0 overflow-x-hidden">
         <DashboardHeader
           title="Projects Manager"
           description="Manage your projects and their contents."
@@ -51,33 +98,15 @@ function ProjectsManager() {
 
         <div className="flex flex-col gap-8 animate-in fade-in duration-500 mt-10">
           <ProjectsTable
-            onEdit={(p) => {
-              setEditingProject(p);
-              setShowFormModal(true);
-            }}
+            onEdit={goToDetail}
             onDelete={(p) => setDeletingProject(p)}
-            onAdd={() => {
-              setEditingProject(null);
-              setShowFormModal(true);
-            }}
+            onAdd={handleAdd}
             refreshTrigger={refreshTrigger}
-            onViewProject={(p) => {
-              setEditingProject(p);
-              setShowFormModal(true);
-            }}
+            onViewProject={goToDetail}
+            isAdding={isAdding}
           />
         </div>
       </div>
-
-      <ProjectFormModal
-        isOpen={showFormModal}
-        onClose={() => {
-          setShowFormModal(false);
-          setEditingProject(null);
-        }}
-        onSuccess={handleSuccess}
-        project={editingProject}
-      />
 
       <DeleteConfirmModal
         isOpen={!!deletingProject}

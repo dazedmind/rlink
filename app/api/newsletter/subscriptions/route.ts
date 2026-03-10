@@ -3,8 +3,12 @@ import { db } from "@/lib/db";
 import { newsletter } from "@/db/schema";
 import { asc, count, desc, eq, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
+import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+  const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 100);
+
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
 

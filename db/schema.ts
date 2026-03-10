@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
@@ -10,7 +11,7 @@ import {
   serial,
   jsonb,
 } from 'drizzle-orm/pg-core'
-
+import { user } from '@/db/auth-schema'
 // ─────────────────────────────────────────────
 // ENUMS
 // ─────────────────────────────────────────────
@@ -169,6 +170,11 @@ export const departmentEnum = pgEnum('department', [
   'product'
 ])
 
+export const activityStatusEnum = pgEnum('activity_status', [
+  'success',
+  'failed',
+])
+
 /**
  * leads — sales leads / prospects
  */
@@ -243,6 +249,10 @@ export const projects = pgTable('projects', {
   mapLink:     text('map_link'),
   accentColor: text('accent_color'),
   description: text('description'),
+  dhsudNumber: text('dhsud_number'),
+  address: text('address'),
+  completionDate: date('completion_date'),
+  salesOffice: text('sales_office'),
   amenities: jsonb('amenities').notNull().default([]),
   landmarks: jsonb('landmarks').notNull().default([]),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
@@ -414,5 +424,28 @@ export const mediaAssets = pgTable('media_assets', {
   purpose:   text('purpose'),
   url:       text('url'),
   format:    mediaFormatEnum('format'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+
+/**
+ * developer_tools_settings — CMS configuration for landing page (SEO, Analytics, Security)
+ */
+export const developerToolsSettings = pgTable('developer_tools_settings', {
+  id:        text('id').primaryKey(),
+  value:     jsonb('value').notNull().default({}),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+/**
+ * activity_logs — logged user activities
+ */
+export const activityLogs = pgTable('activity_logs', {
+  id:        text('id').primaryKey().default(sql<string>`gen_random_uuid()`),
+  userId:    text('user_id').notNull().references(() => user.id, { onDelete: 'no action' }),
+  activity:  text('activity').notNull(),
+  ipAddress: text('ip_address').notNull(),
+  userAgent: text('user_agent').notNull(),
+  status:    activityStatusEnum('status').notNull().default('success'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })

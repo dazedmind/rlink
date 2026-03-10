@@ -121,6 +121,7 @@ type ProjectsTableProps = {
   onAdd: () => void;
   refreshTrigger?: number;
   onViewProject: (project: Project) => void;
+  isAdding?: boolean;
 };
 
 export default function ProjectsTable({
@@ -129,6 +130,7 @@ export default function ProjectsTable({
   onAdd,
   refreshTrigger = 0,
   onViewProject,
+  isAdding = false,
 }: ProjectsTableProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -239,7 +241,7 @@ export default function ProjectsTable({
   ];
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden min-w-0 w-full max-w-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
         <div className="flex items-center gap-2">
@@ -336,13 +338,14 @@ export default function ProjectsTable({
           </DropdownMenu>
         </div>
 
-        <Button size="sm" className="gap-2" onClick={onAdd}>
+        <Button size="sm" className="gap-2" onClick={onAdd} disabled={isAdding}>
           <PlusCircle size={14} />
-          Add Project
+          {isAdding ? "Creating..." : "Add Project"}
         </Button>
       </div>
 
       {/* Table */}
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
@@ -475,6 +478,7 @@ export default function ProjectsTable({
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between px-6 py-4 border-t bg-white">

@@ -7,7 +7,10 @@ import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: NextRequest, { params }: RouteContext) {
+export async function GET(request: NextRequest, { params }: RouteContext) {
+  const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 100);
+
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
 

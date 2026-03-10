@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import rlandLogo from "@/public/rland-logo.png";
 import { 
@@ -8,7 +8,11 @@ import {
   ChevronRight, 
   Code,
   Menu,
+  ShieldX,
+  UserIcon,
+  Link2,
 } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 
 import {
   Sidebar,
@@ -38,13 +42,31 @@ import {
 
 import Link from "next/link";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
+
+function DeveloperToolsForbidden() {
+  return (
+    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
+      <div className="mx-auto p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="h-16 w-16 rounded-full bg-red-50 flex items-center justify-center">
+          <ShieldX className="size-8 text-red-500" />
+        </div>
+        <h2 className="text-xl font-semibold">Access Denied</h2>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          Developer Tools are only available to Admin and IT roles. Contact your administrator if you need access.
+        </p>
+      </div>
+    </main>
+  );
+}
 import CMSDashboard from "./dashboard/page";
-import PageManager from "./page-manager/page";
 import ProjectsManager from "./listings/projects/page";
 import CareersManager from "./listings/careers/page";
 import PromosManager from "./listings/promos/page";
 import NewsManager from "./listings/news/page";
-import SecurityToolsManager from "./developer-tools/security-tools/page";
+import SeoToolsPage from "./developer-tools/seo-tools/page";
+import AnalyticsToolsPage from "./developer-tools/analytics-tools/page";
+import SecurityToolsPage from "./developer-tools/security-tools/page";
+import ManageLinks from "./manage-links/page";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "CMS Menu" },
@@ -60,7 +82,7 @@ const navItems = [
       { title: "News Articles", url: "listings/news" },
     ]
   },
-  // { title: "Internal", icon: User, url: "internal", group: "Content Management" },
+  { title: "Social Links", icon: Link2, url: "manage-links", group: "Content Management" },
   { title: "Developer Tools", icon: Code, url: "developer-tools", group: "Configuration", 
     items: [
       { title: "SEO Tools", url: "developer-tools/seo-tools" },
@@ -89,7 +111,7 @@ function CmsNavContent({
   return (
     <>
       {Object.entries(groupedNav).map(([groupName, items]) => (
-        <SidebarGroup key={groupName}>
+        <SidebarGroup key={groupName} className="px-4 lg:px-2">
           <SidebarGroupLabel className="text-xs font-bold uppercase">
             {groupName}
           </SidebarGroupLabel>
@@ -165,17 +187,36 @@ function CmsNavContent({
   );
 }
 
+function canAccessDeveloperTools(role?: string | null, department?: string | null) {
+  const r = (role ?? "").toLowerCase();
+  const d = (department ?? "").toLowerCase();
+  return r === "admin" || r === "it" || d === "it";
+}
+
 export default function CmsSidebar() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { data: session } = useSession();
 
-  const groupedNav = navItems.reduce((acc, item) => {
-    if (!acc[item.group]) acc[item.group] = [];
-    acc[item.group].push(item);
-    return acc;
-  }, {} as Record<string, typeof navItems>);
+  const filteredNavItems = useMemo(() => {
+    const hasDevToolsAccess = canAccessDeveloperTools(session?.user?.role, session?.user?.department);
+    if (hasDevToolsAccess) return navItems;
+    return navItems.filter((item) => item.url !== "developer-tools");
+  }, [session?.user?.role, session?.user?.department]);
+
+  const groupedNav = useMemo(
+    () =>
+      filteredNavItems.reduce((acc, item) => {
+        if (!acc[item.group]) acc[item.group] = [];
+        acc[item.group].push(item);
+        return acc;
+      }, {} as Record<string, typeof navItems>),
+    [filteredNavItems]
+  );
+
+  const hasDevToolsAccess = canAccessDeveloperTools(session?.user?.role, session?.user?.department);
 
   return (
-    <SidebarProvider className="bg-neutral-100">
+    <SidebarProvider className="bg-neutral-100 min-w-0 overflow-x-hidden">
       <Sidebar
         variant="sidebar"
         collapsible="icon"
@@ -208,23 +249,36 @@ export default function CmsSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-neutral-100">
+      <SidebarInset className="bg-neutral-100 min-w-0 overflow-x-hidden">
         {/* Mobile menu bar - visible only on small screens */}
-        <header className="sticky bg-white top-0 z-40 flex md:hidden items-center gap-3 border-b px-4 py-3">
+        <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">
             <Menu className="size-5" />
           </SidebarTrigger>
           <Image src={rlandLogo} alt="RLand" width={60} height={32} className="object-contain" />
         </header>
 
+        {/* CMS MENU */}
         {activeTab === "dashboard" && <CMSDashboard />}
         
+        {/* CONTENT MANAGEMENT */}
         {activeTab === "listings/projects" && <ProjectsManager />}
         {activeTab === "listings/careers" && <CareersManager />}
         {activeTab === "listings/promos" && <PromosManager />}  
         {activeTab === "listings/news" && <NewsManager />}
 
-        {activeTab === "developer-tools/security-tools" && <SecurityToolsManager />}
+        {activeTab === "manage-links" && <ManageLinks />}
+
+        {/* CONFIGURATION */}
+        {activeTab === "developer-tools/seo-tools" && (
+          hasDevToolsAccess ? <SeoToolsPage /> : <DeveloperToolsForbidden />
+        )}
+        {activeTab === "developer-tools/analytics-tools" && (
+          hasDevToolsAccess ? <AnalyticsToolsPage /> : <DeveloperToolsForbidden />
+        )}
+        {activeTab === "developer-tools/security-tools" && (
+          hasDevToolsAccess ? <SecurityToolsPage /> : <DeveloperToolsForbidden />
+        )}
       </SidebarInset>
     </SidebarProvider>
   );

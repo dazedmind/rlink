@@ -28,6 +28,11 @@ function ManageUsers() {
         toast.error(error.message ?? "Failed to delete user.");
         return;
       }
+      await fetch("/api/activity-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activity: "user_deleted" }),
+      }).catch(() => {});
       toast.success("User deleted.");
       setDeletingUser(null);
       setRefreshTrigger((t) => t + 1);

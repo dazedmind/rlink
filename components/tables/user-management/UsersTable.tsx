@@ -123,27 +123,30 @@ export default function UsersTable({
     <div className="border border-border rounded-xl overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ArrowUpDown size={14} />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuRadioGroup value={sortOption} onValueChange={setSortOption}>
-                <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <div className="flex items-center justify-between w-full gap-2">
+          <h3 className="font-semibold text-xl">Users</h3>
 
-        <Button size="sm" className="gap-2" onClick={onAdd}>
-          <PlusCircle size={14} />
-          Add User
-        </Button>
+          <span className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <ArrowUpDown size={14} />
+                  Sort
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuRadioGroup value={sortOption} onValueChange={setSortOption}>
+                  <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" className="gap-2" onClick={onAdd}>
+              <PlusCircle size={14} />
+              Add User
+            </Button>
+          </span>
+        </div>
       </div>
 
       {/* Table */}

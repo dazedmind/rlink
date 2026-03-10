@@ -29,15 +29,15 @@ function AppearanceTabContent() {
               <Label>Theme Preference</Label>
               <div className="grid grid-cols-3 gap-4">
                 <button className="border-2 border-blue-600 p-3 rounded-lg flex flex-col items-center gap-2">
-                  <div className="w-full h-12 bg-white border rounded" />
+                  <div className="w-full h-20 bg-white border rounded-lg" />
                   <span className="text-xs font-medium">Light</span>
                 </button>
                 <button className="border p-3 rounded-lg flex flex-col items-center gap-2 hover:bg-neutral-50">
-                  <div className="w-full h-12 bg-neutral-900 border rounded" />
+                  <div className="w-full h-20 bg-neutral-900 border rounded-lg" />
                   <span className="text-xs font-medium">Dark</span>
                 </button>
                 <button className="border p-3 rounded-lg flex flex-col items-center gap-2 hover:bg-neutral-50">
-                  <div className="w-full h-12 bg-neutral-400 border rounded" />
+                  <div className="w-full h-20 bg-neutral-400 border rounded-lg" />
                   <span className="text-xs font-medium">System</span>
                 </button>
               </div>

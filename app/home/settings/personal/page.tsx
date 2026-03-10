@@ -17,6 +17,7 @@ import { User, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
 import Footer from "@/components/layout/Footer";
+import { department } from "@/lib/types";
 
 function PersonalInfoTabContent() {
   const { data: session } = useSession();
@@ -160,7 +161,7 @@ function PersonalInfoTabContent() {
                 <Input
                   id="department"
                   name="department"
-                  value={formData.department}
+                  value={department[formData.department as keyof typeof department]}
                   placeholder="Enter Department"
                   onChange={handleInputChange}
                 />

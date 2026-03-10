@@ -243,7 +243,7 @@ export default function NewsTable({
               >
                 {/* ── Merged: star + thumbnail + headline ── */}
                 <TableCell className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     {/* Star — fixed width so it doesn't collapse */}
                     <div className="w-4 shrink-0">
                       {row.isFeatured && (
@@ -267,7 +267,7 @@ export default function NewsTable({
                     )}
 
                     {/* Headline */}
-                    <p className="font-medium text-sm line-clamp-2 max-w-sm">
+                    <p className="ml-4 font-medium text-lg line-clamp-2 max-w-lg text-wrap">
                       {row.headline}
                     </p>
                   </div>
@@ -275,7 +275,7 @@ export default function NewsTable({
 
                 {/* Type */}
                 <TableCell className="px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs uppercase font-medium bg-slate-100 text-slate-700 border border-slate-200">
                     {row.type}
                   </span>
                 </TableCell>

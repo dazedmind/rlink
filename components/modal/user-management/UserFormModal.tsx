@@ -151,6 +151,11 @@ export default function UserFormModal({
           toast.error(error.message ?? "Failed to update user.");
           return;
         }
+        await fetch("/api/activity-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ activity: "Updated user " + form.email }),
+        }).catch(() => {});
         toast.success("User updated successfully!");
       } else {
         const { error } = await authClient.admin.createUser({
@@ -172,6 +177,11 @@ export default function UserFormModal({
           toast.error(error.message ?? "Failed to create user.");
           return;
         }
+        await fetch("/api/activity-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ activity: "Created user " + form.email }),
+        }).catch(() => {});
         toast.success("User created successfully!");
       }
       onSuccess();
@@ -234,7 +244,6 @@ export default function UserFormModal({
             </div>
           </div>
 
-          {!isEdit && (
             <div className="flex flex-col gap-1.5">
               <FieldLabel>
                 Password <span className="text-red-500">*</span>
@@ -247,7 +256,7 @@ export default function UserFormModal({
                 onChange={handleInputChange}
               />
             </div>
-          )}
+  
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">

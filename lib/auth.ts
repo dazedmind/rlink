@@ -1,13 +1,35 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { db } from "@/lib/db";
 import { user, session, account, verification } from "@/db/auth-schema";
+import { activityLogs } from "@/db/schema";
 import { admin } from "better-auth/plugins";
 
 export const auth = betterAuth({
   plugins: [
-    admin()  
+    admin()
   ],
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-in/email" || ctx.path.startsWith("/callback")) {
+        const newSession = ctx.context.newSession;
+        if (newSession?.user?.id) {
+          ctx.context.runInBackground(
+            logActivity(newSession.user.id, "Login", ctx.headers)
+          );
+        }
+      }
+    }),
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-out") {
+        const session = await getSessionFromCtx(ctx);
+        if (session?.user?.id) {
+          await logActivity(session.user.id, "Logout", ctx.headers);
+        }
+      }
+    }),
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { user, session, account, verification },
@@ -40,3 +62,21 @@ export const auth = betterAuth({
     },
   },
 });
+
+// FOR ACTIVITY LOGS
+async function logActivity(
+  userId: string,
+  activity: string,
+  headers: Headers | undefined
+) {
+  const h = headers ?? new Headers();
+  const forwarded = h.get("x-forwarded-for");
+  const ip = forwarded?.split(",")[0]?.trim() ?? h.get("x-real-ip") ?? "unknown";
+  const userAgent = h.get("user-agent") ?? "unknown";
+  await db.insert(activityLogs).values({
+    userId,
+    activity,
+    ipAddress: ip,
+    userAgent,
+  });
+}

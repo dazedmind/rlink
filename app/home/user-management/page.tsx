@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   User, 
   Menu,
+  Logs,
 } from "lucide-react";
 
 import {
@@ -28,10 +29,12 @@ import {
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import UserManagementDashboard from "./dashboard/page";
 import ManageUsers from "./manage-users/page";
+import ActivityLogs from "./activity-logs/page";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "User Management" },
   { title: "Manage Users", icon: User, url: "manage-users", group: "User Management" },
+  { title: "Activity Logs", icon: Logs, url: "activity-logs", group: "User Management" },
 ];
     
 function UserManagementNavContent({
@@ -53,7 +56,7 @@ function UserManagementNavContent({
   return (
     <>
       {Object.entries(groupedNav).map(([groupName, items]) => (
-        <SidebarGroup key={groupName}>
+        <SidebarGroup key={groupName} className="px-4 lg:px-2">
           <SidebarGroupLabel className="text-xs font-bold uppercase text-neutral-500">
             {groupName}
           </SidebarGroupLabel>
@@ -129,7 +132,7 @@ export default function UserManagementSidebar() {
 
       <SidebarInset className="bg-neutral-100 min-w-0 overflow-x-hidden">
         {/* Mobile menu bar - visible only on small screens */}
-        <header className="sticky top-0 z-40 flex md:hidden items-center gap-3 border-b bg-white px-4 py-3">
+        <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">
             <Menu className="size-5" />
           </SidebarTrigger>
@@ -139,6 +142,8 @@ export default function UserManagementSidebar() {
         {/* Content Area */}
         {activeTab === "dashboard" && <UserManagementDashboard />}
         {activeTab === "manage-users" && <ManageUsers />}
+        {activeTab === "activity-logs" && <ActivityLogs />}
+
       </SidebarInset>
     </SidebarProvider>
   );

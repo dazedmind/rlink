@@ -11,6 +11,7 @@ function DropSelect({
   onChange,
   value,
   className,
+  required,
 }: {
   children: React.ReactNode;
   label?: string;
@@ -19,10 +20,11 @@ function DropSelect({
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   value?: string;
   className?: string;
+  required?: boolean;
 }) {
   return (
-    <Field className={cn("", "col-span-2 md:col-span-1")}>
-      <FieldLabel className="text-xs uppercase text-gray-500">{label}</FieldLabel>
+    <Field className={cn("col-span-2 md:col-span-1 gap-2", className)}>
+      <FieldLabel className="text-xs uppercase text-gray-500">{label}{required && <span className="text-red-500">*</span>}</FieldLabel>
       <div className="relative">
         <ChevronDownIcon className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2" />
         <select
