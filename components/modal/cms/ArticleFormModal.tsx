@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
+import { articleType } from "@/lib/types";
 
 export type Article = {
   id: number;
@@ -47,11 +48,6 @@ const EMPTY_FORM: FormData = {
   photoUrl: "",
   isFeatured: false,
 };
-
-const TYPE_OPTIONS = [
-  { value: "news", label: "News" },
-  { value: "blog", label: "Blog" },
-];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -197,9 +193,9 @@ export default function ArticleFormModal({
                 value={form.type}
                 onChange={(e) => handleSelectChange("type", e.target.value)}
               >
-                {TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
+                {Object.entries(articleType).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </DropSelect>

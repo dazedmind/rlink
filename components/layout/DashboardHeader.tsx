@@ -20,38 +20,20 @@ import {
   MessageSquare,
   Check,
   Sun,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import { NotificationType, notificationTypeMeta } from "@/lib/types";
 
-// Mock data for your RLink CRM/CMS
-const notifications = [
-  {
-    id: 1,
-    title: "New Reservation",
-    description: "John Doe reserved Unit 502 in Project Horizon.",
-    time: "2m ago",
-    unread: true,
-    icon: <Check className="size-4 text-green-500" />,
-  },
-  {
-    id: 2,
-    title: "Inquiry Received",
-    description: "New inquiry regarding 'The Palms' listings.",
-    time: "1h ago",
-    unread: true,
-    icon: <MessageSquare className="size-4 text-blue-500" />,
-  },
-  {
-    id: 3,
-    title: "System Update",
-    description: "CMS maintenance scheduled for 2:00 AM.",
-    time: "5h ago",
-    unread: false,
-    icon: <Info className="size-4 text-zinc-500" />,
-  },
-];
+const notificationIcons = {
+  info: <Info className="size-4 text-blue-500" />,
+  success: <Check className="size-4 text-green-500" />,
+  error: <AlertCircle className="size-4 text-red-500" />,
+  warning: <AlertTriangle className="size-4 text-yellow-500" />,
+};
 
 function DashboardHeader({
   title,
@@ -63,10 +45,21 @@ function DashboardHeader({
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const [today, setToday] = useState("");
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setToday(dateFormatter(new Date().toISOString()));
+    fetchNotifications();
   }, []);
+
+  const fetchNotifications = async () => {
+    const response = await fetch("/api/notifications");
+    const data = await response.json();
+    setNotifications(data);
+    setUnreadCount(data.filter((n: any) => !n.read).length);
+    setLoading(false);
+  };
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -106,7 +99,7 @@ function DashboardHeader({
             <DropdownMenuLabel className="flex items-center justify-between font-bold text-lg p-2 px-4">
               Notifications
               {unreadCount > 0 && (
-                <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-normal bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
                   {unreadCount} New
                 </span>
               )}
@@ -116,31 +109,44 @@ function DashboardHeader({
 
             <ScrollArea className="h-[350px]">
               <DropdownMenuGroup>
-                {notifications.map((n) => (
+                {notifications.length === 0 ? (
+                  <DropdownMenuItem 
+                  className="flex justify-center gap-4 p-4 py-36 cursor-pointer focus:bg-zinc-50 ">
+                    <span className="flex flex-col items-center justify-center gap-2">
+                    <Info className="size-8 text-zinc-500" />
+                    <p className="text-sm text-zinc-500">No notifications yet</p>
+                    </span>
+                 
+                  </DropdownMenuItem>
+                ) : (
+                  notifications.map((n) => (
                   <DropdownMenuItem
-                    key={n.id}
+                    key={n.id.toString()}
                     className="flex items-start gap-4 p-4 cursor-pointer focus:bg-zinc-50"
                   >
                     <div className="mt-1 shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
-                      {n.icon}
+                      <span className={`size-4 rounded-full ${notificationTypeMeta[n.type].className}`}>
+                        {notificationIcons[n.type as keyof typeof notificationIcons]}
+                      </span>
                     </div>
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between gap-2">
                         <p
-                          className={`text-sm leading-none ${n.unread ? "font-bold" : "font-medium"}`}
+                          className={`text-sm leading-none ${n.read ? "text-zinc-600 font-medium" : "text-zinc-900 font-bold"}`}
                         >
                           {n.title}
                         </p>
                         <span className="text-[10px] text-zinc-500 whitespace-nowrap">
-                          {n.time}
+                          {dateFormatter(n.createdAt)}
                         </span>
                       </div>
                       <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
                         {n.description}
                       </p>
                     </div>
-                  </DropdownMenuItem>
-                ))}
+                    </DropdownMenuItem>
+                  ))
+                )}
               </DropdownMenuGroup>
             </ScrollArea>
 

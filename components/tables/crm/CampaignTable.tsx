@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "../../layout/ContextMenu";
+import { campaignStatus, campaignStatusMeta } from "@/lib/types";
 
 type Campaign = {
   id: number;
@@ -56,13 +57,6 @@ type Campaign = {
   body?: string;
   previewLine?: string;
 };
-
-const statusMeta: Record<string, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-slate-100 text-slate-600 border border-slate-200" },
-  scheduled: { label: "Scheduled", className: "bg-yellow-50 text-yellow-700 border border-yellow-200" },
-  sent:  { label: "Sent",  className: "bg-blue-50 text-blue-700 border border-blue-200" },
-};
-
 
 const ITEMS_PER_PAGE = 10;
 
@@ -229,7 +223,7 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
                 )}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                {Object.entries(statusMeta).map(([key, { label }]) => (
+                {Object.entries(campaignStatusMeta).map(([key, { label }]) => (
                   <DropdownMenuCheckboxItem
                     key={key}
                     checked={filterStatus.includes(key)}
@@ -284,12 +278,12 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
 
               <TableCell className="px-6 py-4">
                 <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium gap-1 ${statusMeta[row.status]?.className ?? ""}`}
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium gap-1 ${campaignStatusMeta[row.status]?.className ?? ""}`}
                 > 
                   {row.status === "draft" && <CircleDashed size={12} className="text-slate-700" />}
                   {row.status === "scheduled" && <Clock size={12} className="text-yellow-700" />}
                   {row.status === "sent" && <Check size={12} className="text-blue-700" />}
-                  {statusMeta[row.status]?.label}
+                  {campaignStatusMeta[row.status]?.label ?? campaignStatus[row.status as keyof typeof campaignStatus]}
                 </span>
               </TableCell>
 

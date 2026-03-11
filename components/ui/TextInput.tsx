@@ -14,6 +14,7 @@ function TextInput({
   value,
   className,
   required = false,
+  onBlur
 }: {
   label?: string;
   name: string;
@@ -23,6 +24,7 @@ function TextInput({
   value: string;
   className?: string;
   required?: boolean;
+  onBlur?: () => void;
 }) {
   const [inputType, setInputType] = useState<string>(type);
 

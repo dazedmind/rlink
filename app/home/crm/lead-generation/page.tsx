@@ -10,49 +10,7 @@ import LeadsTable from "@/components/tables/crm/LeadsTable";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
-
-// Values must match DB enum values exactly
-const SOURCE_OPTIONS = [
-  { value: "ads", label: "Ads" },
-  { value: "organic_fb", label: "Organic - FB" },
-  { value: "organic_ig", label: "Organic - IG" },
-  { value: "tiktok", label: "Organic - TikTok" },
-  { value: "website", label: "Website" },
-  { value: "email", label: "Email" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "open", label: "Open" },
-  { value: "ongoing", label: "In Progress" },
-  { value: "follow_up", label: "Follow-Up Needed" },
-  { value: "no_response", label: "No Response" },
-  { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" },
-  { value: "ineligible", label: "Not Qualified" },
-];
-
-const STAGE_OPTIONS = [
-  { value: "lead", label: "Lead" },
-  { value: "qualified", label: "Qualified" },
-  { value: "presented", label: "Presentation Completed" },
-  { value: "viewed", label: "Viewing Completed" },
-  { value: "proposal_sent", label: "Proposal Sent" },
-  { value: "negotiation", label: "Negotiation" },
-  { value: "closed_won", label: "Closed Won" },
-  { value: "closed_lost", label: "Closed Lost" },
-];
-
-const NEXT_ACTION_OPTIONS = [
-  { value: "call", label: "Call Client" },
-  { value: "message", label: "Send Message" },
-  { value: "email", label: "Send Email" },
-  { value: "followup", label: "Follow Up" },
-  { value: "schedule_presentation", label: "Schedule Presentation" },
-  { value: "tripping", label: "Schedule Viewing / Tripping" },
-  { value: "computation", label: "Send Proposal / Computation" },
-  { value: "reservation", label: "Reservation Processing" },
-  { value: "documentation", label: "Documentation Processing" },
-];
+import { leadSource, leadStatus, leadStage, leadNextAction } from "@/lib/types";
 
 type FormData = {
   firstName: string;
@@ -268,9 +226,9 @@ function LeadGeneration() {
                   className="col-span-2 md:col-span-1"
                 >
                   <option value="">Select Source</option>
-                  {SOURCE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {Object.entries(leadSource).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -282,9 +240,9 @@ function LeadGeneration() {
                   onChange={(e) => handleSelectChange("status", e.target.value)}
                   className="col-span-2 md:col-span-1"
                 >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {Object.entries(leadStatus).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -296,9 +254,9 @@ function LeadGeneration() {
                   onChange={(e) => handleSelectChange("stage", e.target.value)}
                   className="col-span-2 md:col-span-1"
                 >
-                  {STAGE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {Object.entries(leadStage).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -312,9 +270,9 @@ function LeadGeneration() {
                   }
                   className="col-span-2 md:col-span-1"
                 >
-                  {NEXT_ACTION_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {Object.entries(leadNextAction).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>

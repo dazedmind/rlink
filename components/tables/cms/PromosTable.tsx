@@ -37,29 +37,9 @@ import {
 } from "lucide-react";
 import type { Promo } from "@/components/modal/cms/PromoFormModal";
 import Image from "next/image";
+import { promoStatus, promoStatusMeta } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
-
-const STATUS_OPTIONS = [
-  { value: "draft", label: "Draft" },
-  { value: "active", label: "Active" },
-  { value: "expired", label: "Expired" },
-];
-
-const statusMeta: Record<string, { label: string; className: string }> = {
-  draft: {
-    label: "Draft",
-    className: "bg-slate-500 text-white border border-slate-200",
-  },
-  active: {
-    label: "Active",
-    className: "bg-emerald-500 text-white border border-emerald-200",
-  },
-  expired: {
-    label: "Expired",
-    className: "bg-red-500 text-white border border-red-100",
-  },
-};
 
 type PromosTableProps = {
   onEdit: (promo: Promo) => void;
@@ -174,13 +154,13 @@ export default function PromosTable({
               <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Status
               </p>
-              {STATUS_OPTIONS.map((opt) => (
+              {Object.entries(promoStatus).map(([key, label]) => (
                 <DropdownMenuCheckboxItem
-                  key={opt.value}
-                  checked={filterStatus.includes(opt.value)}
-                  onCheckedChange={() => toggleFilter(opt.value)}
+                  key={key}
+                  checked={filterStatus.includes(key)}
+                  onCheckedChange={() => toggleFilter(key)}
                 >
-                  {opt.label}
+                  {label}
                 </DropdownMenuCheckboxItem>
               ))}
               {activeFilterCount > 0 && (
@@ -304,11 +284,11 @@ export default function PromosTable({
                 <TableCell className="px-6 py-4">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      statusMeta[row.status]?.className ??
+                      promoStatusMeta[row.status]?.className ??
                       "bg-slate-100 text-slate-600 border border-slate-200"
                     }`}
                   >
-                    {statusMeta[row.status]?.label ?? row.status}
+                    {promoStatusMeta[row.status]?.label ?? row.status}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-muted-foreground">

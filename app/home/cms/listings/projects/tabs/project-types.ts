@@ -19,13 +19,14 @@ export type Project = {
   landmarks: unknown[];
 };
 
-export type ProjectStatus = "sold" | "available";
+export type ProjectStatus = "sold" | "available" | "on_hold";
 export type ProjectStage =
   | "pre_selling"
   | "ongoing_development"
+  | "coming_soon"
   | "completed"
   | "cancelled";
-export type ProjectType = "houselot" | "condo";
+export type ProjectType = "houselot" | "condo" | "townhouse";
 
 export type ProjectModel = {
   id: string;

@@ -144,7 +144,7 @@ function CmsNavContent({
                   <Collapsible
                     key={item.title}
                     asChild
-                    defaultOpen={activeTab.startsWith(item.url)}
+                    defaultOpen={true}
                     className="group/collapsible"
                   >
                     <SidebarMenuItem>
@@ -165,10 +165,10 @@ function CmsNavContent({
                               <SidebarMenuSubButton
                                 asChild
                                 isActive={activeTab === subItem.url}
-                                className={activeTab === subItem.url ? "font-medium text-black" : ""}
+                                className={activeTab === subItem.url ? "font-bold text-blue-600" : ""}
                               >
                                 <button onClick={() => handleNavClick(subItem.url)}>
-                                  <span>{subItem.title}</span>
+                                  <span className={activeTab === subItem.url ? "font-bold text-blue-800" : ""}>{subItem.title}</span>
                                 </button>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -259,7 +259,7 @@ export default function CmsSidebar() {
         </header>
 
         {/* CMS MENU */}
-        {activeTab === "dashboard" && <CMSDashboard />}
+        {activeTab === "dashboard" && <CMSDashboard onNavigate={setActiveTab} />}
         
         {/* CONTENT MANAGEMENT */}
         {activeTab === "listings/projects" && <ProjectsManager />}

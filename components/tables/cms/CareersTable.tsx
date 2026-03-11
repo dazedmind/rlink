@@ -33,10 +33,10 @@ import {
   Pencil,
   Trash2,
   EllipsisVertical,
-  BriefcaseBusiness,
   MapPin,
+  Eye,
 } from "lucide-react";
-import { Career } from "@/lib/types";
+import { Career, careerStatus } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,12 +47,6 @@ type CareersTableProps = {
   onAdd: () => void;
   refreshTrigger?: number;
 };
-
-const careerStatus = {
-  hiring: "Hiring",
-  closed: "Closed",
-  archived: "Archived",
-} as const;
 
 export default function CareersTable({
   onEdit,
@@ -125,7 +119,7 @@ export default function CareersTable({
   const actionMenu = (row: Career) => [
     {
       label: "View",
-      icon: BriefcaseBusiness,
+      icon: Eye,
       onClick: () => onView(row),
     },
     {
@@ -163,7 +157,7 @@ export default function CareersTable({
               <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Status
               </p>
-              {Object.values(Career).map((opt) => (
+              {Object.values(careerStatus).map((opt) => (
                 <DropdownMenuCheckboxItem
                   key={opt}
                   checked={filterStatus.includes(opt)}

@@ -12,23 +12,7 @@ import Image from "next/image";
 import { Plus, Trash2 } from "lucide-react";
 import type { OverviewForm } from "./project-types";
 import { Separator } from "@/components/ui/separator";
-
-const STATUS_OPTIONS = [
-  { value: "available", label: "Available" },
-  { value: "sold", label: "Sold Out" },
-];
-
-const STAGE_OPTIONS = [
-  { value: "pre_selling", label: "Pre-Selling" },
-  { value: "ongoing_development", label: "Ongoing Development" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const TYPE_OPTIONS = [
-  { value: "houselot", label: "House & Lot" },
-  { value: "condo", label: "Condominium" },
-];
+import { projectStage, projectStatus, projectType  } from "@/lib/types";
 
 const ACCENT_COLORS = [
   { value: "blue", label: "Blue", color: "bg-blue-900/80" },
@@ -121,6 +105,7 @@ type ProjectOverviewTabProps = {
   setForm: React.Dispatch<React.SetStateAction<OverviewForm>>;
   onSave: () => void;
   isSaving: boolean;
+  saveLabel?: string;
 };
 
 export default function ProjectOverviewTab({
@@ -128,6 +113,7 @@ export default function ProjectOverviewTab({
   setForm,
   onSave,
   isSaving,
+  saveLabel = "Save Changes",
 }: ProjectOverviewTabProps) {
   return (
     <div className="flex flex-col gap-8">
@@ -246,9 +232,9 @@ export default function ProjectOverviewTab({
                   }
                 >
                   <option value="">Select type</option>
-                  {TYPE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
+                  {Object.entries(projectType).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -278,9 +264,9 @@ export default function ProjectOverviewTab({
                   }
                 >
                   <option value="">Select status</option>
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
+                  {Object.entries(projectStatus).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -296,9 +282,9 @@ export default function ProjectOverviewTab({
                   }
                 >
                   <option value="">Select stage</option>
-                  {STAGE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
+                  {Object.entries(projectStage).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>
@@ -420,7 +406,7 @@ export default function ProjectOverviewTab({
       </div>
       <span className="flex justify-end">
         <Button onClick={onSave} disabled={isSaving} className="mt-2 w-fit">
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? "Saving..." : saveLabel}
         </Button>
       </span>
     </div>

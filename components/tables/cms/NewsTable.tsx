@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "@/components/layout/ContextMenu";
 import { toast } from "sonner";
+import { articleType } from "@/lib/types";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import {
   PlusCircle,
@@ -32,9 +33,9 @@ import {
   Pencil,
   Trash2,
   EllipsisVertical,
-  FileText,
   Image as ImageIcon,
   Star,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -52,11 +53,6 @@ export type Article = {
 };
 
 const ITEMS_PER_PAGE = 10;
-
-const TYPE_OPTIONS = [
-  { value: "news", label: "News" },
-  { value: "blog", label: "Blog" },
-];
 
 type NewsTableProps = {
   onEdit: (article: Article | null) => void;
@@ -125,14 +121,13 @@ export default function NewsTable({
     );
 
   const actionMenu = (row: Article) => [
-    { label: "View",   icon: FileText, onClick: () => onView(row) },
+    { label: "View",   icon: Eye, onClick: () => onView(row) },
     { label: "Edit",   icon: Pencil,   onClick: () => onEdit(row) },
     { label: "Delete", icon: Trash2,   color: "text-red-600", separator: true, onClick: () => onDelete(row) },
   ];
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
-
       {/* Toolbar */}
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
         <div className="flex items-center gap-2">
@@ -152,13 +147,13 @@ export default function NewsTable({
               <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Type
               </p>
-              {TYPE_OPTIONS.map((opt) => (
+              {Object.entries(articleType).map(([key, label]) => (
                 <DropdownMenuCheckboxItem
-                  key={opt.value}
-                  checked={filterType.includes(opt.value)}
-                  onCheckedChange={() => toggleFilter(opt.value)}
+                  key={key}
+                  checked={filterType.includes(key)}
+                  onCheckedChange={() => toggleFilter(key)}
                 >
-                  {opt.label}
+                  {label}
                 </DropdownMenuCheckboxItem>
               ))}
               {activeFilterCount > 0 && (
@@ -261,13 +256,13 @@ export default function NewsTable({
                         height={100}
                       />
                     ) : (
-                      <div className="w-24 h-14 rounded-md bg-neutral-100 border border-border flex items-center justify-center shrink-0">
+                      <div className="w-40 h-24 rounded-md bg-neutral-100 border border-border flex items-center justify-center shrink-0">
                         <ImageIcon className="size-4 text-muted-foreground/50" />
                       </div>
                     )}
 
                     {/* Headline */}
-                    <p className="ml-4 font-medium text-lg line-clamp-2 max-w-lg text-wrap">
+                    <p className="ml-4 font-medium line-clamp-2 max-w-lg text-wrap">
                       {row.headline}
                     </p>
                   </div>

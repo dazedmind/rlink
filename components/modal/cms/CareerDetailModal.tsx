@@ -58,17 +58,29 @@ export default function CareerDetailModal({
           </DialogHeader>
   
           <div className="flex-1 overflow-y-auto py-2 scrollbar-hide flex flex-col gap-5">
-            {sections.map((s) => (
+          {sections.map((s) => {
+            const lines = s.content.split("\n").map((l) => l.trim()).filter(Boolean);
+            return (
               <div key={s.label} className="flex flex-col gap-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {s.label}
                 </p>
-                <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-                  {s.content}
-                </p>
+                {lines.length > 1 ? (
+                  <ul className="flex flex-col gap-1">
+                    {lines.map((line, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-foreground leading-relaxed">
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-primary mt-2" />
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-foreground leading-relaxed">{s.content}</p>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
   
           <DialogFooter className="shrink-0 pt-3 border-t">
             <p className="text-xs text-muted-foreground mr-auto">

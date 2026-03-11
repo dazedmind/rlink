@@ -45,7 +45,7 @@ function Inventory() {
   }, []);
 
   const projectInventory = selectedProject
-    ? inventory.filter((inv) => inv.projectId === selectedProject.id)
+    ? inventory.filter((inv) => String(inv.projectId) === String(selectedProject.id))
     : [];
 
   // Pass all reservations to resolve soldTo (reservation id) for inventory items

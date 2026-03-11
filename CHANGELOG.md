@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2026-03-11
+
+### Added
+- CMS: Added main dashboard contents
+- Database: Added enum options for Project stage, status, and type
+- Added notification database and notificate API GET routes
+- CRM: Added a view by block/by house model filter on Project Inventory
+
+### Changes
+- Refactored all hardcoded select options and put in `types.ts` for easier changes integration
+- Removed the self-sign up option for security purposes
+
+### Fixes
+- Fixed inventory does not allow same block numbers with different house model
+ 
 ## [0.0.7] - 2026-03-10
 
 ### Added

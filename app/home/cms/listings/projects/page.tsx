@@ -12,7 +12,6 @@ function ProjectsManager() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleDelete = async () => {
@@ -50,41 +49,24 @@ function ProjectsManager() {
     setRefreshTrigger((t) => t + 1);
   };
 
-  const handleAdd = async () => {
-    setIsAdding(true);
-    try {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          projectCode: "NEW",
-          projectName: "New Project",
-          type: "houselot",
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        toast.error(data.error ?? "Failed to create project.");
-        return;
-      }
-      const created = await response.json();
-      toast.success("Project created.");
-      setSelectedProjectId(String(created.id));
-      setView("detail");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsAdding(false);
-    }
+  const handleAdd = () => {
+    setSelectedProjectId("new");
+    setView("detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleProjectCreated = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setRefreshTrigger((t) => t + 1);
   };
 
   if (view === "detail" && selectedProjectId) {
     return (
-      <>
-        <ProjectDetailPage projectId={selectedProjectId} onBack={goBackToList} />
-      </>
+      <ProjectDetailPage
+        projectId={selectedProjectId}
+        onBack={goBackToList}
+        onProjectCreated={handleProjectCreated}
+      />
     );
   }
 
@@ -103,7 +85,6 @@ function ProjectsManager() {
             onAdd={handleAdd}
             refreshTrigger={refreshTrigger}
             onViewProject={goToDetail}
-            isAdding={isAdding}
           />
         </div>
       </div>

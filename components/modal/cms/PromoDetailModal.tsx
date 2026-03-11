@@ -12,6 +12,7 @@ import {
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { ExternalLink } from "lucide-react";
 import type { Promo } from "./PromoFormModal";
+import { promoStatusMeta } from "@/lib/types";
 
 export default function PromoDetailModal({
   promo,
@@ -24,21 +25,7 @@ export default function PromoDetailModal({
 }) {
   if (!promo) return null;
 
-  const statusMeta: Record<string, { label: string; className: string }> = {
-    draft: {
-      label: "Draft",
-      className: "bg-slate-100 text-slate-600 border border-slate-200",
-    },
-    active: {
-      label: "Active",
-      className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    },
-    expired: {
-      label: "Expired",
-      className: "bg-red-50 text-red-400 border border-red-100",
-    },
-  };
-  const meta = statusMeta[promo.status] ?? {
+  const meta = promoStatusMeta[promo.status] ?? {
     label: promo.status,
     className: "bg-slate-100 text-slate-600 border border-slate-200",
   };

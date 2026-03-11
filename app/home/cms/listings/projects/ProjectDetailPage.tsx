@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft } from "lucide-react";
 import ProjectOverviewTab from "./tabs/ProjectOverviewTab";
 import ProjectModelsTab from "./tabs/ProjectModelsTab";
 import ProjectInventoryTab from "./tabs/ProjectInventoryTab";
@@ -14,6 +14,7 @@ import type {
   InventoryUnit,
   OverviewForm,
 } from "./tabs/project-types";
+import BackButton from "@/components/ui/BackButton";
 
 type Tab = "overview" | "models" | "inventory";
 
@@ -46,13 +47,36 @@ function normalizeStringArray(raw: unknown): string[] {
 type ProjectDetailPageProps = {
   projectId: string;
   onBack: () => void;
+  onProjectCreated?: (projectId: string) => void;
+};
+
+const EMPTY_FORM: OverviewForm = {
+  projectCode: "",
+  projectName: "",
+  status: "",
+  location: "",
+  stage: "",
+  type: "houselot",
+  photoUrl: "",
+  logoUrl: "",
+  mapLink: "",
+  accentColor: "",
+  description: "",
+  dhsudNumber: "",
+  address: "",
+  completionDate: "",
+  salesOffice: "",
+  amenities: [],
+  landmarks: [],
 };
 
 export default function ProjectDetailPage({
   projectId,
   onBack,
+  onProjectCreated,
 }: ProjectDetailPageProps) {
   const id = projectId;
+  const isCreateMode = id === "new";
 
   const [activeTab, setActiveTabLocal] = useState<Tab>("overview");
   const [project, setProject] = useState<Project | null>(null);
@@ -82,7 +106,14 @@ export default function ProjectDetailPage({
   });
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
+    if (!id || id === "new") {
+      setProject(null);
+      setForm(EMPTY_FORM);
+      setModels([]);
+      setInventory([]);
+      setIsLoading(false);
+      return;
+    }
     try {
       const [projRes, modelsRes, invRes] = await Promise.all([
         fetch(`/api/projects/${id}`, { credentials: "include" }).then((r) =>
@@ -139,39 +170,57 @@ export default function ProjectDetailPage({
 
   const saveProjectDetails = async () => {
     if (!id) return;
+    const payload = {
+      projectCode: form.projectCode.trim().toUpperCase(),
+      projectName: form.projectName.trim(),
+      status: form.status || null,
+      location: form.location.trim() || null,
+      stage: form.stage || null,
+      type: form.type || null,
+      photoUrl: form.photoUrl.trim() || null,
+      logoUrl: form.logoUrl.trim() || null,
+      mapLink: form.mapLink.trim() || null,
+      accentColor: form.accentColor.trim() || null,
+      description: form.description.trim() || null,
+      dhsudNumber: form.dhsudNumber.trim() || null,
+      address: form.address.trim() || null,
+      completionDate: form.completionDate || null,
+      salesOffice: form.salesOffice.trim() || null,
+      amenities: form.amenities,
+      landmarks: form.landmarks,
+    };
     setSavingSection("overview");
     try {
-      const res = await fetch(`/api/projects/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          projectCode: form.projectCode.trim().toUpperCase(),
-          projectName: form.projectName.trim(),
-          status: form.status || null,
-          location: form.location.trim() || null,
-          stage: form.stage || null,
-          type: form.type || null,
-          photoUrl: form.photoUrl.trim() || null,
-          logoUrl: form.logoUrl.trim() || null,
-          mapLink: form.mapLink.trim() || null,
-          accentColor: form.accentColor.trim() || null,
-          description: form.description.trim() || null,
-          dhsudNumber: form.dhsudNumber.trim() || null,
-          address: form.address.trim() || null,
-          completionDate: form.completionDate || null,
-          salesOffice: form.salesOffice.trim() || null,
-          amenities: form.amenities,
-          landmarks: form.landmarks,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        toast.error(err.error ?? "Failed to save.");
-        return;
+      if (isCreateMode) {
+        const res = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          toast.error(err.error ?? "Failed to create project.");
+          return;
+        }
+        const created = await res.json();
+        toast.success("Project created.");
+        onProjectCreated?.(String(created.id));
+      } else {
+        const res = await fetch(`/api/projects/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          toast.error(err.error ?? "Failed to save.");
+          return;
+        }
+        toast.success("Project details saved.");
+        fetchData();
       }
-      toast.success("Project details saved.");
-      fetchData();
     } catch {
       toast.error("Network error.");
     } finally {
@@ -260,7 +309,7 @@ export default function ProjectDetailPage({
     );
   }
 
-  if (!project) {
+  if (!project && !isCreateMode) {
     return (
       <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-white">
         <div className="mx-auto p-8 max-w-full">
@@ -274,52 +323,57 @@ export default function ProjectDetailPage({
   }
 
   const currentTab = activeTab;
+  const displayTitle = isCreateMode ? "New Project" : (project?.projectName ?? "");
+  const displayDescription = isCreateMode
+    ? "Fill in the details below to create a new project."
+    : `Edit ${project?.projectName} details and contents.`;
 
   return (
     <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-white">
       <div className="mx-auto p-8 max-w-full">
         <span className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <ArrowLeft size={20} />
-          </Button>
+          <BackButton href="/home/cms/listings/projects" mainPageName="Projects" onClick={onBack} />
           <div className="flex-1">
             <DashboardHeader
-              title={project.projectName}
-              description={`Edit ${project.projectName} details and contents.`}
+              title={displayTitle}
+              description={displayDescription}
             />
           </div>
         </span>
-        <div className="flex bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTabLocal(tab.id)}
-              className={`flex-1 px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
-                currentTab === tab.id
-                  ? "bg-primary text-white"
-                  : "text-[#8E8E93] hover:text-[#1C1C1E]"
-              }`}
-            >
-              {tab.label}
-              {tab.id === "models" && models.length > 0 && ` (${models.length})`}
-              {tab.id === "inventory" &&
-                inventory.length > 0 &&
-                ` (${inventory.length})`}
-            </button>
-          ))}
-        </div>
+        {!isCreateMode && (
+          <div className="flex bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTabLocal(tab.id)}
+                className={`flex-1 px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
+                  currentTab === tab.id
+                    ? "bg-primary text-white"
+                    : "text-[#8E8E93] hover:text-[#1C1C1E]"
+                }`}
+              >
+                {tab.label}
+                {tab.id === "models" && models.length > 0 && ` (${models.length})`}
+                {tab.id === "inventory" &&
+                  inventory.length > 0 &&
+                  ` (${inventory.length})`}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {currentTab === "overview" && (
+        {(currentTab === "overview" || isCreateMode) && (
           <ProjectOverviewTab
             form={form}
             setForm={setForm}
             onSave={saveProjectDetails}
             isSaving={savingSection === "overview"}
+            saveLabel={isCreateMode ? "Create Project" : "Save"}
           />
         )}
 
-        {currentTab === "models" && (
+        {!isCreateMode && currentTab === "models" && (
           <ProjectModelsTab
             models={models}
             setModels={setModels}
@@ -328,7 +382,7 @@ export default function ProjectDetailPage({
           />
         )}
 
-        {currentTab === "inventory" && (
+        {!isCreateMode && currentTab === "inventory" && (
           <ProjectInventoryTab
             inventory={inventory}
             setInventory={setInventory}

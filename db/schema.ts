@@ -81,7 +81,9 @@ export const inquirySubjectEnum = pgEnum('inquiry_subject', [
 
 export const inquirySourceEnum = pgEnum('inquiry_source', [
   'facebook',
+  'instagram',
   'linkedin',
+  'tiktok',
   'youtube',
   'website',
   'others',
@@ -90,18 +92,21 @@ export const inquirySourceEnum = pgEnum('inquiry_source', [
 export const inventoryStatusEnum = pgEnum('inventory_status', [
   'sold',
   'available',
+  'on_hold'
 ])
 
 export const inventoryStageEnum = pgEnum('inventory_stage', [
   'pre_selling',
   'ongoing_development',
   'completed',
+  'coming_soon',
   'cancelled',
 ])
 
 export const inventoryTypeEnum = pgEnum('inventory_type', [
   'houselot',
   'condo',
+  'townhouse',
 ])
 
 export const brokerStatusEnum = pgEnum('broker_status', [
@@ -113,6 +118,8 @@ export const brokerStatusEnum = pgEnum('broker_status', [
 export const articleTypeEnum = pgEnum('article_type', [
   'news',
   'blog',
+  'announcement',
+  'event',
 ])
 
 export const mediaFormatEnum = pgEnum('format', [
@@ -173,6 +180,13 @@ export const departmentEnum = pgEnum('department', [
 export const activityStatusEnum = pgEnum('activity_status', [
   'success',
   'failed',
+])
+
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'info',
+  'success',
+  'error',
+  'warning',
 ])
 
 /**
@@ -292,7 +306,7 @@ export const projectInventory = pgTable('project_inventory', {
   createdAt:     timestamp('created_at').notNull().defaultNow(),
   updatedAt:     timestamp('updated_at').notNull().defaultNow(),
 }, (t) => ({
-  uniqueBlockLot: unique().on(t.projectId, t.block, t.lot),
+  uniqueBlockLotModel: unique().on(t.projectId, t.block, t.lot, t.modelId),
 }))
 
 /**
@@ -448,4 +462,19 @@ export const activityLogs = pgTable('activity_logs', {
   userAgent: text('user_agent').notNull(),
   status:    activityStatusEnum('status').notNull().default('success'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+/**
+ * Notifications
+ */
+
+export const notifications = pgTable('notifications', {
+  id:        serial('id').primaryKey(),
+  title:     text('title').notNull(),
+  description: text('description').notNull(),
+  type:        notificationTypeEnum('type').notNull(),
+  read:        boolean('read').notNull().default(false),
+  userId:      text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

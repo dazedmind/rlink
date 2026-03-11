@@ -56,9 +56,12 @@ function UserManagementDashboard() {
                   <div className="flex items-center gap-2 z-30">
                     <p className="text-lg font-semibold text-muted-foreground">{user_stat.label}</p>
                   </div>
-                  <span className="absolute -bottom-4 right-3 z-0">
+                  {/* <span className="absolute -bottom-4 right-3 z-0">
                   {user_stat.icon && <user_stat.icon className="size-20 text-neutral-200/60" />} 
-                  </span>
+                  </span> */}
+                  <span className="absolute -bottom-4 right-4">
+                      <user_stat.icon className="size-20 text-muted-foreground/20 stroke-2" />
+                    </span>
                 </CardContent>
               </Card>
             ))}

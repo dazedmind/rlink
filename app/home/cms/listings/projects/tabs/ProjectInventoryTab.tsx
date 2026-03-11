@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   Star,
+  Info,
 } from "lucide-react";
 import type { InventoryUnit, ProjectModel } from "./project-types";
 
@@ -317,7 +318,10 @@ export default function ProjectInventoryTab({
       </div>
 
       {models.length === 0 && (
-        <div className="text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm">
+        <div className="flex items-center  gap-2 text-amber-800 bg-amber-50/50 border border-amber-100 rounded-lg px-4 py-3 text-sm">
+          <span>
+            <Info className="size-4"/>
+          </span>
           Define at least one model in the Models tab before adding inventory
           units.
         </div>

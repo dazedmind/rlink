@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { LeadStatus } from "@/lib/types";
+import { leadStatus, leadStage, leadNextAction, type LeadStatus, leadSource } from "@/lib/types";
 import TextInput from "../../ui/TextInput";
 import { toast } from "sonner";
 import DropSelect from "../../ui/DropSelect";
@@ -17,48 +17,6 @@ import { Separator } from "../../ui/separator";
 import { Field } from "../../ui/field";
 import { Textarea } from "../../ui/textarea";
 import { Label } from "../../ui/label";
-
-const SOURCE_OPTIONS = [
-  { value: "ads", label: "Ads" },
-  { value: "organic_fb", label: "Organic - FB" },
-  { value: "organic_ig", label: "Organic - IG" },
-  { value: "tiktok", label: "Organic - TikTok" },
-  { value: "website", label: "Website" },
-  { value: "email", label: "Email" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "open", label: "Open" },
-  { value: "ongoing", label: "In Progress" },
-  { value: "follow_up", label: "Follow-Up Needed" },
-  { value: "no_response", label: "No Response" },
-  { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" },
-  { value: "ineligible", label: "Not Qualified" },
-];
-
-const STAGE_OPTIONS = [
-  { value: "lead", label: "Lead" },
-  { value: "qualified", label: "Qualified" },
-  { value: "presented", label: "Presentation Completed" },
-  { value: "viewed", label: "Viewing Completed" },
-  { value: "proposal_sent", label: "Proposal Sent" },
-  { value: "negotiation", label: "Negotiation" },
-  { value: "closed_won", label: "Closed Won" },
-  { value: "closed_lost", label: "Closed Lost" },
-];
-
-const NEXT_ACTION_OPTIONS = [
-  { value: "call", label: "Call Client" },
-  { value: "message", label: "Send Message" },
-  { value: "email", label: "Send Email" },
-  { value: "followup", label: "Follow Up" },
-  { value: "schedule_presentation", label: "Schedule Presentation" },
-  { value: "tripping", label: "Schedule Viewing / Tripping" },
-  { value: "computation", label: "Send Proposal / Computation" },
-  { value: "reservation", label: "Reservation Processing" },
-  { value: "documentation", label: "Documentation Processing" },
-];
 
 interface LeadDetailModalProps {
   lead: any;
@@ -220,9 +178,9 @@ export function LeadDetailModal({
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
               >
-                {SOURCE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {Object.entries(leadSource).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </DropSelect>
@@ -258,9 +216,9 @@ export function LeadDetailModal({
                 value={status}
                 onChange={(e) => setStatus(e.target.value as LeadStatus)}
               >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {Object.entries(leadStatus).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </DropSelect>
@@ -272,9 +230,9 @@ export function LeadDetailModal({
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
               >
-                {STAGE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {Object.entries(leadStage).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </DropSelect>
@@ -286,9 +244,9 @@ export function LeadDetailModal({
                 value={nextAction}
                 onChange={(e) => setNextAction(e.target.value)}
               >
-                {NEXT_ACTION_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {Object.entries(leadNextAction).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </DropSelect>

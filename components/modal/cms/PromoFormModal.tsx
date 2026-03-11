@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
+import { promoStatus } from "@/lib/types";
 
 export type Promo = {
   id: number;
@@ -47,12 +48,6 @@ const EMPTY_FORM: FormData = {
   startDate: "",
   endDate: "",
 };
-
-const STATUS_OPTIONS = [
-  { value: "draft", label: "Draft" },
-  { value: "active", label: "Active" },
-  { value: "expired", label: "Expired" },
-];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -227,9 +222,9 @@ export default function PromoFormModal({
               value={form.status}
               onChange={(e) => handleSelectChange("status", e.target.value)}
             >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
+              {Object.entries(promoStatus).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
                 </option>
               ))}
             </DropSelect>

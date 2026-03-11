@@ -1,7 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel } from "@/components/ui/field";
+import React, { useState, useEffect } from "react";
+import { Field } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import rlandLogo from "@/public/rland-logo.png";
 import Image from "next/image";
@@ -9,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { FcGoogle } from "react-icons/fc";
-import Link from "next/link";
-import { ShieldCheck, Building2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import TextInput from "@/components/ui/TextInput";
 
 function LoginPage() {
   const router = useRouter();
@@ -41,17 +39,27 @@ function LoginPage() {
     router.push("/home");
   };
 
-  const handleGoogleLogin = async () => {
-    const { error } = await authClient.signIn.social({ provider: "google", callbackURL: "/home" });
-    if (error) {
-      toast.error(error.message ?? "Failed to sign in with Google");
-      return;
-    }
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleValidateEmail();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [email]);
+
+  // const handleGoogleLogin = async () => {
+  //   const { error } = await authClient.signIn.social({
+  //     provider: "google",
+  //     callbackURL: "/home",
+  //   });
+  //   if (error) {
+  //     toast.error(error.message ?? "Failed to sign in with Google");
+  //     return;
+  //   }
+  // };
 
   const handleValidateEmail = () => {
     const trimmedEmail = email.trim().toLowerCase();
-    
+
     if (trimmedEmail !== "" && !trimmedEmail.endsWith("@rland.ph")) {
       setErrorMsg("Invalid email. Please use your employee email.");
     } else {
@@ -61,7 +69,6 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex bg-slate-950">
-
       {/* ── LEFT PANEL ── */}
       <div className="hidden lg:flex flex-col justify-center w-[52%] relative overflow-hidden bg-slate-900 p-12">
         {/* Grid texture */}
@@ -77,15 +84,17 @@ function LoginPage() {
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-
         {/* Center headline */}
         <div className="relative space-y-6 px-12">
           <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 rounded-full px-4 py-1.5">
             <ShieldCheck size={13} className="text-blue-400" />
-            <span className="text-blue-400 text-xs font-medium tracking-wide uppercase">RLink</span>
+            <span className="text-blue-400 text-xs font-medium tracking-wide uppercase">
+              RLink
+            </span>
           </div>
           <h1 className="text-5xl font-bold text-white leading-[1.1] tracking-tight">
-            Centralized<br />
+            Centralized
+            <br />
             <span className="text-blue-400">Access</span> Platform
           </h1>
         </div>
@@ -94,74 +103,55 @@ function LoginPage() {
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 flex items-center justify-center p-6 bg-white">
         <div className="w-full max-w-sm space-y-7">
-
           {/* Header */}
           <div className="space-y-1">
             <div className="flex items-center gap-3 mb-6">
-              <Image src={rlandLogo} alt="RLand Logo" width={80} height={80}  />
+              <Image src={rlandLogo} alt="RLand Logo" width={80} height={80} />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-            <p className="text-sm text-slate-500">Sign in to your employee account to continue</p>
-          </div>
-
-          {/* Google */}
-          <Button
-            variant="outline"
-            className="w-full h-11 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium gap-3 shadow-sm"
-            onClick={handleGoogleLogin}
-            type="button"
-          >
-            <FcGoogle size={18} />
-            Continue with Google
-          </Button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-xs text-slate-400 font-medium">or sign in with email</span>
-            <div className="flex-1 h-px bg-slate-200" />
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Welcome back
+            </h2>
+            <p className="text-sm text-slate-500">
+              Sign in to your employee account to continue
+            </p>
           </div>
 
           {/* Form */}
           <form className="space-y-4" onSubmit={handleLogin}>
             <Field>
-              <FieldLabel className="text-sm font-medium text-slate-700">
-                Employee Email
-              </FieldLabel>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={handleValidateEmail}
+              <TextInput
+                label="Employee Email"
+                name="email"
                 type="text"
-                placeholder="jdelacruz@rland.ph"
-                className="h-11 border-slate-200 bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-colors"
+                placeholder="Enter your email"
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
               />
-              {errorMsg && (
-                <p className="text-xs text-red-500 mt-1">{errorMsg}</p>
-              )}
             </Field>
+            {errorMsg && (
+              <p className="text-xs text-red-500 mt-1">{errorMsg}</p>
+            )}
 
             <Field>
-              <div className="flex items-center justify-between mb-1">
-                <FieldLabel className="text-sm font-medium text-slate-700 mb-0">
-                  Password
-                </FieldLabel>
-                <span className="text-xs text-blue-600 cursor-pointer hover:underline font-medium">
-                  Forgot password?
-                </span>
-              </div>
-              <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              <TextInput
+                label="Password"
+                name="password"
                 type="password"
                 placeholder="Enter your password"
-                className="h-11 border-slate-200 bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-colors"
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
               />
+              <span className="text-xs text-blue-600 cursor-pointer hover:underline font-medium">
+                Forgot password?
+              </span>
             </Field>
 
             <div className="flex items-center gap-2">
               <Checkbox id="remember" />
-              <label htmlFor="remember" className="text-sm text-slate-500 cursor-pointer select-none">
+              <label
+                htmlFor="remember"
+                className="text-sm text-slate-500 cursor-pointer select-none"
+              >
                 Remember me for 30 days
               </label>
             </div>
@@ -173,9 +163,24 @@ function LoginPage() {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
                   </svg>
                   Signing in…
                 </span>
@@ -185,15 +190,8 @@ function LoginPage() {
             </Button>
           </form>
 
-          {/* <p className="text-center text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-600 font-medium hover:underline">
-              Sign up
-            </Link>
-          </p> */}
-
           <p className="text-center text-xs text-slate-400">
-            Protected by RLand security · Employee access only
+            For employee access only · Property of RLand Develoment Inc.
           </p>
         </div>
       </div>

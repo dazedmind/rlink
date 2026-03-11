@@ -9,6 +9,7 @@ import type { Article } from "@/components/tables/cms/NewsTable";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import ArticleBodyEditor from "./article-editor/ArticleBodyEditor";
 import ArticleMetadataSidebar from "./article-editor/ArticleMetadataSidebar";
+import BackButton from "@/components/ui/BackButton";
 
 export default function ArticleEditor({
   article,
@@ -118,9 +119,7 @@ export default function ArticleEditor({
       className="flex flex-col gap-6 animate-in fade-in duration-300"
     >
       <span className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onCancel}>
-          <ArrowLeft size={20} />
-        </Button>
+        <BackButton href="/home/cms/listings/news" mainPageName="News" onClick={onCancel} />
         <div className="flex-1">
           <DashboardHeader
             title="News and Articles Manager"

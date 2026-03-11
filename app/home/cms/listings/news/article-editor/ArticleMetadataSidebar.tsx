@@ -11,11 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-
-const TYPE_OPTIONS = [
-  { value: "news", label: "News" },
-  { value: "blog", label: "Blog" },
-];
+import { articleType } from "@/lib/types";
 
 function TagInput({
   label,
@@ -165,9 +161,9 @@ export default function ArticleMetadataSidebar({
           onChange={(e) => setType(e.target.value as "news" | "blog")}
           required={true}
         >
-          {TYPE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
+          {Object.entries(articleType).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
             </option>
           ))}
         </DropSelect>
@@ -200,7 +196,6 @@ export default function ArticleMetadataSidebar({
                     mode="single"
                     selected={scheduleDate}
                     onSelect={setScheduleDate}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   />
                 </div>
                 <div className="flex gap-2 pt-2">

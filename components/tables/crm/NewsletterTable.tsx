@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
+import { subscriberStatusMeta } from "@/lib/types";
 
 type Subscriber = {
   id: number;
@@ -45,11 +46,6 @@ type Subscriber = {
 };
 
 const ITEMS_PER_PAGE = 10;
-
-const statusMeta: Record<string, { label: string; className: string }> = {
-  subscribed:   { label: "Subscribed",   className: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  unsubscribed: { label: "Unsubscribed", className: "bg-slate-100 text-slate-500 border border-slate-200" },
-};
 
 function NewsletterTable() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -133,7 +129,7 @@ function NewsletterTable() {
       const headers = ["Email", "Status", "Joined At"];
       const csvRows = rows.map((s) => [
         s.email,
-        statusMeta[s.status]?.label ?? s.status,
+        subscriberStatusMeta[s.status]?.label ?? s.status,
         shortDateFormatter(s.createdAt),
       ]);
       const csvContent = [
@@ -268,7 +264,7 @@ function NewsletterTable() {
                   )}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {Object.entries(statusMeta).map(([key, { label }]) => (
+                  {Object.entries(subscriberStatusMeta).map(([key, { label }]) => (
                     <DropdownMenuCheckboxItem
                       key={key}
                       checked={filterStatus.includes(key)}
@@ -346,9 +342,9 @@ function NewsletterTable() {
 
                 <TableCell className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${statusMeta[row.status]?.className ?? ""}`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${subscriberStatusMeta[row.status]?.className ?? ""}`}
                   >
-                    {statusMeta[row.status]?.label}
+                    {subscriberStatusMeta[row.status]?.label}
                   </span>
                 </TableCell>
 

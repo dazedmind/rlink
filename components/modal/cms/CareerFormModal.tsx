@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
-import { Career } from "@/lib/types";
+import type { Career } from "@/lib/types";
+import { careerStatus } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 
 // ─── Field Label ──────────────────────────────────────────────────────────────
@@ -224,9 +225,9 @@ export default function CareerFormModal({
                   value={form.status}
                   onChange={(e) => handleSelectChange("status", e.target.value)}
                 >
-                  {Object.values(Career).map((o) => (
-                    <option key={o} value={o.toLowerCase()}>
-                      {o}
+                  {Object.entries(careerStatus).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
                     </option>
                   ))}
                 </DropSelect>

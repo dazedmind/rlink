@@ -39,19 +39,16 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-
-type ProjectStatus = "sold" | "available";
-type ProjectStage = "pre_selling" | "ongoing_development" | "completed" | "cancelled";
-type ProjectType = "houselot" | "condo";
+import { projectStatus, projectStage, projectType, projectStatusMeta, projectStageMeta, projectTypeMeta } from "@/lib/types";
 
 export type Project = {
   id: string;
   projectCode: string;
   projectName: string;
-  status: ProjectStatus | null;
+  status: string | null;
   location: string | null;
-  stage: ProjectStage | null;
-  type: ProjectType;
+  stage: string | null;
+  type: string;
   photoUrl: string | null;
   accentColor: string | null;
   description: string | null;
@@ -61,58 +58,6 @@ export type Project = {
   updatedAt: string;
 };
 
-const statusMeta: Record<string, { label: string; className: string }> = {
-  available: {
-    label: "Available",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  },
-  sold: {
-    label: "Sold Out",
-    className: "bg-red-50 text-red-700 border border-red-200",
-  },
-};
-
-const stageMeta: Record<string, { label: string; className: string }> = {
-  pre_selling: {
-    label: "Pre-Selling",
-    className: "bg-blue-50 text-blue-700 border border-blue-200",
-  },
-  ongoing_development: {
-    label: "Ongoing Development",
-    className: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  },
-  completed: {
-    label: "Completed",
-    className: "bg-slate-100 text-slate-700 border border-slate-200",
-  },
-  cancelled: {
-    label: "Cancelled",
-    className: "bg-red-50 text-red-400 border border-red-100",
-  },
-};
-
-const typeMeta: Record<string, { label: string }> = {
-  houselot: { label: "House & Lot" },
-  condo: { label: "Condominium" },
-};
-
-const STATUS_OPTIONS = [
-  { value: "available", label: "Available" },
-  { value: "sold", label: "Sold Out" },
-];
-
-const STAGE_OPTIONS = [
-  { value: "pre_selling", label: "Pre-Selling" },
-  { value: "ongoing_development", label: "Ongoing Development" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const TYPE_OPTIONS = [
-  { value: "houselot", label: "House & Lot" },
-  { value: "condo", label: "Condominium" },
-];
-
 const ITEMS_PER_PAGE = 10;
 
 type ProjectsTableProps = {
@@ -121,7 +66,6 @@ type ProjectsTableProps = {
   onAdd: () => void;
   refreshTrigger?: number;
   onViewProject: (project: Project) => void;
-  isAdding?: boolean;
 };
 
 export default function ProjectsTable({
@@ -130,7 +74,6 @@ export default function ProjectsTable({
   onAdd,
   refreshTrigger = 0,
   onViewProject,
-  isAdding = false,
 }: ProjectsTableProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -263,13 +206,13 @@ export default function ProjectsTable({
                   Status
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {STATUS_OPTIONS.map((opt) => (
+                  {Object.entries(projectStatus).map(([key, label]) => (
                     <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={filterStatus.includes(opt.value)}
-                      onCheckedChange={() => toggleFilter(setFilterStatus, opt.value)}
+                      key={key}
+                      checked={filterStatus.includes(key)}
+                      onCheckedChange={() => toggleFilter(setFilterStatus, key)}
                     >
-                      {opt.label}
+                      {label}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -279,13 +222,13 @@ export default function ProjectsTable({
                   Stage
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {STAGE_OPTIONS.map((opt) => (
+                  {Object.entries(projectStage).map(([key, label]) => (
                     <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={filterStage.includes(opt.value)}
-                      onCheckedChange={() => toggleFilter(setFilterStage, opt.value)}
+                      key={key}
+                      checked={filterStage.includes(key)}
+                      onCheckedChange={() => toggleFilter(setFilterStage, key)}
                     >
-                      {opt.label}
+                      {label}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -295,13 +238,13 @@ export default function ProjectsTable({
                   Type
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {TYPE_OPTIONS.map((opt) => (
+                  {Object.entries(projectType).map(([key, label]) => (
                     <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={filterType.includes(opt.value)}
-                      onCheckedChange={() => toggleFilter(setFilterType, opt.value)}
+                      key={key}
+                      checked={filterType.includes(key)}
+                      onCheckedChange={() => toggleFilter(setFilterType, key)}
                     >
-                      {opt.label}
+                      {label}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -338,9 +281,9 @@ export default function ProjectsTable({
           </DropdownMenu>
         </div>
 
-        <Button size="sm" className="gap-2" onClick={onAdd} disabled={isAdding}>
+        <Button size="sm" className="gap-2" onClick={onAdd}>
           <PlusCircle size={14} />
-          {isAdding ? "Creating..." : "Add Project"}
+          Add Project
         </Button>
       </div>
 
@@ -426,7 +369,7 @@ export default function ProjectsTable({
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="text-sm text-muted-foreground">
-                    {typeMeta[row.type]?.label ?? row.type}
+                    {row.type ? (projectTypeMeta[row.type]?.label ?? projectType[row.type as keyof typeof projectType] ?? row.type) : "—"}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4">
@@ -445,10 +388,10 @@ export default function ProjectsTable({
                   {row.status ? (
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        statusMeta[row.status]?.className ?? ""
+                        projectStatusMeta[row.status]?.className ?? ""
                       }`}
                     >
-                      {statusMeta[row.status]?.label ?? row.status}
+                      {projectStatusMeta[row.status]?.label ?? projectStatus[row.status as keyof typeof projectStatus] ?? row.status}
                     </span>
                   ) : (
                     <span className="text-sm text-muted-foreground">—</span>
@@ -458,10 +401,10 @@ export default function ProjectsTable({
                   {row.stage ? (
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        stageMeta[row.stage]?.className ?? ""
+                        projectStageMeta[row.stage]?.className ?? ""
                       }`}
                     >
-                      {stageMeta[row.stage]?.label ?? row.stage}
+                      {projectStageMeta[row.stage]?.label ?? projectStage[row.stage as keyof typeof projectStage] ?? row.stage}
                     </span>
                   ) : (
                     <span className="text-sm text-muted-foreground">—</span>

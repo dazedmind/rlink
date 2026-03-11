@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { projectInventory } from '@/db/schema';
-import { eq, desc, asc} from 'drizzle-orm';
+import { projectInventory, projectModels } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { requireAuth } from '@/lib/api-auth';
 import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
@@ -13,11 +13,28 @@ export async function GET(request: NextRequest) {
   if (authResult.error) return authResult.error;
 
   try {
-    const inventoryList = await db.select().from(projectInventory).orderBy(desc(projectInventory.createdAt)).$dynamic();
+    const rows = await db
+      .select({
+        id: projectInventory.id,
+        projectId: projectInventory.projectId,
+        modelId: projectInventory.modelId,
+        modelName: projectModels.modelName,
+        inventoryCode: projectInventory.inventoryCode,
+        block: projectInventory.block,
+        lot: projectInventory.lot,
+        soldTo: projectInventory.soldTo,
+        sellingPrice: projectInventory.sellingPrice,
+        isFeatured: projectInventory.isFeatured,
+      })
+      .from(projectInventory)
+      .leftJoin(projectModels, eq(projectInventory.modelId, projectModels.id))
+      .orderBy(desc(projectInventory.createdAt));
 
-    const uniqueBlocks = [...new Set(inventoryList.map((inventory: any) => inventory.block))];
-    const uniqueLots = [...new Set(inventoryList.map((inventory: any) => inventory.lot))];
-    
+    const inventoryList = rows.map((r) => ({
+      ...r,
+      modelName: r.modelName ?? "Unknown Model",
+    }));
+
     return NextResponse.json(inventoryList);
   } catch (error) {
     console.error('[GET /api/projects/inventory]', error);
