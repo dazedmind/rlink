@@ -1,5 +1,3 @@
-import { announcements } from "@/db/schema";
-
 export const leadStatus = {
     open: 'Open',
     ongoing: 'Ongoing',
@@ -327,4 +325,30 @@ export type Notification = {
     read: boolean;
     createdAt: string;
     updatedAt: string;
+};
+
+export const userRole = {
+    admin: 'Admin',
+    user: 'User',
+} as const;
+export type UserRole = (typeof userRole)[keyof typeof userRole];
+
+export const userStatus = {
+    active: 'Active',
+    disabled: 'Disabled',
+    locked: 'Locked',
+    inactive: 'Inactive',
+} as const;
+export type UserStatus = (typeof userStatus)[keyof typeof userStatus];
+
+export const userRoleMeta: Record<string, { label: string; className: string }> = {
+    admin: { label: 'Admin', className: 'bg-blue-50 text-blue-700 border border-blue-200' },
+    user: { label: 'User', className: 'bg-gray-50 text-gray-700 border border-gray-200' },
+};
+
+export const userStatusMeta: Record<string, { label: string; className: string }> = {
+    active: { label: 'Active', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    disabled: { label: 'Disabled', className: 'bg-red-50 text-red-700 border border-red-200' },
+    locked: { label: 'Locked', className: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
+    inactive: { label: 'Inactive', className: 'bg-gray-50 text-gray-700 border border-gray-200' },
 };

@@ -4,24 +4,27 @@ import React, { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronLeft } from "lucide-react";
+import { ArrowLeft, TextAlignStart, Image, House, Box } from "lucide-react";
 import ProjectOverviewTab from "./tabs/ProjectOverviewTab";
 import ProjectModelsTab from "./tabs/ProjectModelsTab";
 import ProjectInventoryTab from "./tabs/ProjectInventoryTab";
+import ProjectGalleryTab from "./tabs/ProjectGalleryTab";
 import type {
   Project,
   ProjectModel,
   InventoryUnit,
   OverviewForm,
 } from "./tabs/project-types";
+import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./tabs/project-types";
 import BackButton from "@/components/ui/BackButton";
 
-type Tab = "overview" | "models" | "inventory";
+type Tab = "overview" | "models" | "inventory" | "gallery";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "models", label: "Models" },
-  { id: "inventory", label: "Inventory" },
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "overview", label: "Overview", icon: <TextAlignStart  className="size-5"/> },
+  { id: "models", label: "Models", icon: <House  className="size-5"/> },
+  { id: "inventory", label: "Inventory", icon: <Box  className="size-5"/> },
+  { id: "gallery", label: "Gallery", icon: <Image  className="size-5"/> },
 ];
 
 function normalizeStringArray(raw: unknown): string[] {
@@ -42,6 +45,26 @@ function normalizeStringArray(raw: unknown): string[] {
     });
   }
   return [];
+}
+
+function normalizeLandmarks(raw: unknown): Record<string, string[]> {
+  if (!raw) return { ...EMPTY_LANDMARKS };
+  if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+    const obj = raw as Record<string, unknown>;
+    const result: Record<string, string[]> = { ...EMPTY_LANDMARKS };
+    for (const cat of LANDMARK_CATEGORIES) {
+      const val = obj[cat];
+      if (Array.isArray(val)) {
+        result[cat] = val.filter((i): i is string => typeof i === "string");
+      }
+    }
+    return result;
+  }
+  if (Array.isArray(raw)) {
+    const legacy = raw.filter((i): i is string => typeof i === "string");
+    return { ...EMPTY_LANDMARKS, Landmarks: legacy };
+  }
+  return { ...EMPTY_LANDMARKS };
 }
 
 type ProjectDetailPageProps = {
@@ -67,7 +90,7 @@ const EMPTY_FORM: OverviewForm = {
   completionDate: "",
   salesOffice: "",
   amenities: [],
-  landmarks: [],
+  landmarks: { ...EMPTY_LANDMARKS },
 };
 
 export default function ProjectDetailPage({
@@ -86,23 +109,7 @@ export default function ProjectDetailPage({
   const [savingSection, setSavingSection] = useState<string | null>(null);
 
   const [form, setForm] = useState<OverviewForm>({
-    projectCode: "",
-    projectName: "",
-    status: "",
-    location: "",
-    stage: "",
-    type: "",
-    photoUrl: "",
-    logoUrl: "",
-    mapLink: "",
-    accentColor: "",
-    description: "",
-    dhsudNumber: "",
-    address: "",
-    completionDate: "",
-    salesOffice: "",
-    amenities: [],
-    landmarks: [],
+    ...EMPTY_FORM,
   });
 
   const fetchData = useCallback(async () => {
@@ -149,7 +156,7 @@ export default function ProjectDetailPage({
             : "",
           salesOffice: proj.salesOffice ?? "",
           amenities: normalizeStringArray(proj.amenities),
-          landmarks: normalizeStringArray(proj.landmarks),
+          landmarks: normalizeLandmarks(proj.landmarks),
         });
       } else if (projRes?.error) {
         setProject(null);
@@ -341,23 +348,26 @@ export default function ProjectDetailPage({
           </div>
         </span>
         {!isCreateMode && (
-          <div className="flex bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
+          <div className="flex flex-wrap bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTabLocal(tab.id)}
-                className={`flex-1 px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
+                className={`flex-1 min-w-[80px] px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
                   currentTab === tab.id
                     ? "bg-primary text-white"
                     : "text-[#8E8E93] hover:text-[#1C1C1E]"
                 }`}
               >
-                {tab.label}
-                {tab.id === "models" && models.length > 0 && ` (${models.length})`}
+                <span className="flex items-center gap-2 justify-center">
+                  {tab.icon}{tab.label}
+                  {tab.id === "models" && models.length > 0 && ` (${models.length})`}
                 {tab.id === "inventory" &&
                   inventory.length > 0 &&
                   ` (${inventory.length})`}
+                </span>
+         
               </button>
             ))}
           </div>
@@ -390,6 +400,10 @@ export default function ProjectDetailPage({
             onSave={saveInventory}
             isSaving={savingSection === "inventory"}
           />
+        )}
+
+        {!isCreateMode && currentTab === "gallery" && (
+          <ProjectGalleryTab projectId={id} models={models} />
         )}
       </div>
     </main>

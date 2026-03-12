@@ -9,22 +9,23 @@ import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { FieldLabel } from "@/components/ui/field";
 import Image from "next/image";
-import { Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import type { OverviewForm } from "./project-types";
+import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./project-types";
 import { Separator } from "@/components/ui/separator";
-import { projectStage, projectStatus, projectType  } from "@/lib/types";
+import { projectStage, projectStatus, projectType } from "@/lib/types";
 
 const ACCENT_COLORS = [
-  { value: "blue", label: "Blue", color: "bg-blue-900/80" },
-  { value: "yellow", label: "Yellow", color: "bg-yellow-500/80" },
-  { value: "amber", label: "Amber", color: "bg-amber-800/80" },
-  { value: "orange", label: "Orange", color: "bg-orange-600/80" },
-  { value: "green", label: "Green", color: "bg-green-600/80" },
-  { value: "purple", label: "Purple", color: "bg-purple-600/80" },
-  { value: "red", label: "Red", color: "bg-red-600/80" },
-  { value: "pink", label: "Pink", color: "bg-pink-600/80" },
-  { value: "gray", label: "Gray", color: "bg-gray-600/80" },
-  { value: "black", label: "Black", color: "bg-gray-800/80" },
+  { value: "blue", label: "Blue", color: "bg-linear-to-r from-blue-500/80 to-blue-900/80" },
+  { value: "yellow", label: "Yellow", color: "bg-linear-to-r from-yellow-500/80 to-yellow-900/80" },
+  { value: "amber", label: "Amber", color: "bg-linear-to-r from-amber-500/80 to-amber-900/80" },
+  { value: "orange", label: "Orange", color: "bg-linear-to-r from-orange-500/80 to-orange-900/80" },
+  { value: "green", label: "Green", color: "bg-linear-to-r from-green-500/80 to-green-900/80" },
+  { value: "purple", label: "Purple", color: "bg-linear-to-r from-purple-500/80 to-purple-900/80" },
+  { value: "red", label: "Red", color: "bg-linear-to-r from-red-500/80 to-red-900/80" },
+  { value: "pink", label: "Pink", color: "bg-linear-to-r from-pink-500/80 to-pink-900/80" },
+  { value: "gray", label: "Gray", color: "bg-linear-to-r from-gray-500/80 to-gray-900/80" },
+  { value: "black", label: "Black", color: "bg-linear-to-r from-gray-500/80 to-gray-900/80" },
 ];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -92,10 +93,126 @@ function TagInput({
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
           className="h-10 w-full rounded-md border border-border bg-transparent px-4 text-sm outline-none focus-visible:border-ring"
         />
-        <Button type="button" variant="outline" size="sm" onClick={add}>
+        <Button type="button" variant="outline" size="lg" onClick={add}>
           <Plus size={14} />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function LandmarksByCategoryInput({
+  value,
+  onChange,
+}: {
+  value: Record<string, string[]>;
+  onChange: (v: Record<string, string[]>) => void;
+}) {
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    LANDMARK_CATEGORIES[0]
+  );
+  const [input, setInput] = useState("");
+
+  const addToCategory = () => {
+    const parts = input
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return;
+    const existing = value[selectedCategory] ?? [];
+    const next = [...existing];
+    for (const name of parts) {
+      if (!next.includes(name)) next.push(name);
+    }
+    onChange({ ...value, [selectedCategory]: next });
+    setInput("");
+  };
+
+  const removeLandmark = (category: string, name: string) => {
+    const list = (value[category] ?? []).filter((n) => n !== name);
+    onChange({ ...value, [category]: list });
+  };
+
+  const allTags: { category: string; name: string }[] = [];
+  for (const cat of LANDMARK_CATEGORIES) {
+    for (const name of value[cat] ?? []) {
+      allTags.push({ category: cat, name });
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5 w-full">
+        <DropSelect
+          label="Category"
+          selectName="category"
+          selectId="category"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          {LANDMARK_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </DropSelect>
+      </div>
+      <div className="flex flex-col gap-2 w-full">
+          <SectionLabel>Locations in {selectedCategory}</SectionLabel>
+
+          <div className="flex flex-col gap-2">
+            <span className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                placeholder={
+                  selectedCategory === "Hospitals"
+                    ? "Cebu Doctors Hospital, Chong Hua"
+                    : selectedCategory === "Schools"
+                      ? "University of Cebu, USC"
+                      : "Add locations..."
+                }
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addToCategory())
+                }
+                className="h-10 flex-1 rounded-md border border-border bg-transparent px-4 text-sm outline-none focus-visible:border-ring"
+              />
+              <Button type="button" variant="outline" size="lg" onClick={addToCategory}>
+                <Plus size={14} className="mr-1" />
+                Add
+              </Button>
+            </span>
+
+            <p className="text-xs text-muted-foreground pl-2">Add multiple by putting comma</p>
+          </div>
+        {allTags.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <SectionLabel>Nearby landmarks ({allTags.length})</SectionLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {allTags.map(({ category, name }) => (
+                <span
+                  key={`${category}-${name}`}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
+                >
+                  <span className="font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md text-xs">{category}</span>
+                  {name}
+                  <button
+                    type="button"
+                    onClick={() => removeLandmark(category, name)}
+                    className="hover:text-red-500 ml-0.5"
+                    aria-label={`Remove ${name}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+     
+     
     </div>
   );
 }
@@ -117,7 +234,7 @@ export default function ProjectOverviewTab({
 }: ProjectOverviewTabProps) {
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-16">
         {/* Media - LEFT SIDE */}
         <section className="w-full md:w-1/3">
           <span>
@@ -186,12 +303,18 @@ export default function ProjectOverviewTab({
                       onClick={() =>
                         setForm((p) => ({ ...p, accentColor: c.value }))
                       }
-                      className={`h-8 w-8 rounded-full ${c.color} ${
+                      className={`h-6 w-10 rounded cursor-pointer ${c.color} ${
                         form.accentColor === c.value
-                          ? "ring-2 ring-offset-2 ring-primary"
+                          ? "ring-2 ring-primary"
                           : ""
                       }`}
-                    />
+                    >
+                      {form.accentColor === c.value && (
+                        <span className="flex items-center justify-center text-xs text-primary">
+                          <Check className="size-4 stroke-2"/>
+                        </span>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -383,22 +506,23 @@ export default function ProjectOverviewTab({
                   onChange={(e) =>
                     setForm((p) => ({ ...p, description: e.target.value }))
                   }
-                  className="min-h-24 resize-none"
+                  className="min-h-24 resize-none border-border border"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-6">
                 <TagInput
                   label="Amenities"
                   placeholder="e.g. Swimming Pool, Gym"
                   values={form.amenities}
                   onChange={(v) => setForm((p) => ({ ...p, amenities: v }))}
                 />
-                <TagInput
-                  label="Nearby Landmarks"
-                  placeholder="e.g. SM City, Airport"
-                  values={form.landmarks}
-                  onChange={(v) => setForm((p) => ({ ...p, landmarks: v }))}
-                />
+                <div className="flex flex-col gap-4">
+                  <SectionLabel>Nearby Landmarks</SectionLabel>
+                  <LandmarksByCategoryInput
+                    value={form.landmarks}
+                    onChange={(v) => setForm((p) => ({ ...p, landmarks: v }))}
+                  />
+                </div>
               </div>
             </div>
           </section>

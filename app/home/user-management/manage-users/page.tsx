@@ -31,7 +31,7 @@ function ManageUsers() {
       await fetch("/api/activity-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activity: "user_deleted" }),
+        body: JSON.stringify({ activity: "User deleted: " + deletingUser.email }),
       }).catch(() => {});
       toast.success("User deleted.");
       setDeletingUser(null);

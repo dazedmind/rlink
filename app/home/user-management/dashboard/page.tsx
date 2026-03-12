@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import {
   Card, CardContent } from "@/components/ui/card";
-import LeadsTable from "@/components/tables/crm/LeadsTable";
 import UsersTable from "@/components/tables/user-management/UsersTable";
 import { Users } from "lucide-react";
 import { Building } from "lucide-react";
@@ -68,7 +67,7 @@ function UserManagementDashboard() {
           </div>
 
           {/* LEADS TABLE SECTION */}
-          <UsersTable onEdit={() => {}} onDelete={() => {}} onAdd={() => {}} />
+          <UsersTable onEdit={() => {}} onDelete={() => {}} onAdd={() => {}} viewOnly={true} />
         </div>
 
       </div>

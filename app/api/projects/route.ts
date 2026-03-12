@@ -67,6 +67,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    const normalizedLandmarks =
+      landmarks && typeof landmarks === "object" && !Array.isArray(landmarks)
+        ? Object.fromEntries(
+            Object.entries(landmarks).map(([k, v]) => [
+              k,
+              Array.isArray(v) ? v.filter((i): i is string => typeof i === "string") : [],
+            ])
+          )
+        : Array.isArray(landmarks)
+          ? { Landmarks: landmarks.filter((i): i is string => typeof i === "string") }
+          : {};
+
     const [{ maxId }] = await db.select({ maxId: max(projects.id) }).from(projects);
     const newId = Number(maxId ?? 0) + 1;
 
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
         accentColor: accentColor?.trim() || null,
         description: description?.trim() || null,
         amenities: Array.isArray(amenities) ? amenities : [],
-        landmarks: Array.isArray(landmarks) ? landmarks : [],
+        landmarks: normalizedLandmarks,
       } as unknown as typeof projects.$inferInsert)
       .returning();
 

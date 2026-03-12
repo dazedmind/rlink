@@ -16,19 +16,6 @@ import { user } from '@/db/auth-schema'
 // ENUMS
 // ─────────────────────────────────────────────
 
-export const userStatusEnum = pgEnum('user_status', [
-  'active',
-  'disabled',
-  'locked',
-  'in_vacation',
-])
-
-export const userAccessEnum = pgEnum('user_access', [
-  'hr',
-  'marketing',
-  'admin',
-  'infotech',
-])
 
 export const leadStatusEnum = pgEnum('lead_status', [
   'open',
@@ -163,20 +150,6 @@ export const newsletterStatusEnum = pgEnum('newsletter_status', [
   'unsubscribed',
 ])
 
-export const departmentEnum = pgEnum('department', [
-  'marketing',
-  'executive',
-  'engineering',
-  'design',
-  'hr',
-  'finance',
-  'it',
-  'legal',
-  'operations',
-  'customer_service',
-  'product'
-])
-
 export const activityStatusEnum = pgEnum('activity_status', [
   'success',
   'failed',
@@ -308,6 +281,19 @@ export const projectInventory = pgTable('project_inventory', {
 }, (t) => ({
   uniqueBlockLotModel: unique().on(t.projectId, t.block, t.lot, t.modelId),
 }))
+
+/**
+ * project_gallery — photos for projects or specific house models
+ */
+export const projectGallery = pgTable('project_gallery', {
+  id:        text('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  modelId:   text('model_id').references(() => projectModels.id, { onDelete: 'cascade' }),
+  imageUrl:  text('image_url').notNull(),
+  caption:   text('caption'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
 
 /**
  * job_inquiry — job application submissions
@@ -456,7 +442,7 @@ export const developerToolsSettings = pgTable('developer_tools_settings', {
  */
 export const activityLogs = pgTable('activity_logs', {
   id:        text('id').primaryKey().default(sql<string>`gen_random_uuid()`),
-  userId:    text('user_id').notNull().references(() => user.id, { onDelete: 'no action' }),
+  userId:    text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   activity:  text('activity').notNull(),
   ipAddress: text('ip_address').notNull(),
   userAgent: text('user_agent').notNull(),

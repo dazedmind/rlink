@@ -67,14 +67,14 @@ export function InquiryDetailModal({
                 <span>•</span>
                 <div className="flex items-center gap-2">
                 <Calendar size={14} />
-                <span className="text-slate-700 capitalize">
-                   {dateFormatter(inquiry.createdAt)}
+                <span className="text-slate-700">
+                   Sent on: {dateFormatter(inquiry.createdAt)}
                 </span>
                 <span>•</span>
                 <div className="flex items-center gap-2">
                 <Globe size={14} />
                 <span className="text-slate-700 capitalize">
-                   {inquirySource[inquiry.source as keyof typeof inquirySource] || inquiry.source}
+                   From {inquirySource[inquiry.source as keyof typeof inquirySource] || inquiry.source}
                 </span>
                 </div>
               </div>

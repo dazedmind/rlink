@@ -40,6 +40,7 @@ type UsersTableProps = {
   onDelete: (user: UserRecord) => void;
   onAdd: () => void;
   refreshTrigger?: number;
+  viewOnly?: boolean;
 };
 
 export default function UsersTable({
@@ -47,6 +48,7 @@ export default function UsersTable({
   onDelete,
   onAdd,
   refreshTrigger = 0,
+  viewOnly,
 }: UsersTableProps) {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -141,10 +143,12 @@ export default function UsersTable({
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" className="gap-2" onClick={onAdd}>
-              <PlusCircle size={14} />
-              Add User
-            </Button>
+            {!viewOnly && (
+                 <Button size="sm" className="gap-2" onClick={onAdd}>
+                 <PlusCircle size={14} />
+                 Add User
+               </Button>
+            )}
           </span>
         </div>
       </div>
@@ -187,7 +191,7 @@ export default function UsersTable({
               </TableCell>
             </TableRow>
           ) : (
-            users.map((row) => (
+            users.slice(0, viewOnly ? 5 : undefined).map((row) => (
               <TableRow
                 key={row.id}
                 className="hover:bg-gray-50/50 cursor-pointer"
@@ -246,9 +250,11 @@ export default function UsersTable({
                       )
                     : "—"}
                 </TableCell>
-                <TableCell className="px-6 py-4 text-right">
+                {!viewOnly && (
+                  <TableCell className="px-6 py-4 text-right">
                   <ContextMenu menu={actionMenu(row)} triggerIcon={EllipsisVertical} />
                 </TableCell>
+                )}
               </TableRow>
             ))
           )}

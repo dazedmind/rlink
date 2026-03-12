@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
-import { department } from "@/lib/types";
+import { department, userRole } from "@/lib/types";
+import { RefreshCcw } from "lucide-react";
 
 export type UserRecord = {
   id: string;
@@ -58,11 +59,6 @@ const EMPTY_FORM: FormData = {
   department: "",
   employeeId: "",
 };
-
-const ROLE_OPTIONS = [
-  { value: "user", label: "User" },
-  { value: "admin", label: "Admin" },
-];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -193,6 +189,11 @@ export default function UserFormModal({
     }
   };
 
+  const generatePassword = () => {
+    const password = Math.random().toString(36).substring(2, 6) + Math.random().toString(36).substring(2, 6);
+    setForm((prev) => ({ ...prev, password }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -244,19 +245,22 @@ export default function UserFormModal({
             </div>
           </div>
 
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>
-                Password <span className="text-red-500">*</span>
-              </FieldLabel>
-              <TextInput
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={handleInputChange}
-              />
-            </div>
-  
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>
+              Password <span className="text-red-500">*</span>
+            </FieldLabel>
+            <TextInput
+              name="password"
+              type="password"
+              placeholder="Enter Password"
+              value={form.password}
+              onChange={handleInputChange}
+            />
+            <Button variant="outline" size="lg" className="font-normal text-sm" onClick={generatePassword}>
+              <RefreshCcw />
+              Generate Password
+            </Button>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
@@ -267,12 +271,23 @@ export default function UserFormModal({
                 value={form.role}
                 onChange={(e) => handleSelectChange("role", e.target.value)}
               >
-                {ROLE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
+                {Object.keys(userRole).map((o) => (
+                  <option key={o} value={o}>
+                    {userRole[o as keyof typeof userRole]}
                   </option>
                 ))}
               </DropSelect>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Employee ID</FieldLabel>
+              <TextInput
+                name="employeeId"
+                type="text"
+                placeholder="Employee ID"
+                value={form.employeeId}
+                onChange={handleInputChange}
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -285,6 +300,7 @@ export default function UserFormModal({
                 onChange={handleInputChange}
               />
             </div>
+
             <div className="flex flex-col gap-1.5">
               <FieldLabel>Phone</FieldLabel>
               <TextInput
@@ -292,16 +308,6 @@ export default function UserFormModal({
                 type="tel"
                 placeholder="Phone number"
                 value={form.phone}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Employee ID</FieldLabel>
-              <TextInput
-                name="employeeId"
-                type="text"
-                placeholder="Employee ID"
-                value={form.employeeId}
                 onChange={handleInputChange}
               />
             </div>

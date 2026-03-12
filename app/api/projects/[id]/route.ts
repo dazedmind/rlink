@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { projects, projectModels, projectInventory } from "@/db/schema";
+import { projects, projectModels, projectInventory, projectGallery } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
@@ -72,6 +72,18 @@ export async function PATCH(
       );
     }
 
+    const normalizedLandmarks =
+      landmarks && typeof landmarks === "object" && !Array.isArray(landmarks)
+        ? Object.fromEntries(
+            Object.entries(landmarks).map(([k, v]) => [
+              k,
+              Array.isArray(v) ? v.filter((i): i is string => typeof i === "string") : [],
+            ])
+          )
+        : Array.isArray(landmarks)
+          ? { Landmarks: landmarks.filter((i): i is string => typeof i === "string") }
+          : {};
+
     const [updated] = await db
       .update(projects)
       .set({
@@ -91,7 +103,7 @@ export async function PATCH(
         completionDate: completionDate ? String(completionDate).slice(0, 10) : null,
         salesOffice: salesOffice?.trim() || null,
         amenities: Array.isArray(amenities) ? amenities : [],
-        landmarks: Array.isArray(landmarks) ? landmarks : [],
+        landmarks: normalizedLandmarks,
       } as unknown as Partial<typeof projects.$inferInsert>)
       .where(eq(projects.id, id))
       .returning();
@@ -130,6 +142,7 @@ export async function DELETE(
     const { id } = await params;
 
     const [deleted] = await db.delete(projects).where(eq(projects.id, id)).returning({ id: projects.id });
+    await db.delete(projectGallery).where(eq(projectGallery.projectId, id));
     await db.delete(projectModels).where(eq(projectModels.projectId, id));
     await db.delete(projectInventory).where(eq(projectInventory.projectId, id));
 

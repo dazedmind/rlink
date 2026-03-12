@@ -46,17 +46,6 @@ function LoginPage() {
     return () => clearTimeout(timer);
   }, [email]);
 
-  // const handleGoogleLogin = async () => {
-  //   const { error } = await authClient.signIn.social({
-  //     provider: "google",
-  //     callbackURL: "/home",
-  //   });
-  //   if (error) {
-  //     toast.error(error.message ?? "Failed to sign in with Google");
-  //     return;
-  //   }
-  // };
-
   const handleValidateEmail = () => {
     const trimmedEmail = email.trim().toLowerCase();
 

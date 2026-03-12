@@ -129,7 +129,7 @@ function PersonalInfoTabContent() {
                   id="email"
                   value={session?.user.email ?? ""}
                   disabled
-                  className="bg-neutral-100 italic"
+                  className="bg-neutral-100"
                   placeholder="Enter Work Email"
                 />
               </div>
@@ -142,6 +142,8 @@ function PersonalInfoTabContent() {
                   value={formData.employeeId}
                   placeholder="Enter Employee ID"
                   onChange={handleInputChange}
+                  className="bg-neutral-100"
+                  disabled
                 />
               </div>
 
@@ -153,6 +155,8 @@ function PersonalInfoTabContent() {
                   value={formData.position}
                   placeholder="Enter Position"
                   onChange={handleInputChange}
+                  disabled
+                  className="bg-neutral-100"
                 />
               </div>
 
@@ -164,6 +168,8 @@ function PersonalInfoTabContent() {
                   value={department[formData.department as keyof typeof department]}
                   placeholder="Enter Department"
                   onChange={handleInputChange}
+                  className="bg-neutral-100"
+                  disabled
                 />
               </div>
 

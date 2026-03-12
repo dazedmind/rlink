@@ -6,7 +6,36 @@ import {
   boolean,
   index,
   date,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+
+export const departmentEnum = pgEnum('department', [
+  'marketing',
+  'executive',
+  'engineering',
+  'design',
+  'hr',
+  'finance',
+  'it',
+  'legal',
+  'operations',
+  'customer_service',
+  'product'
+])
+
+export const userStatusEnum = pgEnum('user_status', [
+  'active',
+  'disabled',
+  'locked',
+  'in_vacation',
+])
+
+export const userRoleEnum = pgEnum('user_role', [
+  'admin',
+  'user',
+])
+
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -19,16 +48,17 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  role: text("role"),
+  role: userRoleEnum("role").default("user"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  accountStatus: userStatusEnum("account_status").default("active"),
   firstName: text("first_name").default(""),
   lastName: text("last_name").default(""),
   middleName: text("middle_name").default(""),
   phone: text("phone").default(""),
   position: text("position").default(""),
-  department: text("department").default(""),
+  department: departmentEnum("department").default("marketing"),
   employeeId: text("employee_id").default(""),
   birthdate: text("birthdate"),
 });

@@ -12,10 +12,3 @@ export const authClient = createAuthClient({
 });
 
 export const { signIn, signOut, signUp, useSession } = authClient;
-
-export const signInWithGoogle = async () => {
-  const { error } = await authClient.signIn.social({ provider: 'google' });
-  if (error) {
-    throw new Error(error.message ?? "Failed to sign in with Google");
-  }
-};

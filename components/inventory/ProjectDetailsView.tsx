@@ -49,7 +49,7 @@ function ProjectDetailsView({
     const modelSet = new Set(
       inventory
         .map((inv) => inv.modelName)
-        .filter((m): m is string => m != null && m !== "")
+        .filter((m): m is string => m != null && m !== ""),
     );
     return Array.from(modelSet).sort((a, b) => a.localeCompare(b));
   }, [inventory]);
@@ -112,11 +112,18 @@ function ProjectDetailsView({
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Back + Title */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="shrink-0"
+        >
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h2 className="text-2xl font-bold text-primary">{project.projectName}</h2>
+          <h2 className="text-2xl font-bold text-primary">
+            {project.projectName}
+          </h2>
           <p className="text-sm text-muted-foreground">Block & lot inventory</p>
         </div>
       </div>
@@ -124,7 +131,9 @@ function ProjectDetailsView({
       {/* Legend + Filter */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-slate-50/50 px-4 py-3">
         <div className="flex items-center gap-6">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Legend</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Legend
+          </span>
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 rounded-md bg-primary" />
             <span className="text-sm font-medium">Available</span>
@@ -136,58 +145,74 @@ function ProjectDetailsView({
         </div>
 
         <section className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">View</span>
-          <Select value={sortMode} onValueChange={(v) => setSortMode(v as "block" | "model")}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="block" className="gap-2">
-                <LayoutGrid className="size-4" />
-                By Block
-              </SelectItem>
-              <SelectItem value="model" className="gap-2">
-                <Home className="size-4" />
-                By House Model
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Block</span>
-          <Select value={selectedBlock} onValueChange={setSelectedBlock}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All blocks" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All blocks</SelectItem>
-              {blocks.map((b) => (
-                <SelectItem key={b} value={String(b)}>Block {b}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Model</span>
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All models" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All models</SelectItem>
-              {models.map((m) => (
-                <SelectItem key={m} value={String(m)}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              View
+            </span>
+            <Select
+              value={sortMode}
+              onValueChange={(v) => setSortMode(v as "block" | "model")}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="block" className="gap-2">
+                  <LayoutGrid className="size-4" />
+                  By Block
+                </SelectItem>
+                <SelectItem value="model" className="gap-2">
+                  <Home className="size-4" />
+                  By House Model
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Block
+            </span>
+            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="All blocks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All blocks</SelectItem>
+                {blocks.map((b) => (
+                  <SelectItem key={b} value={String(b)}>
+                    Block {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Model
+            </span>
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="All models" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All models</SelectItem>
+                {models.map((m) => (
+                  <SelectItem key={m} value={String(m)}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </section>
-        </div>
-     
+      </div>
 
       {/* Blocks & Lots */}
-      {(sortMode === "block" ? inventoryByBlock.size > 0 : inventoryByModel.size > 0) ? (
+      {(
+        sortMode === "block"
+          ? inventoryByBlock.size > 0
+          : inventoryByModel.size > 0
+      ) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-8">
           {sortMode === "block"
             ? Array.from(inventoryByBlock.entries())
@@ -265,9 +290,10 @@ function ProjectDetailsView({
               className={`
                 flex items-center justify-center w-10 h-10 px-3 font-bold text-lg
                 transition-all duration-200 cursor-pointer
-                ${isAvailable
-                  ? "bg-primary text-primary-foreground hover:brightness-110"
-                  : "bg-slate-300 text-slate-600 cursor-default"
+                ${
+                  isAvailable
+                    ? "bg-primary text-primary-foreground hover:brightness-110"
+                    : "bg-slate-300 text-slate-600 cursor-default"
                 }
               `}
             >
@@ -278,11 +304,15 @@ function ProjectDetailsView({
             <DropdownMenuGroup>
               <DropdownMenuLabel>
                 <span className="flex flex-col">
-                  <span className={`w-full h-2 absolute top-0 left-0 ${isAvailable ? "bg-primary" : "bg-slate-300"}`} />
+                  <span
+                    className={`w-full h-2 absolute top-0 left-0 ${isAvailable ? "bg-primary" : "bg-slate-300"}`}
+                  />
                   <h1 className="text-lg font-bold text-primary">
                     {item.soldTo ? "SOLD" : "AVAILABLE"}
                   </h1>
-                  <p>{project.projectCode} - Block {item.block} Lot {item.lot}</p>
+                  <p>
+                    {project.projectCode} - Block {item.block} Lot {item.lot}
+                  </p>
                   <p className="text-xs text-slate-500">{model}</p>
                 </span>
               </DropdownMenuLabel>
@@ -295,25 +325,36 @@ function ProjectDetailsView({
                 </>
               ) : (
                 <>
-                  {item.soldTo != null && (() => {
-                    const res = reservation.find(
-                      (r) => String(r.id) === String(item.soldTo)
-                    );
-                    return res ? (
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Reserved to</p>
-                          <p className="text-sm font-semibold text-neutral-950">{res.firstName} {res.lastName}</p>
-                          <p className="text-xs text-slate-600">{res.email}</p>
-                          <p className="text-xs text-slate-600">{res.phone}</p>
-                        </div>
-                      </DropdownMenuLabel>
-                    ) : (
-                      <DropdownMenuItem disabled>
-                        <span className="text-sm text-slate-500">Reserved (details unavailable)</span>
-                      </DropdownMenuItem>
-                    );
-                  })()}
+                  {item.soldTo != null &&
+                    (() => {
+                      const res = reservation.find(
+                        (r) => String(r.id) === String(item.soldTo),
+                      );
+                      return res ? (
+                        <DropdownMenuLabel className="font-normal">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                              Reserved to
+                            </p>
+                            <p className="text-sm font-semibold text-neutral-950">
+                              {res.firstName} {res.lastName}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {res.email}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {res.phone}
+                            </p>
+                          </div>
+                        </DropdownMenuLabel>
+                      ) : (
+                        <DropdownMenuItem disabled>
+                          <span className="text-sm text-slate-500">
+                            Reserved (details unavailable)
+                          </span>
+                        </DropdownMenuItem>
+                      );
+                    })()}
                 </>
               )}
             </DropdownMenuGroup>

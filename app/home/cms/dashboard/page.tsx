@@ -218,7 +218,7 @@ function CMSDashboard({ onNavigate }: CMSDashboardProps) {
           {/* Quick links */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-              Quick access
+              Quick View
             </h3>
             <div className="flex gap-3">
               {QUICK_LINKS.map((link) => (

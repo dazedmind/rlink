@@ -14,7 +14,8 @@ function TextInput({
   value,
   className,
   required = false,
-  onBlur
+  onBlur,
+  onKeyDown
 }: {
   label?: string;
   name: string;
@@ -25,6 +26,7 @@ function TextInput({
   className?: string;
   required?: boolean;
   onBlur?: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const [inputType, setInputType] = useState<string>(type);
 
