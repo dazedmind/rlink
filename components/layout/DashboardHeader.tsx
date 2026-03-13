@@ -69,8 +69,8 @@ function DashboardHeader({
   return (
     <div className="flex items-center justify-between">
       <span>
-        <h1 className="text-3xl text-primary font-bold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <h1 className="text-xl md:text-3xl text-primary font-bold">{title}</h1>
+        <p className="hidden md:block text-sm text-muted-foreground">{description}</p>
       </span>
 
       <span className="flex items-center justify-center gap-4">

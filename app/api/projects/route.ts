@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { projects, projectModels, projectInventory } from "@/db/schema";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
-import { max } from "drizzle-orm";
+import { max, asc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   if (authResult.error) return authResult.error;
 
   try {
-    const projectsList = await db.select().from(projects).$dynamic();
+    const projectsList = await db.select().from(projects).$dynamic().orderBy(asc(projects.createdAt));
     return NextResponse.json(projectsList);
   } catch (error) {
     console.error("[GET /api/projects]", error);

@@ -44,63 +44,6 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TagInput({
-  label,
-  placeholder,
-  values,
-  onChange,
-}: {
-  label: string;
-  placeholder: string;
-  values: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const [input, setInput] = useState("");
-  const add = () => {
-    const t = input.trim();
-    if (!t || values.includes(t)) return;
-    onChange([...values, t]);
-    setInput("");
-  };
-  return (
-    <div className="flex flex-col gap-1.5">
-      <SectionLabel>{label}</SectionLabel>
-      {values.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-1">
-          {values.map((v, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
-            >
-              {v}
-              <button
-                type="button"
-                onClick={() => onChange(values.filter((_, idx) => idx !== i))}
-                className="hover:text-red-500"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          placeholder={placeholder}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
-          className="h-10 w-full rounded-md border border-border bg-transparent px-4 text-sm outline-none focus-visible:border-ring"
-        />
-        <Button type="button" variant="outline" size="lg" onClick={add}>
-          <Plus size={14} />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function LandmarksByCategoryInput({
   value,
   onChange,
@@ -510,12 +453,6 @@ export default function ProjectOverviewTab({
                 />
               </div>
               <div className="flex flex-col gap-6">
-                <TagInput
-                  label="Amenities"
-                  placeholder="e.g. Swimming Pool, Gym"
-                  values={form.amenities}
-                  onChange={(v) => setForm((p) => ({ ...p, amenities: v }))}
-                />
                 <div className="flex flex-col gap-4">
                   <SectionLabel>Nearby Landmarks</SectionLabel>
                   <LandmarksByCategoryInput

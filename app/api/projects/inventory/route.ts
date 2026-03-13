@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { projectInventory, projectModels } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { requireAuth } from '@/lib/api-auth';
 import { rateLimit, rateLimit429 } from '@/lib/rate-limit';
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       })
       .from(projectInventory)
       .leftJoin(projectModels, eq(projectInventory.modelId, projectModels.id))
-      .orderBy(desc(projectInventory.createdAt));
+      .orderBy(asc(projectInventory.createdAt));
 
     const inventoryList = rows.map((r) => ({
       ...r,

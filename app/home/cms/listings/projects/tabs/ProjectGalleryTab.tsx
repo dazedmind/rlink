@@ -82,15 +82,16 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-end gap-4">
+      <div className="flex justify-between items-start gap-4">
+
         <div className="flex flex-col gap-1.5 min-w-[200px]">
+          <h1 className="text-2xl font-bold text-foreground">Gallery</h1>
+
           <DropSelect
-            label="Link to house model"
             selectName="selectedModelId"
             selectId="selectedModelId"
             onChange={(e) => setSelectedModelId(e.target.value || null)}
             value={selectedModelId ?? ""}
-            required
            >
             <option value="">Project (General)</option>
             {models.map((m) => (

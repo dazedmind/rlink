@@ -252,8 +252,8 @@ export default function NewsTable({
                         src={row.photoUrl}
                         alt=""
                         className="rounded-md w-40 h-24 aspect-video object-cover"
-                        width={100}
-                        height={100}
+                        width={200}
+                        height={200}
                       />
                     ) : (
                       <div className="w-40 h-24 rounded-md bg-neutral-100 border border-border flex items-center justify-center shrink-0">

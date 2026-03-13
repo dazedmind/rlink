@@ -1,3 +1,8 @@
+export type ProjectAmenity = {
+  name: string;
+  photoUrl?: string;
+};
+
 export type Project = {
   id: string;
   projectCode: string;
@@ -15,7 +20,7 @@ export type Project = {
   address: string | null;
   completionDate: string | null;
   salesOffice: string | null;
-  amenities: unknown[];
+  amenities: ProjectAmenity[];
   landmarks: unknown[];
 };
 
@@ -69,7 +74,6 @@ export type OverviewForm = {
   address: string;
   completionDate: string;
   salesOffice: string;
-  amenities: string[];
   landmarks: Record<string, string[]>;
 }
 

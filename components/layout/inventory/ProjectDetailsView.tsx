@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import type { Project, InventoryItem, Reservation } from "@/lib/types";
 
 type ProjectDetailsViewProps = {

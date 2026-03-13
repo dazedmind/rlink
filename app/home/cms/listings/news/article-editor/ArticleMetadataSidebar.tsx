@@ -9,9 +9,16 @@ import DropSelect from "@/components/ui/DropSelect";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { articleType } from "@/lib/types";
+
+/** Parse YYYY-MM-DD as local date to avoid timezone shifts */
+function parseDateOnly(str: string): Date | undefined {
+  if (!str || str.length < 10) return undefined;
+  const [y, m, d] = str.split("-").map(Number);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return undefined;
+  return new Date(y, m - 1, d);
+}
 
 function TagInput({
   label,
@@ -128,8 +135,6 @@ export default function ArticleMetadataSidebar({
   onCancel,
 }: ArticleMetadataSidebarProps) {
   const [schedulePopoverOpen, setSchedulePopoverOpen] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState<Date | undefined>(undefined);
-  const [scheduleTime, setScheduleTime] = useState<string>("");
 
   const handleConfirmSchedule = () => {
     setSchedulePopoverOpen(false);
@@ -176,9 +181,12 @@ export default function ArticleMetadataSidebar({
             <PopoverTrigger className="w-full text-start flex items-center justify-between" asChild>
               <Button variant="outline" className="border-slate-200 font-medium gap-2" disabled={isSubmitting}>
                 {/* <CalendarIcon size={14} /> Select Publish Date */}
-                {scheduleDate ? (
+                {publishDate ? (
                   <span className="text-sm">
-                    {format(scheduleDate, "MMM d, yyyy")} {scheduleTime}
+                    {(() => {
+                      const d = parseDateOnly(publishDate);
+                      return d ? format(d, "MMM d, yyyy") : publishDate.slice(0, 10);
+                    })()}
                   </span>
                 ) : (
                   <div className="flex items-center text-neutral-500 gap-2">
@@ -194,8 +202,10 @@ export default function ArticleMetadataSidebar({
                   <Label className="text-sm font-medium mb-2 block">Date</Label>
                   <Calendar
                     mode="single"
-                    selected={scheduleDate}
-                    onSelect={setScheduleDate}
+                    selected={parseDateOnly(publishDate)}
+                    onSelect={(date) =>
+                      setPublishDate(date ? format(date, "yyyy-MM-dd") : "")
+                    }
                   />
                 </div>
                 <div className="flex gap-2 pt-2">

@@ -5,15 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.9] - 2026-03-11
+## [0.0.10] - 2026-03-13
+
+### Added
+- Amenities Tab: Created a separate section in CMS with cover photo upload support.
+- Department Column: Added a department column in careers table for better organization.
+
+### Changes
+- Project Table: Updated the project layout to a table format for better visibility.
+- Dashboard Layout: Reorganized the CMS dashboard for improved flow.
+- Career Table: Removed the `purpose` field to reduce data redundancy.
+- Image Optimization: Enhanced thumbnail quality for better performance.
+
+### Fixed
+- Publish Date: Fixed the bug not saving publish dates to the database.
+
+## [0.0.9] - 2026-03-12
 
 ### Added
 - CMS: Added a photo gallery on projects that allows photo gallery on specific models
-- Settings: Added a password validation on change password input in the Privacy & Security tab
+- Settings: Added a password validation with "strength meter" and a list of requirements on the new password input in the Privacy & Security tab
+- User Management: Added a generate password button on the password input for faster account creation
 
 ### Changes
 - CMS: Re-arranged the layout overview and redesigned the Nearby Landmarks input on project overview.
-
+- Code refactoring on ENUM values, and other related database changes from the abovementioned features
 
 ## [0.0.8] - 2026-03-11
 

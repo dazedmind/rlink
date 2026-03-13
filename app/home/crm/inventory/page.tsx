@@ -5,7 +5,7 @@ import DashboardHeader from "@/components/layout/DashboardHeader";
 import Image from "next/image";
 import arcoeResidenceLogo from "@/public/project-logo/ar-logo.png";
 import arcoeEstatesLogo from "@/public/project-logo/ae-logo.png";
-import ProjectDetailsView from "@/components/inventory/ProjectDetailsView";
+import ProjectDetailsView from "@/components/layout/inventory/ProjectDetailsView";
 import InventorySkeleton from "@/components/layout/skeleton/InventorySkeleton";
 import type { Project, InventoryItem, Reservation } from "@/lib/types";
 

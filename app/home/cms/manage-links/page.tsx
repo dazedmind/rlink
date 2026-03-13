@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import { FormField } from "@/components/forms/SettingsFormSection";
+import { FormField } from "@/components/layout/forms/SettingsFormSection";
 import { Separator } from "@/components/ui/separator";
 import {
   InputGroup,

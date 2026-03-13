@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import { SettingsFormSection, FormField } from "@/components/forms/SettingsFormSection";
+import { SettingsFormSection, FormField } from "@/components/layout/forms/SettingsFormSection";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield } from "lucide-react";
 import { toast } from "sonner";

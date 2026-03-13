@@ -4,6 +4,7 @@ import { careers } from "@/db/schema";
 import { and, asc, count, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { Department } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
@@ -73,10 +74,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       position,
+      department,
       location,
       status,
       jobDescription,
-      purpose,
       responsibilities,
       qualifications,
       requiredSkills,
@@ -105,10 +106,10 @@ export async function POST(request: NextRequest) {
       .insert(careers)
       .values({
         position: position.trim(),
+        department: department as Department,
         location: location.trim(),
         status: status ?? "hiring",
         jobDescription: jobDescription.trim(),
-        purpose: (purpose ?? "").trim() || "",
         responsibilities: (responsibilities ?? "").trim() || "",
         qualifications: (qualifications ?? "").trim() || "",
         requiredSkills: (requiredSkills ?? "").trim() || "",

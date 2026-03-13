@@ -13,7 +13,7 @@ import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
 import type { Career } from "@/lib/types";
-import { careerStatus } from "@/lib/types";
+import { careerStatus, department, location } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 
 // ─── Field Label ──────────────────────────────────────────────────────────────
@@ -32,8 +32,8 @@ type FormData = {
   position: string;
   location: string;
   status: string;
+  department: string;
   jobDescription: string;
-  purpose: string;
   responsibilities: string;
   qualifications: string;
   requiredSkills: string;
@@ -43,8 +43,8 @@ const EMPTY_FORM: FormData = {
   position: "",
   location: "",
   status: "hiring",
+  department: "",
   jobDescription: "",
-  purpose: "",
   responsibilities: "",
   qualifications: "",
   requiredSkills: "",
@@ -78,8 +78,8 @@ export default function CareerFormModal({
         position: career.position ?? "",
         location: career.location ?? "",
         status: career.status ?? "hiring",
+        department: career.department ?? "",
         jobDescription: career.jobDescription ?? "",
-        purpose: career.purpose ?? "",
         responsibilities: career.responsibilities ?? "",
         qualifications: career.qualifications ?? "",
         requiredSkills: career.requiredSkills ?? "",
@@ -130,8 +130,8 @@ export default function CareerFormModal({
           position: form.position.trim(),
           location: form.location.trim(),
           status: form.status,
+          department: form.department,
           jobDescription: form.jobDescription.trim(),
-          purpose: form.purpose.trim() || null,
           responsibilities: form.responsibilities.trim() || null,
           qualifications: form.qualifications.trim() || null,
           requiredSkills: form.requiredSkills.trim() || null,
@@ -205,16 +205,37 @@ export default function CareerFormModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>
-                  Location <span className="text-red-500">*</span>
-                </FieldLabel>
-                <TextInput
-                  name="location"
-                  type="text"
-                  placeholder="e.g. Cebu City, Philippines"
+                <FieldLabel>Location</FieldLabel>
+                <DropSelect
+                  selectName="location"
+                  selectId="location"
                   value={form.location}
-                  onChange={handleInputChange}
-                />
+                  onChange={(e) => handleSelectChange("location", e.target.value)}
+                >
+                  <option value="" disabled>Select Location</option>
+                  {Object.keys(location).map((key) => (
+                    <option key={key} value={key}>
+                      {location[key as keyof typeof location]}
+                    </option>
+                  ))}
+                </DropSelect>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Department</FieldLabel>
+                <DropSelect
+                  selectName="department"
+                  selectId="department"
+                  value={form.department}
+                  onChange={(e) => handleSelectChange("department", e.target.value)}
+                >
+                  <option value="" disabled>Select Department</option>
+                  {Object.keys(department).map((key) => (
+                    <option key={key} value={key}>
+                      {department[key as keyof typeof department]}
+                    </option>
+                  ))}
+                </DropSelect>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -243,17 +264,6 @@ export default function CareerFormModal({
                   value={form.jobDescription}
                   onChange={handleInputChange}
                   className="min-h-28 resize-none"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Purpose</FieldLabel>
-                <Textarea
-                  name="purpose"
-                  placeholder="Why this role exists within the organization..."
-                  value={form.purpose}
-                  onChange={handleInputChange}
-                  className="min-h-20 resize-none"
                 />
               </div>
             </div>

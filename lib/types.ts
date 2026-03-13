@@ -102,6 +102,13 @@ export const careerStatus = {
 
 export type CareerStatus = (typeof careerStatus)[keyof typeof careerStatus];
 
+export const location = {
+    'Quezon City (Head Office)': 'Quezon City (Head Office)',
+    'Lipa, Batangas': 'Lipa, Batangas',
+    'Angeles, Pampanga': 'Angeles, Pampanga',
+  } as const;
+  export type Location = (typeof location)[keyof typeof location];
+
 /*
     PROJECT RELATED ENUMS
 */
@@ -291,6 +298,7 @@ export type Reservation = {
 export type Career = {
     id: number;
     position: string;
+    department: string;
     location: string;
     jobDescription: string;
     purpose: string;

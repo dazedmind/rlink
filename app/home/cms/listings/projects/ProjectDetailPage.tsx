@@ -4,47 +4,50 @@ import React, { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, TextAlignStart, Image, House, Box } from "lucide-react";
+import { ArrowLeft, TextAlignStart, Image, House, Box, Sparkles, Tent } from "lucide-react";
 import ProjectOverviewTab from "./tabs/ProjectOverviewTab";
+import ProjectAmenitiesTab from "./tabs/ProjectAmenitiesTab";
 import ProjectModelsTab from "./tabs/ProjectModelsTab";
 import ProjectInventoryTab from "./tabs/ProjectInventoryTab";
 import ProjectGalleryTab from "./tabs/ProjectGalleryTab";
 import type {
   Project,
   ProjectModel,
+  ProjectAmenity,
   InventoryUnit,
   OverviewForm,
 } from "./tabs/project-types";
 import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./tabs/project-types";
 import BackButton from "@/components/ui/BackButton";
 
-type Tab = "overview" | "models" | "inventory" | "gallery";
+type Tab = "overview" | "amenities" | "models" | "inventory" | "gallery";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "overview", label: "Overview", icon: <TextAlignStart  className="size-5"/> },
+  { id: "amenities", label: "Amenities", icon: <Tent  className="size-5"/> },
   { id: "models", label: "Models", icon: <House  className="size-5"/> },
   { id: "inventory", label: "Inventory", icon: <Box  className="size-5"/> },
   { id: "gallery", label: "Gallery", icon: <Image  className="size-5"/> },
 ];
 
-function normalizeStringArray(raw: unknown): string[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) {
-    return raw.flatMap((entry) => {
-      if (typeof entry === "string") return [entry];
-      if (typeof entry === "object" && entry !== null) {
-        const obj = entry as Record<string, unknown>;
-        if (Array.isArray(obj.items))
-          return (obj.items as unknown[]).filter(
-            (i): i is string => typeof i === "string"
-          );
-        const first = Object.values(obj).find((v) => typeof v === "string");
-        return first ? [first as string] : [];
-      }
-      return [];
-    });
+function normalizeAmenities(raw: unknown): ProjectAmenity[] {
+  if (!raw || !Array.isArray(raw)) return [];
+  const result: ProjectAmenity[] = [];
+  for (const entry of raw) {
+    if (typeof entry === "string") {
+      if (entry.trim()) result.push({ name: entry.trim() });
+    } else if (typeof entry === "object" && entry !== null) {
+      const obj = entry as Record<string, unknown>;
+      const name = typeof obj.name === "string" ? obj.name.trim() : "";
+      if (!name) continue;
+      const photoUrl =
+        typeof obj.photoUrl === "string" && obj.photoUrl.trim()
+          ? obj.photoUrl.trim()
+          : undefined;
+      result.push(photoUrl ? { name, photoUrl } : { name });
+    }
   }
-  return [];
+  return result;
 }
 
 function normalizeLandmarks(raw: unknown): Record<string, string[]> {
@@ -89,7 +92,6 @@ const EMPTY_FORM: OverviewForm = {
   address: "",
   completionDate: "",
   salesOffice: "",
-  amenities: [],
   landmarks: { ...EMPTY_LANDMARKS },
 };
 
@@ -103,6 +105,7 @@ export default function ProjectDetailPage({
 
   const [activeTab, setActiveTabLocal] = useState<Tab>("overview");
   const [project, setProject] = useState<Project | null>(null);
+  const [amenities, setAmenities] = useState<ProjectAmenity[]>([]);
   const [models, setModels] = useState<ProjectModel[]>([]);
   const [inventory, setInventory] = useState<InventoryUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +119,7 @@ export default function ProjectDetailPage({
     if (!id || id === "new") {
       setProject(null);
       setForm(EMPTY_FORM);
+      setAmenities([]);
       setModels([]);
       setInventory([]);
       setIsLoading(false);
@@ -155,9 +159,9 @@ export default function ProjectDetailPage({
             ? String(proj.completionDate).slice(0, 10)
             : "",
           salesOffice: proj.salesOffice ?? "",
-          amenities: normalizeStringArray(proj.amenities),
           landmarks: normalizeLandmarks(proj.landmarks),
         });
+        setAmenities(normalizeAmenities(proj.amenities));
       } else if (projRes?.error) {
         setProject(null);
       }
@@ -193,7 +197,7 @@ export default function ProjectDetailPage({
       address: form.address.trim() || null,
       completionDate: form.completionDate || null,
       salesOffice: form.salesOffice.trim() || null,
-      amenities: form.amenities,
+      amenities: amenities,
       landmarks: form.landmarks,
     };
     setSavingSection("overview");
@@ -228,6 +232,30 @@ export default function ProjectDetailPage({
         toast.success("Project details saved.");
         fetchData();
       }
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setSavingSection(null);
+    }
+  };
+
+  const saveAmenities = async () => {
+    if (!id || id === "new") return;
+    setSavingSection("amenities");
+    try {
+      const res = await fetch(`/api/projects/${id}/amenities`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ amenities }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error ?? "Failed to save amenities.");
+        return;
+      }
+      toast.success("Amenities saved.");
+      fetchData();
     } catch {
       toast.error("Network error.");
     } finally {
@@ -348,13 +376,13 @@ export default function ProjectDetailPage({
           </div>
         </span>
         {!isCreateMode && (
-          <div className="flex flex-wrap bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-start md:justify-start bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTabLocal(tab.id)}
-                className={`flex-1 min-w-[80px] px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
+                className={`flex-1 w-full md:w-auto min-w-[80px] px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
                   currentTab === tab.id
                     ? "bg-primary text-white"
                     : "text-[#8E8E93] hover:text-[#1C1C1E]"
@@ -362,10 +390,11 @@ export default function ProjectDetailPage({
               >
                 <span className="flex items-center gap-2 justify-center">
                   {tab.icon}{tab.label}
+                  {tab.id === "amenities" && amenities.length > 0 && ` (${amenities.length})`}
                   {tab.id === "models" && models.length > 0 && ` (${models.length})`}
-                {tab.id === "inventory" &&
-                  inventory.length > 0 &&
-                  ` (${inventory.length})`}
+                  {tab.id === "inventory" &&
+                    inventory.length > 0 &&
+                    ` (${inventory.length})`}
                 </span>
          
               </button>
@@ -380,6 +409,15 @@ export default function ProjectDetailPage({
             onSave={saveProjectDetails}
             isSaving={savingSection === "overview"}
             saveLabel={isCreateMode ? "Create Project" : "Save"}
+          />
+        )}
+
+        {!isCreateMode && currentTab === "amenities" && (
+          <ProjectAmenitiesTab
+            amenities={amenities}
+            setAmenities={setAmenities}
+            onSave={saveAmenities}
+            isSaving={savingSection === "amenities"}
           />
         )}
 

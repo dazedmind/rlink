@@ -16,6 +16,19 @@ import { user } from '@/db/auth-schema'
 // ENUMS
 // ─────────────────────────────────────────────
 
+export const departmentEnum = pgEnum('department', [
+  'marketing',
+  'executive',
+  'engineering',
+  'design',
+  'hr',
+  'finance',
+  'it',
+  'legal',
+  'operations',
+  'customer_service',
+  'product'
+])
 
 export const leadStatusEnum = pgEnum('lead_status', [
   'open',
@@ -240,6 +253,7 @@ export const projects = pgTable('projects', {
   address: text('address'),
   completionDate: date('completion_date'),
   salesOffice: text('sales_office'),
+  /** Array of { name: string, photoUrl?: string } */
   amenities: jsonb('amenities').notNull().default([]),
   landmarks: jsonb('landmarks').notNull().default([]),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
@@ -317,9 +331,9 @@ export const jobInquiry = pgTable('job_inquiry', {
 export const careers = pgTable('careers', {
   id:             serial('id').primaryKey(),
   position:       text('position').notNull(),
+  department:     departmentEnum('department').notNull().default('marketing'),
   location:       text('location').notNull(),
   jobDescription: text('job_description').notNull(),
-  purpose:        text('purpose').notNull(),
   responsibilities: text('responsibilities').notNull(),
   qualifications: text('qualifications').notNull(),
   requiredSkills: text('required_skills').notNull(),
