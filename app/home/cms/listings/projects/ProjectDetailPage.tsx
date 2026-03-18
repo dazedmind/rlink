@@ -19,6 +19,7 @@ import type {
 } from "./tabs/project-types";
 import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./tabs/project-types";
 import BackButton from "@/components/ui/BackButton";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 type Tab = "overview" | "amenities" | "models" | "inventory" | "gallery";
 
@@ -79,6 +80,7 @@ type ProjectDetailPageProps = {
 const EMPTY_FORM: OverviewForm = {
   projectCode: "",
   projectName: "",
+  slug: "",
   status: "",
   location: "",
   stage: "",
@@ -144,6 +146,7 @@ export default function ProjectDetailPage({
         setForm({
           projectCode: proj.projectCode ?? "",
           projectName: proj.projectName ?? "",
+          slug: proj.slug ?? nameToSlug(proj.projectName ?? ""),
           status: proj.status ?? "",
           location: proj.location ?? "",
           stage: proj.stage ?? "",
@@ -184,6 +187,7 @@ export default function ProjectDetailPage({
     const payload = {
       projectCode: form.projectCode.trim().toUpperCase(),
       projectName: form.projectName.trim(),
+      slug: form.slug.trim() || nameToSlug(form.projectName),
       status: form.status || null,
       location: form.location.trim() || null,
       stage: form.stage || null,

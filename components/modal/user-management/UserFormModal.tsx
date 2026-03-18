@@ -207,54 +207,53 @@ export default function UserFormModal({
         <div className="flex-1 overflow-y-auto py-2 pr-0.5 scrollbar-hide flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>First Name</FieldLabel>
               <TextInput
+                label="First Name"
                 name="firstName"
                 type="text"
                 placeholder="First name"
                 value={form.firstName}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Last Name</FieldLabel>
               <TextInput
+                label="Last Name"
                 name="lastName"
                 type="text"
                 placeholder="Last name"
                 value={form.lastName}
                 onChange={handleInputChange}
+                required
               />
             </div>
           </div>
 
           <div className=" items-center gap-4">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>
-                Email <span className="text-red-500">*</span>
-              </FieldLabel>
-              <input
+              <TextInput
+                label="Email"
                 name="email"
                 type="email"
-                placeholder="user@example.com"
+                placeholder="user@rland.ph"
                 value={form.email}
                 onChange={handleInputChange}
                 disabled={isEdit}
-                className="h-10 w-full rounded-md border border-border bg-transparent px-3 text-sm outline-none focus-visible:border-ring disabled:opacity-70 disabled:cursor-not-allowed"
+                required
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <FieldLabel>
-              Password <span className="text-red-500">*</span>
-            </FieldLabel>
             <TextInput
+              label="Password"
               name="password"
               type="password"
               placeholder="Enter Password"
               value={form.password}
               onChange={handleInputChange}
+              required
             />
             <Button variant="outline" size="lg" className="font-normal text-sm" onClick={generatePassword}>
               <RefreshCcw />
@@ -264,8 +263,8 @@ export default function UserFormModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Role</FieldLabel>
               <DropSelect
+                label="Role"
                 selectName="role"
                 selectId="role"
                 value={form.role}
@@ -280,46 +279,50 @@ export default function UserFormModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Employee ID</FieldLabel>
               <TextInput
+                label="Employee ID"
                 name="employeeId"
                 type="text"
                 placeholder="Employee ID"
                 value={form.employeeId}
                 onChange={handleInputChange}
+                required
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Position</FieldLabel>
               <TextInput
+                label="Position"
                 name="position"
                 type="text"
                 placeholder="Job title"
                 value={form.position}
                 onChange={handleInputChange}
+                required
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Phone</FieldLabel>
               <TextInput
+                label="Phone"
                 name="phone"
                 type="tel"
                 placeholder="Phone number"
                 value={form.phone}
                 onChange={handleInputChange}
+                required
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <FieldLabel>Department</FieldLabel>
             <DropSelect
+              label="Department"
               selectName="department"
               selectId="department"
               value={form.department}
               onChange={(e) => handleSelectChange("department", e.target.value)}
+              required
             >
               <option value="" disabled>
                 Select Department

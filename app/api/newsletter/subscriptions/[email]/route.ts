@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { newsletter } from "@/db/schema";
@@ -27,6 +28,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const [updated] = await db.update(newsletter).set({ status: status }).where(eq(newsletter.email, email)).returning();
+    revalidatePath("/home");
     return NextResponse.json({ data: updated });
   } catch (error) {
     console.error("[PATCH /api/newsletter/subscriptions/:email]", error);
@@ -48,6 +50,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (!deleted) {
       return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
     } else {
+      revalidatePath("/home");
       return NextResponse.json({ message: "Subscriber removed successfully" });
     }
   } catch (error) {

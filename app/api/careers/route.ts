@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { careers } from "@/db/schema";
@@ -5,6 +6,7 @@ import { and, asc, count, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 import { Department } from "@/lib/types";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       position,
+      slug,
       department,
       location,
       status,
@@ -102,10 +105,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const slugValue = slug?.trim() ? nameToSlug(slug) : nameToSlug(position);
+
     const [created] = await db
       .insert(careers)
       .values({
         position: position.trim(),
+        slug: slugValue,
         department: department as Department,
         location: location.trim(),
         status: status ?? "hiring",
@@ -116,6 +122,7 @@ export async function POST(request: NextRequest) {
       } as typeof careers.$inferInsert)
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("[POST /api/careers]", error);

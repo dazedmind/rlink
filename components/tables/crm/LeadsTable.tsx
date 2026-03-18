@@ -13,7 +13,8 @@ import {
   User,
 } from "lucide-react";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   leadStatus,
   type LeadStatus,
@@ -21,6 +22,7 @@ import {
   type LeadNextAction,
 } from "@/lib/types";
 import { leadStage, type LeadStage } from "@/lib/types";
+import { qk } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -49,6 +51,8 @@ import ContextMenu from "../../layout/ContextMenu";
 import { toast } from "sonner";
 import Link from "next/link";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
+import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
+import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 
 type Lead = {
   id: number;
@@ -75,14 +79,13 @@ function LeadsTable({
   recentViewOnly: boolean;
 }) {
   const ITEMS_PER_PAGE = 10;
+  const queryClient = useQueryClient();
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
 
-  // Filter state
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterStage, setFilterStage] = useState<string[]>([]);
   const [filterNextAction, setFilterNextAction] = useState<string[]>([]);
@@ -91,40 +94,61 @@ function LeadsTable({
   const activeFilterCount =
     filterStatus.length + filterStage.length + filterNextAction.length;
 
-  const buildUrl = useCallback(
-    (page: number, limit = ITEMS_PER_PAGE) => {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        sort: sortOption,
-      });
-      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-      if (filterStage.length > 0) params.set("stage", filterStage.join(","));
-      if (filterNextAction.length > 0) params.set("nextAction", filterNextAction.join(","));
-      return `/api/leads?${params}`;
-    },
-    [filterStatus, filterStage, filterNextAction, sortOption],
-  );
+  const buildUrl = (
+    page: number,
+    limit = ITEMS_PER_PAGE,
+  ) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      sort: sortOption,
+    });
+    if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+    if (filterStage.length > 0) params.set("stage", filterStage.join(","));
+    if (filterNextAction.length > 0) params.set("nextAction", filterNextAction.join(","));
+    return `/api/leads?${params}`;
+  };
 
-  const fetchLeads = useCallback(async () => {
-    try {
+  const filters = {
+    page: currentPage,
+    limit: recentViewOnly ? 3 : ITEMS_PER_PAGE,
+    sort: sortOption,
+    status: filterStatus.join(","),
+    stage: filterStage.join(","),
+    nextAction: filterNextAction.join(","),
+  };
+
+  const { data, isLoading } = useQuery({
+    queryKey: qk.leads(filters),
+    queryFn: async () => {
       const limit = recentViewOnly ? 3 : ITEMS_PER_PAGE;
-      const response = await fetch(buildUrl(currentPage, limit));
-      const { data, total: responseTotal } = await response.json();
-      setLeads(data ?? []);
-      setTotal(responseTotal ?? 0);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      setLeads([]);
-      setTotal(0);
-    }
-  }, [buildUrl, currentPage, recentViewOnly]);
+      const res = await fetch(buildUrl(currentPage, limit));
+      const json = await res.json();
+      return { data: json.data ?? [], total: json.total ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+  const leadsData = data?.data ?? [];
+  const totalData = data?.total ?? 0;
 
-  const totalPages = recentViewOnly ? 1 : Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/leads/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) return r.json().then((err) => { throw new Error(err.error ?? "Failed to delete"); });
+        return r.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.leads() });
+      toast.success("Lead deleted successfully");
+      setDeletingLead(null);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete lead");
+    },
+  });
+
+  const totalPages = recentViewOnly ? 1 : Math.max(1, Math.ceil(totalData / ITEMS_PER_PAGE));
 
   const toggleFilter = (
     value: string,
@@ -147,13 +171,11 @@ function LeadsTable({
     setCurrentPage(1);
   };
 
-  // 1. Define your Column Configuration
   const columns = [
     { label: "Lead ID", key: "leadId" },
     { label: "Status", key: "status" },
     { label: "Client Name", key: "clientName" },
     { label: "Contact", key: "contact" },
-    // These columns only show if recentViewOnly is false
     { label: "Inquiry Date", key: "inquiryDate", hideOnRecent: true },
     { label: "Last Update", key: "updatedAt", hideOnRecent: true },
     { label: "Stage", key: "stage", hideOnRecent: true },
@@ -161,10 +183,9 @@ function LeadsTable({
     { label: "", key: "actions", hideOnRecent: true },
   ];
 
-  // 2. Filter columns based on the prop
   const visibleColumns = useMemo(() => {
-    return recentViewOnly 
-      ? columns.filter(col => !col.hideOnRecent) 
+    return recentViewOnly
+      ? columns.filter(col => !col.hideOnRecent)
       : columns;
   }, [recentViewOnly]);
 
@@ -183,23 +204,10 @@ function LeadsTable({
     setIsModalOpen(true);
   };
 
-  const handleDeleteLead = async (id: number) => {
-    try {
-      const response = await fetch(`/api/leads/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to delete lead");
-      }
-      toast.success("Lead deleted successfully");
-      fetchLeads();
-    } catch (error) {
-      console.error("Error deleting lead:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete lead");
-    }
+  const handleDeleteLead = (row: Lead) => {
+    setDeletingLead(row);
   };
-  
+
   const actionMenu = (row: Lead) => [
     {
       label: "View Lead",
@@ -215,21 +223,21 @@ function LeadsTable({
       label: "Delete Lead",
       icon: Trash2,
       color: "text-red-600 focus:text-red-600 focus:bg-red-50",
-      onClick: () => handleDeleteLead(row.id),
+      onClick: () => handleDeleteLead(row),
     },
   ];
 
   const handleExportCSV = async () => {
     try {
-      const response = await fetch(buildUrl(1, 10000));
-      const { data } = await response.json();
-      const rows: Lead[] = data ?? [];
+      const res = await fetch(buildUrl(1, 10000));
+      const { data: rows } = await res.json();
+      const list: Lead[] = rows ?? [];
 
       const headers = [
         "Lead ID", "Status", "First Name", "Last Name",
         "Email", "Phone", "Project", "Stage", "Next Action", "Inquiry Date",
       ];
-      const csvRows = rows.map((lead) => [
+      const csvRows = list.map((lead) => [
         lead.leadId,
         leadStatus[lead.status as keyof typeof leadStatus] || lead.status,
         lead.firstName,
@@ -258,15 +266,25 @@ function LeadsTable({
       link.click();
       document.body.removeChild(link);
 
-      toast.success(`Exported ${rows.length} leads`);
+      toast.success(`Exported ${list.length} leads`);
     } catch {
       toast.error("Failed to export CSV");
     }
   };
-  
+
+  if (isLoading) {
+    return (
+      <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-background">
+        <div className="p-4 border-b">
+          <h3 className="font-semibold text-xl">{table_name}</h3>
+        </div>
+        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} />
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-white animate-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
+    <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-background animate-fade-in-up">
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="font-semibold text-xl">{table_name}</h3>
 
@@ -285,7 +303,6 @@ function LeadsTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
 
-              {/* Sort */}
               <DropdownMenuLabel className="flex items-center gap-2 text-xs uppercase text-gray-500">
                 <ArrowUpDown className="size-3" /> Sort
               </DropdownMenuLabel>
@@ -314,10 +331,9 @@ function LeadsTable({
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-          
+
               <DropdownMenuSeparator />
 
-              {/* Stage */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-xs uppercase text-gray-500">Stage</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -336,7 +352,6 @@ function LeadsTable({
 
               <DropdownMenuSeparator />
 
-              {/* Next Action */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-xs uppercase text-gray-500">Next Action</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -353,7 +368,6 @@ function LeadsTable({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              {/* Clear */}
               {activeFilterCount > 0 && (
                 <>
                   <DropdownMenuSeparator />
@@ -380,14 +394,13 @@ function LeadsTable({
         </span>
       </div>
 
-      {/* shadcn/ui Table */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow>
             {visibleColumns.map((col, i) => (
               <TableHead
                 key={i}
-                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
               >
                 {col.label}
               </TableHead>
@@ -396,9 +409,9 @@ function LeadsTable({
         </TableHeader>
 
         <TableBody>
-          {leads.map((row) => (
+          {leadsData.map((row: Lead) => (
             <TableRow key={row.id} onClick={() => handleRowClick(row)} className="hover:bg-blue-600/10 cursor-pointer">
-              <TableCell className="px-6 py-4 font-medium text-neutral-500">
+              <TableCell className="px-6 py-4 font-medium text-muted-foreground">
                 {row.leadId}
               </TableCell>
 
@@ -412,16 +425,15 @@ function LeadsTable({
 
               <TableCell className="px-6 py-4">
                 <span className="flex flex-col">
-                  <span className="flex items-center gap-2 text-sm font-medium text-neutral-500">
+                  <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <PhoneIcon size={12} /> {row.phone}
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
                     <MailIcon size={12} /> {row.email}
                   </span>
                 </span>
               </TableCell>
 
-              {/* Conditional rendering for the remaining cells */}
               {!recentViewOnly && (
                 <>
                   <TableCell className="px-6 py-4">{shortDateFormatter(row.inquiryDate)}</TableCell>
@@ -441,18 +453,17 @@ function LeadsTable({
         </TableBody>
       </Table>
 
-      {/* Footer with Pagination */}
       {!recentViewOnly && (
-        <div className="flex justify-between items-center bg-white px-6 py-4 border-t">
-          <p className="text-sm text-gray-600">
+        <div className="flex justify-between items-center bg-accent px-6 py-4 border-t">
+          <p className="text-sm text-muted-foreground">
             {activeFilterCount > 0
-              ? `${total} matching leads`
-              : `${total} leads total`}
+              ? `${totalData} matching leads`
+              : `${totalData} leads total`}
           </p>
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 Showing {currentPage} of {totalPages} pages
               </span>
               {currentPage > 1 && (
@@ -498,8 +509,18 @@ function LeadsTable({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUpdate={() => {
-          fetchLeads();
+          queryClient.invalidateQueries({ queryKey: qk.leads() });
         }}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deletingLead !== null}
+        onClose={() => setDeletingLead(null)}
+        onConfirm={() => deletingLead && deleteMutation.mutate(deletingLead.id)}
+        itemName={deletingLead ? `${deletingLead.firstName} ${deletingLead.lastName}` : ""}
+        isDeleting={deleteMutation.isPending}
+        title="Delete Lead"
+        confirmLabel="Delete Lead"
       />
     </div>
   );

@@ -14,6 +14,7 @@ import type { OverviewForm } from "./project-types";
 import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./project-types";
 import { Separator } from "@/components/ui/separator";
 import { projectStage, projectStatus, projectType } from "@/lib/types";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 const ACCENT_COLORS = [
   { value: "blue", label: "Blue", color: "bg-linear-to-r from-blue-500/80 to-blue-900/80" },
@@ -314,9 +315,28 @@ export default function ProjectOverviewTab({
                 placeholder="e.g. Arcoe Residence"
                 value={form.projectName}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, projectName: e.target.value }))
+                  setForm((p) => {
+                    const next = { ...p, projectName: e.target.value };
+                    if (!p.slug) next.slug = nameToSlug(e.target.value);
+                    return next;
+                  })
                 }
               />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-4">
+              <SectionLabel>Slug *</SectionLabel>
+              <TextInput
+                name="slug"
+                type="text"
+                placeholder="e.g. arcoe-residence"
+                value={form.slug}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, slug: e.target.value }))
+                }
+              />
+              <p className="text-[11px] text-muted-foreground">
+                URL-friendly identifier. Auto-generated from project name when empty.
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="flex flex-col gap-1.5">

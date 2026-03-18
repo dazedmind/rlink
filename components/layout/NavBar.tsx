@@ -21,14 +21,6 @@ function NavBar({ isMenuOpen, setIsMenuOpen }: NavBarProps) {
             <Link2 className="size-10 text-primary" />
             <h1 className="text-3xl font-bold text-primary">RLink</h1>
           </Link>
-
-
-          {/* <div className="lg:hidden">
-            <Menu
-              className="w-6 h-6 cursor-pointer"
-              onClick={() => setIsMenuOpen?.(!isMenuOpen)}
-            />
-          </div> */}
         </div>
        
       </nav>

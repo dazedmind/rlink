@@ -18,8 +18,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inquirySource, inquiryStatus, inquirySubject } from "@/lib/types";
+import { qk } from "@/lib/query-keys";
 import {
   Table,
   TableBody,
@@ -44,8 +46,24 @@ import ContextMenu from "../../layout/ContextMenu";
 import { InquiryDetailModal } from "../../modal/crm/InquiryDetailModal";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
+import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
+import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 
 const ITEMS_PER_PAGE = 10;
+
+type InquiryRow = {
+  id: number;
+  inquiryId?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  source: string;
+  status: string;
+  createdAt: string;
+};
 
 function InquiryTable({
   table_name,
@@ -54,12 +72,11 @@ function InquiryTable({
   table_name: string;
   recentViewOnly: boolean;
 }) {
-  const [inquiries, setInquiries] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRow | null>(null);
+  const [deletingInquiry, setDeletingInquiry] = useState<InquiryRow | null>(null);
 
-  // Filter state
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSubject, setFilterSubject] = useState<string[]>([]);
   const [filterSource, setFilterSource] = useState<string[]>([]);
@@ -83,23 +100,75 @@ function InquiryTable({
     [filterStatus, filterSubject, filterSource, sortOption],
   );
 
-  const fetchInquiries = useCallback(async () => {
-    try {
-      const limit = recentViewOnly ? 5 : ITEMS_PER_PAGE;
-      const response = await fetch(buildUrl(currentPage, limit));
-      const { data, total: responseTotal } = await response.json();
-      setInquiries(data ?? []);
-      setTotal(responseTotal ?? 0);
-    } catch (error) {
-      console.error("Error fetching inquiries:", error);
-      setInquiries([]);
-      setTotal(0);
-    }
-  }, [buildUrl, currentPage, recentViewOnly]);
+  const filters = {
+    page: currentPage,
+    limit: recentViewOnly ? 5 : ITEMS_PER_PAGE,
+    sort: sortOption,
+    status: filterStatus.join(","),
+    subject: filterSubject.join(","),
+    source: filterSource.join(","),
+  };
 
-  useEffect(() => {
-    fetchInquiries();
-  }, [fetchInquiries]);
+  const { data, isLoading } = useQuery({
+    queryKey: qk.inquiries(filters),
+    queryFn: async () => {
+      const limit = recentViewOnly ? 5 : ITEMS_PER_PAGE;
+      const res = await fetch(buildUrl(currentPage, limit));
+      const json = await res.json();
+      return { data: json.data ?? [], total: json.total ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  const inquiries = data?.data ?? [];
+  const total = data?.total ?? 0;
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      fetch(`/api/inquiries/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      }).then((r) => {
+        if (!r.ok) throw new Error("Failed to update status");
+        return r.json();
+      }),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: qk.inquiries() });
+      const previous = queryClient.getQueryData(qk.inquiries(filters));
+      queryClient.setQueryData(qk.inquiries(filters), (old: { data: InquiryRow[]; total: number } | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((inq) => (inq.id === id ? { ...inq, status } : inq)),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _payload, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(qk.inquiries(filters), ctx.previous);
+      toast.error("Failed to update status");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qk.inquiries() });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/inquiries/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) return r.json().then((err) => { throw new Error(err.error ?? "Failed to delete"); });
+        return r.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.inquiries() });
+      toast.success("Inquiry deleted successfully");
+      setDeletingInquiry(null);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete inquiry");
+    },
+  });
 
   const toggleFilter = (
     value: string,
@@ -122,30 +191,11 @@ function InquiryTable({
     setCurrentPage(1);
   };
 
-  const updateInquiryStatus = async (id: number, newStatus: string) => {
-    const response = await fetch(`/api/inquiries/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    if (!response.ok) throw new Error("Failed to update status");
-    return response.json();
+  const handleStatusChange = (id: number, newStatus: string) => {
+    updateStatusMutation.mutate({ id, status: newStatus });
   };
 
-  const handleStatusChange = async (id: number, newStatus: string) => {
-    const previousInquiries = [...inquiries];
-    setInquiries((prev) =>
-      prev.map((inq) => (inq.id === id ? { ...inq, status: newStatus } : inq)),
-    );
-    try {
-      await updateInquiryStatus(id, newStatus);
-    } catch (error) {
-      console.error("Status update failed:", error);
-      setInquiries(previousInquiries);
-    }
-  };
-
-  const handleRowClick = (row: any) => {
+  const handleRowClick = (row: InquiryRow) => {
     setSelectedInquiry(row);
   };
 
@@ -158,45 +208,45 @@ function InquiryTable({
 
   const handleExportCSV = async () => {
     try {
-      const response = await fetch(buildUrl(1, 10000));
-      const { data } = await response.json();
-      const rows: any[] = data ?? [];
+      const res = await fetch(buildUrl(1, 10000));
+      const { data: rows } = await res.json();
+      const list: InquiryRow[] = rows ?? [];
 
       const headers = [
         "Client Name", "Email", "Phone", "Subject", "Message", "Source", "Status", "Date",
       ];
-      const csvRows = rows.map((i) => [
-      `${i.firstName} ${i.lastName}`,
-      i.email,
-      i.phone,
-      inquirySubject[i.subject as keyof typeof inquirySubject] || i.subject,
-      i.message,
-      inquirySource[i.source as keyof typeof inquirySource] || i.source,
-      inquiryStatus[i.status as keyof typeof inquiryStatus] || i.status,
-      shortDateFormatter(i.createdAt),
-    ]);
-    const csvContent = [
-      headers.join(","),
-      ...csvRows.map((row) =>
-        row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","),
-      ),
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Inquiries_Export_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-      toast.success(`Exported ${rows.length} inquiries`);
+      const csvRows = list.map((i) => [
+        `${i.firstName} ${i.lastName}`,
+        i.email,
+        i.phone,
+        inquirySubject[i.subject as keyof typeof inquirySubject] || i.subject,
+        i.message,
+        inquirySource[i.source as keyof typeof inquirySource] || i.source,
+        inquiryStatus[i.status as keyof typeof inquiryStatus] || i.status,
+        shortDateFormatter(i.createdAt),
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) =>
+          row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","),
+        ),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Inquiries_Export_${new Date().toISOString().split("T")[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(`Exported ${list.length} inquiries`);
     } catch {
       toast.error("Failed to export CSV");
     }
   };
 
-  const actionMenu = (row: any) => [
+  const actionMenu = (row: InquiryRow) => [
     { label: "View Inquiry", icon: EyeIcon, onClick: () => handleRowClick(row) },
     {
       label: row.status === "read" ? "Mark as Unread" : "Mark as Read",
@@ -212,29 +262,23 @@ function InquiryTable({
       label: "Delete Inquiry",
       icon: Trash2,
       color: "text-red-600 focus:text-red-600 focus:bg-red-50",
-      onClick: () => handleDeleteInquiry(row.id),
+      onClick: () => setDeletingInquiry(row),
     },
   ];
 
-  const handleDeleteInquiry = async (id: number) => {
-    try {
-      const response = await fetch(`/api/inquiries/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to delete inquiry");
-      }
-      toast.success("Inquiry deleted successfully");
-      fetchInquiries();
-    } catch (error) {
-      console.error("Error deleting inquiry:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete inquiry");
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-background">
+        <div className="p-4 border-b">
+          <h3 className="font-semibold text-xl">{table_name}</h3>
+        </div>
+        <TableSkeleton columnCount={8} rowCount={10} />
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-white animate-in slide-in-from-bottom-4 duration-500">
+    <div className="overflow-x-auto scrollbar-hide border rounded-xl bg-background animate-fade-in-up">
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="font-semibold text-xl">{table_name}</h3>
 
@@ -253,7 +297,6 @@ function InquiryTable({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-48">
-              {/* Sort */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   <ArrowUpDown className="size-3.5" /> Sort
@@ -273,7 +316,6 @@ function InquiryTable({
 
               <DropdownMenuSeparator />
 
-              {/* Status */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Status
@@ -297,7 +339,6 @@ function InquiryTable({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              {/* Subject */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Subject
@@ -321,7 +362,6 @@ function InquiryTable({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              {/* Source */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Source
@@ -372,13 +412,13 @@ function InquiryTable({
       </div>
 
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow className="hover:bg-transparent">
             {["Client Name", "Contact", "Subject", "Message", "Source", "Sent on", "Status", ""].map(
               (header) => (
                 <TableHead
                   key={header}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {header}
                 </TableHead>
@@ -388,12 +428,12 @@ function InquiryTable({
         </TableHeader>
 
         <TableBody>
-          {inquiries.map((row) => (
+          {inquiries.map((row: InquiryRow) => (
             <TableRow
               key={row.id}
               onClick={() => handleRowClick(row)}
               className={`hover:bg-blue-600/10 group transition-colors cursor-pointer ${
-                row.status === "unread" ? "font-bold bg-blue-50/30" : ""
+                row.status === "unread" ? "font-bold bg-sidebar" : ""
               }`}
             >
               <TableCell className="px-6 py-4">
@@ -402,10 +442,10 @@ function InquiryTable({
 
               <TableCell className="px-6 py-4">
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-sm text-neutral-500 font-normal">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground font-normal">
                     <PhoneIcon size={12} /> {row.phone}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-neutral-500 font-normal">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground font-normal">
                     <MailIcon size={12} /> {row.email}
                   </div>
                 </div>
@@ -416,7 +456,7 @@ function InquiryTable({
               </TableCell>
 
               <TableCell className="px-6 py-4 max-w-[250px]">
-                <p className="truncate text-gray-600 font-normal" title={row.message}>
+                <p className="truncate text-muted-foreground font-normal" title={row.message}>
                   {row.message}
                 </p>
               </TableCell>
@@ -453,8 +493,8 @@ function InquiryTable({
       </Table>
 
       {!recentViewOnly && (
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-          <p className="text-sm text-gray-600">
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-accent">
+          <p className="text-sm text-muted-foreground">
             {activeFilterCount > 0
               ? `${total} matching inquiries`
               : `${total} inquiries total`}
@@ -496,10 +536,20 @@ function InquiryTable({
       )}
 
       <InquiryDetailModal
-        inquiry={selectedInquiry}
+        inquiry={selectedInquiry ?? null}
         isOpen={selectedInquiry !== null}
         onClose={() => setSelectedInquiry(null)}
         onStatusChange={handleStatusChange}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deletingInquiry !== null}
+        onClose={() => setDeletingInquiry(null)}
+        onConfirm={() => deletingInquiry && deleteMutation.mutate(deletingInquiry.id)}
+        itemName={deletingInquiry ? `${deletingInquiry.firstName} ${deletingInquiry.lastName}` : ""}
+        isDeleting={deleteMutation.isPending}
+        title="Delete Inquiry"
+        confirmLabel="Delete Inquiry"
       />
     </div>
   );

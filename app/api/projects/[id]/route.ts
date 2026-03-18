@@ -1,9 +1,11 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects, projectModels, projectInventory, projectGallery } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 export async function GET(
   _request: NextRequest,
@@ -46,6 +48,7 @@ export async function PATCH(
     const {
       projectCode,
       projectName,
+      slug,
       status,
       location,
       stage,
@@ -72,6 +75,8 @@ export async function PATCH(
       );
     }
 
+    const slugValue = slug?.trim() ? nameToSlug(slug) : nameToSlug(projectName ?? "");
+
     const normalizedLandmarks =
       landmarks && typeof landmarks === "object" && !Array.isArray(landmarks)
         ? Object.fromEntries(
@@ -89,6 +94,7 @@ export async function PATCH(
       .set({
         projectCode: String(projectCode).trim().toUpperCase(),
         projectName: String(projectName ?? "").trim(),
+        slug: slugValue,
         status: status || null,
         location: location?.trim() || null,
         stage: stage || null,
@@ -115,6 +121,7 @@ export async function PATCH(
       );
     }
 
+    revalidatePath("/home");
     return NextResponse.json({
       message: "Project updated successfully",
       data: updated,
@@ -146,6 +153,7 @@ export async function DELETE(
     await db.delete(projectModels).where(eq(projectModels.projectId, id));
     await db.delete(projectInventory).where(eq(projectInventory.projectId, id));
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Project deleted successfully", id: deleted.id });
   } catch (error) {
     console.error("[DELETE /api/projects/[id]]", error);

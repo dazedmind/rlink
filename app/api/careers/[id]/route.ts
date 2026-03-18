@@ -1,9 +1,11 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { careers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -57,6 +59,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     const allowedFields = [
       "position",
+      "slug",
       "location",
       "status",
       "jobDescription",
@@ -70,8 +73,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         const val = body[field];
-        (updates as Record<string, unknown>)[field] =
-          typeof val === "string" ? val.trim() : val;
+        if (field === "slug" && typeof val === "string") {
+          (updates as Record<string, unknown>)[field] = nameToSlug(val.trim()) || nameToSlug(body.position ?? "");
+        } else {
+          (updates as Record<string, unknown>)[field] =
+            typeof val === "string" ? val.trim() : val;
+        }
       }
     }
 
@@ -94,6 +101,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Career not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[PATCH /api/careers/:id]", error);
@@ -128,6 +136,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Career not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Career deleted", id: deleted.id });
   } catch (error) {
     console.error("[DELETE /api/careers/:id]", error);

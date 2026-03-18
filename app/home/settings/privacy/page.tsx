@@ -23,7 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Label } from "@/components/ui/label";
 
 function PrivacyTabContent() {
   const [newPassword, setNewPassword] = useState("");
@@ -112,21 +111,18 @@ function PrivacyTabContent() {
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="grid gap-4 max-w-md relative">
-              
-              {isPasswordSet && (
-                <TextInput
-                  label="Current Password"
-                  name="currentPassword"
-                  type="password"
-                  placeholder="Enter Current Password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
-              )}
+              <TextInput
+                label="Current Password"
+                name="currentPassword"
+                type="password"
+                placeholder="Enter Current Password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
 
               <div className="space-y-2 relative">
                 <TextInput
-                  label={isPasswordSet ? "New Password" : "Set Your Password"}
+                  label="New Password"
                   name="newPassword"
                   type="password"
                   placeholder="Enter Password"
@@ -173,7 +169,7 @@ function PrivacyTabContent() {
               disabled={loading || (newPassword.length > 0 && !isStrong)}
               className="w-fit bg-blue-600 hover:bg-blue-700 mt-2"
             >
-              {loading ? "Processing..." : isPasswordSet ? "Change Password" : "Set Password"}
+              {loading ? "Processing..." : "Change Password"}
             </Button>
             
             <Separator />

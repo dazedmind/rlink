@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projectGallery } from "@/db/schema";
@@ -99,6 +100,7 @@ export async function POST(
       inserted.push({ id: rowId, projectId, modelId, imageUrl: u, caption: null, sortOrder: order });
     }
 
+    revalidatePath("/home");
     return NextResponse.json(inserted, { status: 201 });
   } catch (error) {
     console.error("[POST /api/projects/:id/gallery]", error);
@@ -139,6 +141,7 @@ export async function DELETE(
         and(eq(projectGallery.projectId, projectId), inArray(projectGallery.id, ids))
       );
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Images deleted" });
   } catch (error) {
     console.error("[DELETE /api/projects/:id/gallery]", error);

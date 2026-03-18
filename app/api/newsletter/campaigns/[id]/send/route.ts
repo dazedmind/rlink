@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { campaigns } from "@/db/schema";
@@ -52,6 +53,7 @@ export async function POST(
       .where(eq(campaigns.id, numericId))
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json({ data: updated, message: "Campaign sent successfully" });
   } catch (error) {
     console.error("[POST /api/newsletter/campaigns/:id/send]", error);

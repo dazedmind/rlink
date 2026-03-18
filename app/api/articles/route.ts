@@ -1,9 +1,11 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { articles } from "@/db/schema";
 import { and, asc, count, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const reqBody = await request.json();
-    const { headline, body: articleBody, publishDate, tags, type, photoUrl, isFeatured } = reqBody;
+    const { headline, slug, body: articleBody, publishDate, tags, type, photoUrl, isFeatured } = reqBody;
 
     if (!headline?.trim()) {
       return NextResponse.json(
@@ -97,11 +99,13 @@ export async function POST(request: NextRequest) {
 
     const pubDate = new Date(publishDate);
     const publishDateStr = pubDate.toISOString().slice(0, 10);
+    const slugValue = slug?.trim() ? nameToSlug(slug) : nameToSlug(headline);
 
     const [created] = await db
       .insert(articles)
       .values({
         headline: headline.trim(),
+        slug: slugValue,
         body: articleBody.trim(),
         publishDate: publishDateStr,
         tags: Array.isArray(tags) ? tags : [],
@@ -111,6 +115,7 @@ export async function POST(request: NextRequest) {
       } as typeof articles.$inferInsert)
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("[POST /api/articles]", error);

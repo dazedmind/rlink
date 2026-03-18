@@ -190,6 +190,17 @@ function PersonalInfoTabContent() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  placeholder="Enter Phone Number"
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="birthdate">Birthdate</Label>
                 <Input
                   id="birthdate"

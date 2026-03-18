@@ -1,5 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar, Globe, Mail, Phone, Printer, User } from "lucide-react";
-import { InquiryStatus, inquirySource, inquirySubject } from "@/lib/types";
+import { inquirySource, inquirySubject } from "@/lib/types";
 import { dateFormatter } from "@/app/utils/dateFormatter";
 
 interface InquiryDetailModalProps {
-  inquiry: any;
+  inquiry: { id: number; status: string; firstName: string; lastName: string; email: string; phone: string; subject: string; inquiryId?: string; createdAt: string; source: string; message: string } | null;
   isOpen: boolean;
   onClose: () => void;
   onStatusChange?: (id: number, status: string) => void;
@@ -25,25 +27,32 @@ export function InquiryDetailModal({
   onClose,
   onStatusChange,
 }: InquiryDetailModalProps) {
-  const [status, setStatus] = useState<InquiryStatus>(inquiry?.status);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (isOpen && inquiry?.id && inquiry?.status === "unread") {
-      fetch(`/api/inquiries/${inquiry.id}`, {
+  const markReadMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/inquiries/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "read" }),
-      })
-        .then(() => {
-          setStatus("Read" as any);
-          onStatusChange?.(inquiry.id, "read");
-        })
-        .catch(console.error);
+      }).then((r) => {
+        if (!r.ok) throw new Error("Failed to mark as read");
+        return r.json();
+      }),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: qk.inquiries() });
+      onStatusChange?.(id, "read");
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen && inquiry?.id && inquiry?.status === "unread") {
+      markReadMutation.mutate(inquiry.id);
     }
   }, [isOpen, inquiry?.id]);
 
   const handlePrint = () => window.print();
-  const handleEmail = () => (window.location.href = `mailto:${inquiry.email}`);
+  const handleEmail = () => inquiry && (window.location.href = `mailto:${inquiry.email}`);
 
   if (!inquiry) return null;
 
@@ -53,7 +62,6 @@ export function InquiryDetailModal({
         className="max-w-3xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-hidden p-0 flex flex-col border-none shadow-2xl"
         showCloseButton={false}
       >
-        {/* HEADER SECTION */}
         <DialogHeader className="px-6 py-5 border-b sticky top-0 bg-white z-10">
           <div className="flex justify-between items-start w-full">
             <div className="space-y-1">
@@ -62,30 +70,28 @@ export function InquiryDetailModal({
               </DialogTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="bg-slate-100 px-2 py-0.5 rounded font-mono font-bold text-slate-600">
-                  {inquiry.inquiryId}
+                  {inquiry.inquiryId ?? `IN-${inquiry.id}`}
                 </span>
                 <span>•</span>
                 <div className="flex items-center gap-2">
-                <Calendar size={14} />
-                <span className="text-slate-700">
-                   Sent on: {dateFormatter(inquiry.createdAt)}
-                </span>
-                <span>•</span>
-                <div className="flex items-center gap-2">
-                <Globe size={14} />
-                <span className="text-slate-700 capitalize">
-                   From {inquirySource[inquiry.source as keyof typeof inquirySource] || inquiry.source}
-                </span>
+                  <Calendar size={14} />
+                  <span className="text-slate-700">
+                    Sent on: {dateFormatter(inquiry.createdAt)}
+                  </span>
+                  <span>•</span>
+                  <div className="flex items-center gap-2">
+                    <Globe size={14} />
+                    <span className="text-slate-700 capitalize">
+                      From {inquirySource[inquiry.source as keyof typeof inquirySource] || inquiry.source}
+                    </span>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
           </div>
         </DialogHeader>
 
-        {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto bg-slate-50/50 px-6 py-2 space-y-6">
-          {/* SENDER INFORMATION CARD */}
           <div className="rounded-xl">
             <div className="flex items-center gap-4 mb-4">
               <div className="h-12 w-12 rounded-full aspect-square bg-primary/10 flex items-center justify-center text-primary">
@@ -107,17 +113,14 @@ export function InquiryDetailModal({
             </div>
           </div>
 
-          {/* MESSAGE CONTENT */}
           <div className="space-y-2">
             <p className="text-xs text-gray-500 font-medium uppercase">Message Content</p>
             <div className="bg-white border rounded-xl p-4 min-h-[200px] leading-relaxed text-slate-800">
               {inquiry.message}
             </div>
           </div>
-
         </div>
 
-        {/* FOOTER SECTION */}
         <DialogFooter className="px-6 py-4 border-t bg-white flex flex-row justify-between items-center">
           <Button variant="ghost" onClick={onClose}>
             Close

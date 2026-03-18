@@ -7,15 +7,7 @@ import NewsletterTable from "@/components/tables/crm/NewsletterTable";
 import CampaignTable from "@/components/tables/crm/CampaignTable";
 import ComposerModal from "@/components/modal/crm/ComposerModal";
 import { Megaphone, PlusCircle, User } from "lucide-react";
-
-type Campaign = {
-  id: number;
-  name: string;
-  subject: string;
-  status: "draft" | "scheduled" | "sent";
-  sentAt: string;
-  createdAt: string;
-};
+import type { Campaign } from "@/lib/types";
 
 // --- Main Component ---
 function Newsletter() {

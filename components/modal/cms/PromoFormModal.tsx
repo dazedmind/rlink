@@ -14,20 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
-import { promoStatus } from "@/lib/types";
-
-export type Promo = {
-  id: number;
-  title: string;
-  description: string | null;
-  imageUrl: string | null;
-  linkUrl: string | null;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+import { promoStatus, type Promo } from "@/lib/types";
 
 type FormData = {
   title: string;

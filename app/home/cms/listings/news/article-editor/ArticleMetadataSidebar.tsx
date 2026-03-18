@@ -10,7 +10,8 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { articleType } from "@/lib/types";
+import { nameToSlug } from "@/app/utils/nameToSlug";
+import { articleType, ArticleType } from "@/lib/types";
 
 /** Parse YYYY-MM-DD as local date to avoid timezone shifts */
 function parseDateOnly(str: string): Date | undefined {
@@ -52,13 +53,13 @@ function TagInput({
           {values.map((v, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
+              className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
             >
               {v}
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="hover:text-red-500 transition-colors"
+                className="hover:text-red-500 transition-colors cursor-pointer bg-primary/10 hover:bg-destructive/10 p-0.5 rounded-full"
               >
                 <X size={10} />
               </button>
@@ -100,8 +101,10 @@ function TagInput({
 type ArticleMetadataSidebarProps = {
   headline: string;
   setHeadline: (v: string) => void;
-  type: "news" | "blog";
-  setType: (v: "news" | "blog") => void;
+  slug: string;
+  setSlug: (v: string) => void;
+  type: ArticleType;
+  setType: (v: ArticleType) => void;
   publishDate: string;
   setPublishDate: (v: string) => void;
   tags: string[];
@@ -119,6 +122,8 @@ type ArticleMetadataSidebarProps = {
 export default function ArticleMetadataSidebar({
   headline,
   setHeadline,
+  slug,
+  setSlug,
   type,
   setType,
   publishDate,
@@ -154,16 +159,32 @@ export default function ArticleMetadataSidebar({
           type="text"
           placeholder="e.g. The latest news from the Philippines"
           value={headline}
-          onChange={(e) => setHeadline(e.target.value)}
+          onChange={(e) => {
+            setHeadline(e.target.value);
+            if (!slug) setSlug(nameToSlug(e.target.value));
+          }}
           required={true}
         />
+
+        <TextInput
+          label="Slug"
+          name="slug"
+          type="text"
+          placeholder="e.g. the-latest-news-from-the-philippines"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          required={true}
+        />
+        <p className="text-[11px] text-muted-foreground -mt-2">
+          URL-friendly identifier. Auto-generated from headline when empty.
+        </p>
 
         <DropSelect
           label="Type"
           selectName="type"
           selectId="article-type"
           value={type}
-          onChange={(e) => setType(e.target.value as "news" | "blog")}
+          onChange={(e) => setType(e.target.value as ArticleType)}
           required={true}
         >
           {Object.entries(articleType).map(([key, label]) => (

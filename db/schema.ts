@@ -16,18 +16,18 @@ import { user } from '@/db/auth-schema'
 // ENUMS
 // ─────────────────────────────────────────────
 
+/** Careers table uses career_department (separate from user.department in auth) */
 export const departmentEnum = pgEnum('department', [
-  'marketing',
-  'executive',
-  'engineering',
+  'construction',
   'design',
   'hr',
-  'finance',
   'it',
-  'legal',
-  'operations',
-  'customer_service',
-  'product'
+  'office_president',
+  'project_development',
+  'property_management',
+  'sales_admin',
+  'sales_marketing',
+  'sales_documentation',
 ])
 
 export const leadStatusEnum = pgEnum('lead_status', [
@@ -256,6 +256,7 @@ export const projects = pgTable('projects', {
   /** Array of { name: string, photoUrl?: string } */
   amenities: jsonb('amenities').notNull().default([]),
   landmarks: jsonb('landmarks').notNull().default([]),
+  slug:        text('slug').notNull().unique(),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
   updatedAt:   timestamp('updated_at').notNull().defaultNow(),
 })
@@ -319,7 +320,6 @@ export const jobInquiry = pgTable('job_inquiry', {
   email:     text('email').notNull(),
   phone:     text('phone').notNull(),
   position:  text('position').notNull(),
-  location:  text('location').notNull(),
   resume:    text('resume'),
   coverLetter: text('cover_letter'),
   appliedAt: timestamp('applied_at').notNull().defaultNow(),
@@ -331,13 +331,14 @@ export const jobInquiry = pgTable('job_inquiry', {
 export const careers = pgTable('careers', {
   id:             serial('id').primaryKey(),
   position:       text('position').notNull(),
-  department:     departmentEnum('department').notNull().default('marketing'),
+  department:     departmentEnum('department').notNull().default('construction'),
   location:       text('location').notNull(),
   jobDescription: text('job_description').notNull(),
   responsibilities: text('responsibilities').notNull(),
   qualifications: text('qualifications').notNull(),
   requiredSkills: text('required_skills').notNull(),
   status:         careerStatusEnum('status').notNull().default('hiring'),
+  slug:           text('slug').notNull().unique(),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow(),
 })
@@ -399,6 +400,7 @@ export const articles = pgTable('articles', {
   type:        articleTypeEnum('type').notNull(),
   photoUrl:    text('photo_url'),
   isFeatured:    boolean('is_featured').notNull().default(false),
+  slug:          text('slug').notNull().unique(),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
   updatedAt:   timestamp('updated_at').notNull().defaultNow(),
 })

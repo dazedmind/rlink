@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import QueryProvider from "@/components/providers/QueryProvider";
+import ThemeProvider from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -20,12 +22,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="overflow-x-hidden">
-        <body
-          className={`${figtree.variable} antialiased overflow-x-hidden`}
-        >
-          {children}
-          <Toaster position="bottom-right" />
-        </body>   
+      <body
+        className={`${figtree.variable} antialiased overflow-x-hidden`}
+      >
+        <ThemeProvider>
+          <QueryProvider>
+            {children}
+            <Toaster position="bottom-right" />
+          </QueryProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

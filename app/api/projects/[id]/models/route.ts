@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projectModels } from "@/db/schema";
@@ -42,6 +43,7 @@ export async function PATCH(
       } as unknown as typeof projectModels.$inferInsert);
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Models updated successfully" });
   } catch (error) {
     console.error("[PATCH /api/projects/:id/models]", error);

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import Image from "next/image";
 import arcoeResidenceLogo from "@/public/project-logo/ar-logo.png";
@@ -15,40 +17,45 @@ const LOGO_MAP: Record<string, typeof arcoeResidenceLogo> = {
 };
 
 function Inventory() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [reservation, setReservation] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [projectsRes, inventoryRes, reservationRes] = await Promise.all([
-          fetch("/api/projects"),
-          fetch("/api/projects/inventory"),
-          fetch("/api/reservation?limit=1000"),
-        ]);
-        const projectsData = await projectsRes.json();
-        const inventoryData = await inventoryRes.json();
-        const reservationData = await reservationRes.json();
-        setProjects(Array.isArray(projectsData) ? projectsData : []);
-        setInventory(Array.isArray(inventoryData) ? inventoryData : []);
-        setReservation(Array.isArray(reservationData?.data) ? reservationData.data : []);
-      } catch (error) {
-        console.error("Error fetching inventory data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: projectsData, isLoading: loadingProjects } = useQuery({
+    queryKey: qk.projects(),
+    queryFn: async () => {
+      const res = await fetch("/api/projects");
+      const json = await res.json();
+      return Array.isArray(json) ? json : [];
+    },
+  });
+
+  const { data: inventoryData, isLoading: loadingInventory } = useQuery({
+    queryKey: qk.projectInventory(),
+    queryFn: async () => {
+      const res = await fetch("/api/projects/inventory");
+      const json = await res.json();
+      return Array.isArray(json) ? json : [];
+    },
+  });
+
+  const { data: reservationData, isLoading: loadingReservations } = useQuery({
+    queryKey: qk.reservations({ limit: "1000" }),
+    queryFn: async () => {
+      const res = await fetch("/api/reservation?limit=1000");
+      const json = await res.json();
+      return Array.isArray(json?.data) ? json.data : [];
+    },
+  });
+
+  const projects: Project[] = projectsData ?? [];
+  const inventory: InventoryItem[] = inventoryData ?? [];
+  const reservation: Reservation[] = reservationData ?? [];
+
+  const loading = loadingProjects || loadingInventory || loadingReservations;
 
   const projectInventory = selectedProject
     ? inventory.filter((inv) => String(inv.projectId) === String(selectedProject.id))
     : [];
 
-  // Pass all reservations to resolve soldTo (reservation id) for inventory items
   const allReservations = reservation;
 
   const getProjectLogo = (project: Project) => {
@@ -64,7 +71,7 @@ function Inventory() {
             title="Inventory"
             description="Manage your inventory here."
           />
-          <div className="mt-8">
+          <div className="mt-8 animate-fade-in-up">
             <ProjectDetailsView
               project={selectedProject}
               inventory={projectInventory}
@@ -89,21 +96,23 @@ function Inventory() {
           {loading ? (
             <InventorySkeleton />
           ) : (
-            projects.map((project) => (
-              <button
-                key={project.id}
-                type="button"
-                onClick={() => setSelectedProject(project)}
-                className="flex items-center justify-center hover:scale-95 transition-all duration-300 cursor-pointer h-auto aspect-video rounded-xl border bg-white shadow-sm hover:shadow-md hover:border-primary/30"
-              >
-                <Image
-                  src={project.logoUrl ?? getProjectLogo(project)}
-                  alt={project.projectName}
-                  width={150}
-                  height={150}
-                />
-              </button>
-            ))
+            <div className="contents animate-fade-in-up">
+              {projects.map((project) => (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => setSelectedProject(project)}
+                  className="flex items-center justify-center hover:scale-95 transition-all duration-300 cursor-pointer h-auto aspect-video rounded-xl border bg-white shadow-sm hover:shadow-md hover:border-primary/30"
+                >
+                  <Image
+                    src={project.logoUrl ?? getProjectLogo(project)}
+                    alt={project.projectName}
+                    width={150}
+                    height={150}
+                  />
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>

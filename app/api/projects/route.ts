@@ -1,9 +1,11 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects, projectModels, projectInventory } from "@/db/schema";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 import { max, asc } from "drizzle-orm";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
@@ -36,6 +38,7 @@ export async function POST(request: NextRequest) {
     const {
       projectCode,
       projectName,
+      slug,
       status,
       location,
       stage,
@@ -81,6 +84,7 @@ export async function POST(request: NextRequest) {
 
     const [{ maxId }] = await db.select({ maxId: max(projects.id) }).from(projects);
     const newId = Number(maxId ?? 0) + 1;
+    const slugValue = slug?.trim() ? nameToSlug(slug) : nameToSlug(projectName);
 
     const [newProject] = await db
       .insert(projects)
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
         id: newId,
         projectCode: String(projectCode).trim().toUpperCase(),
         projectName: String(projectName).trim(),
+        slug: slugValue,
         status: status || null,
         location: location?.trim() || null,
         stage: stage || null,
@@ -147,6 +152,7 @@ export async function POST(request: NextRequest) {
       } as unknown as typeof projectInventory.$inferInsert);
     }
 
+    revalidatePath("/home");
     return NextResponse.json(newProject, { status: 201 });
   } catch (error) {
     console.error("[POST /api/projects]", error);

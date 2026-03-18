@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "@/lib/auth-client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import ProtectedRoute from "@/components/utils/ProtectedRoute";
+import ProtectedRoute from "@/components/providers/ProtectedRoute";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import { ChartLine, Laptop, Users, ArrowUpRight } from "lucide-react";
@@ -45,7 +45,7 @@ function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="h-screen w-full bg-neutral-50">
+      <div className="h-screen w-full bg-accent">
         <main className="flex flex-col gap-10 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
           <DashboardHeader title="RLink" description="" />
 
@@ -55,10 +55,10 @@ function Home() {
               <p className="text-xs font-semibold tracking-widest text-neutral-400 uppercase">
                 Welcome back
               </p>
-              <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">
+              <h1 className="text-3xl font-bold text-accent-foreground tracking-tight">
                 {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
               </h1>
-              <p className="text-sm text-neutral-500 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Select a module below to get started.
             </p>
             </div>
@@ -67,7 +67,7 @@ function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {modules.filter((module) => module.permission.some((permission) => permissions.includes(permission))).map((module, i) => (
                 <Link href={module.href} key={module.name} className="group animate-fade-in-up">
-                  <div className="relative flex flex-col justify-between h-52 rounded-2xl border border-border bg-white p-6 overflow-hidden transition-all duration-300 hover:shadow-sm hover:-translate-y-1">
+                  <div className="relative flex flex-col justify-between h-52 rounded-2xl border border-border bg-background p-6 overflow-hidden transition-all duration-300 hover:shadow-sm hover:-translate-y-1">
                     {/* Top row: tag + arrow */}
                     <div className="flex items-center justify-end">
                       <ArrowUpRight
@@ -89,7 +89,7 @@ function Home() {
                         <p className="text-sm font-bold text-primary mt-0.5">
                           {module.shortName}
                         </p>
-                        <h2 className="text-2xl font-bold text-neutral-800 leading-tight">
+                        <h2 className="text-2xl font-bold text-foreground leading-tight">
                           {module.name}
                         </h2>
                         <p className="text-xs text-neutral-400 mt-0.5">

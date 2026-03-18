@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { projectInventory, projectModels } from '@/db/schema';
@@ -82,6 +83,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    revalidatePath("/home");
     return NextResponse.json({
       message: "Inventory updated successfully",
       data: updated

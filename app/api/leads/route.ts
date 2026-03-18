@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
       } as unknown as typeof leads.$inferInsert)
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json(newLead, { status: 201 });
   } catch (error) {
     console.error('[POST /api/leads]', error);

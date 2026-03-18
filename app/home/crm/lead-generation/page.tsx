@@ -1,16 +1,18 @@
 "use client";
 import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { PlusCircle, Table } from "lucide-react";
 import LeadsTable from "@/components/tables/crm/LeadsTable";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
 import { leadSource, leadStatus, leadStage, leadNextAction } from "@/lib/types";
+import type { Project } from "@/lib/types";
 
 type FormData = {
   firstName: string;
@@ -44,10 +46,43 @@ const EMPTY_FORM: FormData = {
   notes: "",
 };
 
+const fetchProjects = async () => {
+  const res = await fetch("/api/projects");
+  const data = await res.json();
+  return data;
+};
+
 function LeadGeneration() {
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"form" | "table">("form");
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: projects } = useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: (payload: FormData) =>
+      fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Failed to submit lead.");
+        return data;
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.leads() });
+      toast.success("Lead submitted successfully!");
+      setFormData(EMPTY_FORM);
+      setView("table");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to submit lead.");
+    },
+  });
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -60,7 +95,7 @@ function LeadGeneration() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmitLead = async () => {
+  const handleSubmitLead = () => {
     if (!formData.firstName || !formData.lastName) {
       toast.error("First name and last name are required.");
       return;
@@ -73,30 +108,7 @@ function LeadGeneration() {
       toast.error("Please select a source.");
       return;
     }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error ?? "Failed to submit lead.");
-        return;
-      }
-
-      toast.success("Lead submitted successfully!");
-      setFormData(EMPTY_FORM);
-      setView("table");
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    submitMutation.mutate(formData);
   };
 
   return (
@@ -107,7 +119,6 @@ function LeadGeneration() {
           description="Manage your sales leads and projects here."
         />
 
-        {/* View toggle */}
         <div className="flex justify-between items-center my-4">
           <div className="flex bg-[#F2F2F7] rounded-[10px] p-1 gap-1">
             {(["form", "table"] as const).map((t) => (
@@ -127,10 +138,8 @@ function LeadGeneration() {
           </div>
         </div>
 
-        {/* Form */}
         {view === "form" && (
           <div className="flex flex-col gap-8 rounded-xl p-6 bg-white border-border border animate-fade-in-up">
-            {/* Customer Profile */}
             <div>
               <h2 className="text-xl font-bold text-neutral-800 mb-4">
                 Customer Profile
@@ -155,16 +164,6 @@ function LeadGeneration() {
                   onChange={handleInputChange}
                   value={formData.lastName}
                 />
-
-                {/* <TextInput
-                label="Inquiry Date"
-                name="inquiryDate"
-                type="date"
-                placeholder="Select Inquiry Date"
-                className="col-span-2 md:col-span-1"
-                onChange={handleInputChange}
-                value={formData.inquiryDate}
-              /> */}
 
                 <TextInput
                   label="Profile Link"
@@ -205,14 +204,16 @@ function LeadGeneration() {
                     handleSelectChange("project", e.target.value)
                   }
                 >
-                  <option value="">Select Project</option>
-                  <option value="Arcoe Residences">Arcoe Residences</option>
-                  <option value="Arcoe Estates">Arcoe Estates</option>
+                  <option value="" disabled>Select Project</option>
+                  {projects?.map((project: Project) => (
+                    <option key={project.id} value={project.projectName}>
+                      {project.projectName} ({project.projectCode})
+                    </option>
+                  ))}
                 </DropSelect>
               </div>
             </div>
 
-            {/* Lead Details */}
             <div>
               <h2 className="text-xl font-bold text-neutral-800 mb-4">
                 Lead Details
@@ -225,7 +226,7 @@ function LeadGeneration() {
                   onChange={(e) => handleSelectChange("source", e.target.value)}
                   className="col-span-2 md:col-span-1"
                 >
-                  <option value="">Select Source</option>
+                  <option value="" disabled>Select Source</option>
                   {Object.entries(leadSource).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -240,6 +241,7 @@ function LeadGeneration() {
                   onChange={(e) => handleSelectChange("status", e.target.value)}
                   className="col-span-2 md:col-span-1"
                 >
+                  <option value="" disabled>Select Status</option>
                   {Object.entries(leadStatus).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -254,6 +256,7 @@ function LeadGeneration() {
                   onChange={(e) => handleSelectChange("stage", e.target.value)}
                   className="col-span-2 md:col-span-1"
                 >
+                  <option value="" disabled>Select Stage</option>
                   {Object.entries(leadStage).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -270,6 +273,7 @@ function LeadGeneration() {
                   }
                   className="col-span-2 md:col-span-1"
                 >
+                  <option value="" disabled>Select Next Action</option>
                   {Object.entries(leadNextAction).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -278,7 +282,6 @@ function LeadGeneration() {
                 </DropSelect>
               </div>
 
-              {/* Notes */}
               <div className="mt-4 space-y-1.5">
                 <Label htmlFor="notes" className="text-xs text-neutral-600">
                   Notes
@@ -296,10 +299,10 @@ function LeadGeneration() {
               <span className="flex justify-end mt-4">
                 <Button
                   onClick={handleSubmitLead}
-                  disabled={isSubmitting}
+                  disabled={submitMutation.isPending}
                   className="bg-blue-600 hover:bg-blue-700 px-8"
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Lead"}
+                  {submitMutation.isPending ? "Submitting..." : "Submit Lead"}
                 </Button>
               </span>
             </div>

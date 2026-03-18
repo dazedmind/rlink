@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { campaigns, newsletter } from "@/db/schema";
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/newsletter/campaigns]", error);

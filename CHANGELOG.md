@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.0.11] - 2026-03-18
+
+### Fixed
+- DSL Tracker Form: Replaced hardcoded dropdown values with dynamic options.
+- Reservation Form: Added input validation and resolved an issue where reservations were not correctly linking to project inventory.
+- Article Editor: Resolved a bug where setting an article type to announcement could be changed after being set.
+
+### Removed
+- IAM: Removed the conditional "Set New Password" input that was previously shown only for Google-authenticated users.
+
+### Changed
+- Tables: Added a delete confirmation dialog to all tables that support record deletion.
+- IAM User Form: Added input validation to the User Form Modal.
+- UX: Improved overall user experience with response caching, smooth animations, and skeleton loaders for async content.
+- Transitioned to tanstack query for a more efficient data state management.
+- CMS: Added slug input fields for Projects, Careers, and Articles.
+- IAM: Updated the Department enum to reflect actual company departments.
+- Codebase: Refactored and unified shared types into `types.ts` to improve maintainability and scalability.
+
 ## [0.0.10] - 2026-03-13
 
 ### Added

@@ -41,22 +41,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "../../layout/ContextMenu";
-import { campaignStatus, campaignStatusMeta } from "@/lib/types";
-
-type Campaign = {
-  id: number;
-  name: string;
-  subject: string;
-  status: "draft" | "scheduled" | "sent";
-  sentAt: string | null;
-  scheduledAt: string | null;
-  createdAt: string;
-  openRate: number;
-  clickRate: number;
-  recipients: number;
-  body?: string;
-  previewLine?: string;
-};
+import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
+import { campaignStatus, campaignStatusMeta, type Campaign } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -73,6 +59,8 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
   // Filter state
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const activeFilterCount = filterStatus.length;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
@@ -112,6 +100,7 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
   }, [currentPage, fetchCampaigns]);
 
   const handleDelete = useCallback(async (id: number) => {
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/newsletter/campaigns/${id}`, {
         method: "DELETE",
@@ -120,9 +109,12 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to delete");
       toast.success("Campaign deleted");
+      setDeletingCampaign(null);
       fetchCampaigns(currentPage);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete campaign");
+    } finally {
+      setIsDeleting(false);
     }
   }, [currentPage, fetchCampaigns]);
 
@@ -149,7 +141,7 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
     }
     items.push(
       { label: "View Campaign", icon: Eye, onClick: () => onOpenComposer?.("view", row) },
-      { label: "Delete", icon: Trash2, color: "text-red-600 focus:text-red-600 focus:bg-red-50", onClick: () => { if (confirm(`Delete "${row.name}"?`)) handleDelete(row.id); }, separator: true }
+      { label: "Delete", icon: Trash2, color: "text-red-600 focus:text-red-600 focus:bg-red-50", onClick: () => setDeletingCampaign(row), separator: true }
     );
     return items;
   }, [handleSendNow, handleDelete, onOpenComposer]);
@@ -372,6 +364,16 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
           </div>
         )}
       </div>
+
+      <DeleteConfirmModal
+        isOpen={deletingCampaign !== null}
+        onClose={() => setDeletingCampaign(null)}
+        onConfirm={() => deletingCampaign && handleDelete(deletingCampaign.id)}
+        itemName={deletingCampaign?.name ?? ""}
+        isDeleting={isDeleting}
+        title="Delete Campaign"
+        confirmLabel="Delete Campaign"
+      />
     </div>
   );
 }

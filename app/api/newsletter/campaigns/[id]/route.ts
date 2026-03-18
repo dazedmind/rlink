@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { campaigns } from "@/db/schema";
@@ -153,6 +154,7 @@ export async function PATCH(
       .where(eq(campaigns.id, numericId))
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json({ data: updated });
   } catch (error) {
     console.error("[PATCH /api/newsletter/campaigns/:id]", error);
@@ -194,6 +196,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Campaign deleted successfully" });
   } catch (error) {
     console.error("[DELETE /api/newsletter/campaigns/:id]", error);

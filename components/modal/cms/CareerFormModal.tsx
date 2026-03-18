@@ -14,6 +14,7 @@ import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
 import type { Career } from "@/lib/types";
 import { careerStatus, department, location } from "@/lib/types";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 import { Label } from "@/components/ui/label";
 
 // ─── Field Label ──────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 type FormData = {
   position: string;
+  slug: string;
   location: string;
   status: string;
   department: string;
@@ -41,6 +43,7 @@ type FormData = {
 
 const EMPTY_FORM: FormData = {
   position: "",
+  slug: "",
   location: "",
   status: "hiring",
   department: "",
@@ -76,6 +79,7 @@ export default function CareerFormModal({
     if (career) {
       setForm({
         position: career.position ?? "",
+        slug: career.slug ?? nameToSlug(career.position ?? ""),
         location: career.location ?? "",
         status: career.status ?? "hiring",
         department: career.department ?? "",
@@ -94,7 +98,13 @@ export default function CareerFormModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "position" && !prev.slug) {
+        next.slug = nameToSlug(value);
+      }
+      return next;
+    });
   };
 
   const handleSelectChange = (name: keyof FormData, value: string) =>
@@ -116,6 +126,11 @@ export default function CareerFormModal({
       setActiveTab("details");
       return;
     }
+    if (!form.slug.trim()) {
+      toast.error("Slug is required.");
+      setActiveTab("overview");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -128,6 +143,7 @@ export default function CareerFormModal({
         credentials: "include",
         body: JSON.stringify({
           position: form.position.trim(),
+          slug: form.slug.trim() || nameToSlug(form.position),
           location: form.location.trim(),
           status: form.status,
           department: form.department,
@@ -192,10 +208,8 @@ export default function CareerFormModal({
           {activeTab === "overview" && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>
-                  Position <span className="text-red-500">*</span>
-                </FieldLabel>
                 <TextInput
+                  label="Position"
                   name="position"
                   type="text"
                   placeholder="e.g. Senior Sales Agent"
@@ -205,8 +219,19 @@ export default function CareerFormModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>Location</FieldLabel>
+                <TextInput
+                  label="Slug"
+                  name="slug"
+                  type="text"
+                  placeholder="e.g. senior-sales-agent"
+                  value={form.slug}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
                 <DropSelect
+                  label="Location"
                   selectName="location"
                   selectId="location"
                   value={form.location}
@@ -222,8 +247,8 @@ export default function CareerFormModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>Department</FieldLabel>
                 <DropSelect
+                  label="Department"
                   selectName="department"
                   selectId="department"
                   value={form.department}
@@ -239,8 +264,8 @@ export default function CareerFormModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>Status</FieldLabel>
                 <DropSelect
+                  label="Status"
                   selectName="status"
                   selectId="status"
                   value={form.status}

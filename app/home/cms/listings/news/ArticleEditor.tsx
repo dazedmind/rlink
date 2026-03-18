@@ -1,15 +1,40 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useRef, useLayoutEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
-
-import type { Article } from "@/components/tables/cms/NewsTable";
+import type { Article, ArticleType } from "@/lib/types";
 import DashboardHeader from "@/components/layout/DashboardHeader";
+import { nameToSlug } from "@/app/utils/nameToSlug";
 import ArticleBodyEditor from "./article-editor/ArticleBodyEditor";
 import ArticleMetadataSidebar from "./article-editor/ArticleMetadataSidebar";
 import BackButton from "@/components/ui/BackButton";
+
+function getInitialState(article: Article | null) {
+  if (article) {
+    return {
+      headline: article.headline ?? "",
+      slug: article.slug ?? nameToSlug(article.headline ?? ""),
+      body: article.body ?? "",
+      publishDate: article.publishDate?.toString().slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      tags: Array.isArray(article.tags) ? article.tags : [] as string[],
+      type: article.type ?? "news",
+      photoUrl: article.photoUrl ?? "",
+      isFeatured: article.isFeatured ?? false,
+    };
+  }
+  return {
+    headline: "",
+    slug: "",
+    body: "",
+    publishDate: new Date().toISOString().slice(0, 10),
+    tags: [] as string[],
+    type: "news",
+    photoUrl: "",
+    isFeatured: false,
+  };
+}
 
 export default function ArticleEditor({
   article,
@@ -22,47 +47,58 @@ export default function ArticleEditor({
 }) {
   const isEdit = !!article;
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialState = getInitialState(article);
 
-  const [headline, setHeadline] = useState("");
-  const [body, setBody] = useState("");
-  const [publishDate, setPublishDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
-  const [tags, setTags] = useState<string[]>([]);
-  const [type, setType] = useState<"news" | "blog">("news");
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [headline, setHeadline] = useState(initialState.headline);
+  const [slug, setSlug] = useState(initialState.slug);
+  const [body, setBody] = useState(initialState.body);
+  const [publishDate, setPublishDate] = useState(initialState.publishDate);
+  const [tags, setTags] = useState<string[]>(initialState.tags);
+  const [type, setType] = useState<ArticleType>(initialState.type as ArticleType);
+  const [photoUrl, setPhotoUrl] = useState(initialState.photoUrl);
+  const [isFeatured, setIsFeatured] = useState(initialState.isFeatured);
   const [mdTab, setMdTab] = useState<"write" | "preview">("write");
 
-  useEffect(() => {
-    if (article) {
-      setHeadline(article.headline ?? "");
-      setBody(article.body ?? "");
-      setPublishDate(
-        article.publishDate?.toString().slice(0, 10) ??
-          new Date().toISOString().slice(0, 10)
-      );
-      setTags(Array.isArray(article.tags) ? article.tags : []);
-      setType(article.type ?? "news");
-      setPhotoUrl(article.photoUrl ?? "");
-      setIsFeatured(article.isFeatured ?? false);
-    } else {
-      setHeadline("");
-      setBody("");
-      setPublishDate(new Date().toISOString().slice(0, 10));
-      setTags([]);
-      setType("news");
-      setPhotoUrl("");
-      setIsFeatured(false);
-    }
-  }, [article]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
+  const saveMutation = useMutation({
+    mutationFn: async (payload: {
+      headline: string;
+      slug: string;
+      body: string;
+      publishDate: string;
+      tags: string[];
+      type: ArticleType;
+      photoUrl: string | null;
+      isFeatured: boolean;
+    }) => {
+      const url = isEdit ? `/api/articles/${article!.id}` : "/api/articles";
+      const method = isEdit ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `Failed to ${isEdit ? "update" : "create"} article.`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.articles() });
+      toast.success(`Article ${isEdit ? "updated" : "created"} successfully!`);
+      onSave();
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Network error. Please try again.");
+    },
+  });
+
+  useLayoutEffect(() => {
     containerRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!headline.trim()) {
       toast.error("Headline is required.");
       return;
@@ -76,41 +112,16 @@ export default function ArticleEditor({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const url = isEdit ? `/api/articles/${article!.id}` : "/api/articles";
-      const method = isEdit ? "PATCH" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          headline: headline.trim(),
-          body: body.trim(),
-          publishDate,
-          tags,
-          type,
-          photoUrl: photoUrl.trim() || null,
-          isFeatured,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(
-          data.error ?? `Failed to ${isEdit ? "update" : "create"} article.`
-        );
-        return;
-      }
-
-      toast.success(`Article ${isEdit ? "updated" : "created"} successfully!`);
-      onSave();
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    saveMutation.mutate({
+      headline: headline.trim(),
+      slug: slug.trim() || nameToSlug(headline),
+      body: body.trim(),
+      publishDate,
+      tags,
+      type,
+      photoUrl: photoUrl.trim() || null,
+      isFeatured,
+    });
   };
 
   return (
@@ -138,6 +149,8 @@ export default function ArticleEditor({
         <ArticleMetadataSidebar
           headline={headline}
           setHeadline={setHeadline}
+          slug={slug}
+          setSlug={setSlug}
           type={type}
           setType={setType}
           publishDate={publishDate}
@@ -148,7 +161,7 @@ export default function ArticleEditor({
           setPhotoUrl={setPhotoUrl}
           isFeatured={isFeatured}
           setIsFeatured={setIsFeatured}
-          isSubmitting={isSubmitting}
+          isSubmitting={saveMutation.isPending}
           isEdit={isEdit}
           onSubmit={handleSubmit}
           onCancel={onCancel}

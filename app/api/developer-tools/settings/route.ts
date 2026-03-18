@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { developerToolsSettings } from "@/db/schema";
@@ -75,6 +76,7 @@ export async function PATCH(request: NextRequest) {
         set: { value: value ?? {}, updatedAt: new Date() },
       });
 
+    revalidatePath("/home");
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[PATCH /api/developer-tools/settings]", error);

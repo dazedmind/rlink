@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import ProtectedRoute from "@/components/utils/ProtectedRoute";
+import ProtectedRoute from "@/components/providers/ProtectedRoute";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {

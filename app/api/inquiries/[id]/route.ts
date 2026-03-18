@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { inquiry } from "@/db/schema";
@@ -45,6 +46,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ data: updated });
   } catch (error) {
     console.error("[PATCH /api/inquiries/:id]", error);
@@ -76,7 +78,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
     }
 
-  return NextResponse.json({ message: "Inquiry deleted successfully" });
+    revalidatePath("/home");
+    return NextResponse.json({ message: "Inquiry deleted successfully" });
   } catch (error) {
     console.error("[DELETE /api/inquiries/:id]", error);
     return NextResponse.json({ error: "Failed to delete inquiry" }, { status: 500 });

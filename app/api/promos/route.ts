@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { promos } from "@/db/schema";
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
       } as typeof promos.$inferInsert)
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("[POST /api/promos]", error);

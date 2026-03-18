@@ -21,6 +21,8 @@ interface FormData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  notes: string;
   project: string;
   inventoryCode: string;
   blockNumber: string;
@@ -37,6 +39,8 @@ function Reservation() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    notes: "",
     project: "",
     inventoryCode: "",
     blockNumber: "",
@@ -51,6 +55,8 @@ function Reservation() {
       firstName: "",
       lastName: "",
       email: "",
+      phone: "",
+      notes: "",
       project: "",
       inventoryCode: "",
       blockNumber: "",
@@ -245,11 +251,12 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
       !formData.firstName ||
       !formData.lastName ||
       !formData.email ||
+      !formData.phone ||
       !formData.project ||
       !formData.blockNumber ||
       !formData.lotNumber
     ) {
-      toast.error("Please fill in all fields.");
+      toast.error("Please fill in all required fields.");
       return;
     } else {
       onNext();
@@ -380,7 +387,7 @@ function StepOne({ formData, onChange, onSelect, onNext }: any) {
             name="notes"
             value={formData.notes}
             placeholder="Add additional notes..."
-            onChange={() => {}}
+            onChange={onChange}
             className="border border-border focus:outline-none focus:ring-0  text-sm resize-none min-h-[100px]"
           />
         </div>

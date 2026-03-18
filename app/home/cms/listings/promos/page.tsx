@@ -1,47 +1,53 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
-import PromoFormModal, { type Promo } from "@/components/modal/cms/PromoFormModal";
+import PromoFormModal from "@/components/modal/cms/PromoFormModal";
+import type { Promo } from "@/lib/types";
 import PromoDetailModal from "@/components/modal/cms/PromoDetailModal";
 import PromosTable from "@/components/tables/cms/PromosTable";
 import { toast } from "sonner";
 
 function PromosManager() {
+  const queryClient = useQueryClient();
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState<Promo | null>(null);
   const [deletingPromo, setDeletingPromo] = useState<Promo | null>(null);
   const [viewingPromo, setViewingPromo] = useState<Promo | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleDelete = async () => {
-    if (!deletingPromo) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/promos/${deletingPromo.id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/promos/${id}`, {
         method: "DELETE",
         credentials: "include",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to delete promo.");
-        return;
-      }
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error ?? "Failed to delete promo.");
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.promos() });
       toast.success("Promo deleted.");
       setDeletingPromo(null);
-      setRefreshTrigger((t) => t + 1);
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete promo.");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deletingPromo) return;
+    deleteMutation.mutate(deletingPromo.id);
   };
 
   const handleSuccess = useCallback(() => {
-    setRefreshTrigger((t) => t + 1);
-  }, []);
+    queryClient.invalidateQueries({ queryKey: qk.promos() });
+  }, [queryClient]);
 
   return (
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
@@ -63,7 +69,6 @@ function PromosManager() {
               setEditingPromo(null);
               setShowFormModal(true);
             }}
-            refreshTrigger={refreshTrigger}
           />
         </div>
       </div>
@@ -89,7 +94,7 @@ function PromosManager() {
         onClose={() => setDeletingPromo(null)}
         onConfirm={handleDelete}
         itemName={deletingPromo?.title ?? ""}
-        isDeleting={isDeleting}
+        isDeleting={deleteMutation.isPending}
         title="Delete Promo"
         confirmLabel="Delete Promo"
       />

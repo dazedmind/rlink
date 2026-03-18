@@ -1,43 +1,46 @@
 "use client";
 
 import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { toast } from "sonner";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import NewsTable from "@/components/tables/cms/NewsTable";
-import type { Article } from "@/components/tables/cms/NewsTable";
 import ArticleEditor from "@/app/home/cms/listings/news/ArticleEditor";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Article } from "@/lib/types";
 
 function NewsManager() {
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"table" | "editor">("table");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleDelete = async () => {
-    if (!deletingArticle) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/articles/${deletingArticle.id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/articles/${id}`, {
         method: "DELETE",
         credentials: "include",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to delete article.");
-        return;
-      }
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error ?? "Failed to delete article.");
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.articles() });
       toast.success("Article deleted.");
       setDeletingArticle(null);
-      setRefreshTrigger((t) => t + 1);
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete article.");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deletingArticle) return;
+    deleteMutation.mutate(deletingArticle.id);
   };
 
   const goToEditor = (article: Article | null) => {
@@ -49,13 +52,7 @@ function NewsManager() {
   const exitEditor = () => {
     setView("table");
     setEditingArticle(null);
-    setRefreshTrigger((t) => t + 1);
-  };
-
-  const goBackToList = () => {
-    setView("table");
-    setEditingArticle(null);
-    setRefreshTrigger((t) => t + 1);
+    queryClient.invalidateQueries({ queryKey: qk.articles() });
   };
 
   return (
@@ -74,14 +71,14 @@ function NewsManager() {
                 onDelete={(a) => setDeletingArticle(a)}
                 onView={goToEditor}
                 onAdd={() => goToEditor(null)}
-                refreshTrigger={refreshTrigger}
               />
             </div>
           </>
- 
+
         ) : (
           <div>
             <ArticleEditor
+              key={editingArticle?.id ?? "new"}
               article={editingArticle}
               onSave={exitEditor}
               onCancel={exitEditor}
@@ -95,7 +92,7 @@ function NewsManager() {
         onClose={() => setDeletingArticle(null)}
         onConfirm={handleDelete}
         itemName={deletingArticle?.headline ?? ""}
-        isDeleting={isDeleting}
+        isDeleting={deleteMutation.isPending}
         title="Delete Article"
         confirmLabel="Delete Article"
       />

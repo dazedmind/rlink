@@ -1,5 +1,6 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,6 +18,7 @@ import {
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { ReservationStatus, reservationStatus } from "@/lib/types";
+import { qk } from "@/lib/query-keys";
 import {
   Table,
   TableBody,
@@ -42,6 +44,8 @@ import { ReservationDetailModal } from "../../modal/crm/ReservationDetailModal";
 import ContextMenu from "../../layout/ContextMenu";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
+import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
+import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 
 type Reservation = {
   id: number;
@@ -76,19 +80,64 @@ function ReservationTable({
   table_name: string;
   recentViewOnly: boolean;
 }) {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deletingReservation, setDeletingReservation] = useState<Reservation | null>(null);
 
-  // Filter state
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
 
   const activeFilterCount = filterStatus.length;
+
+  const filters = {
+    page: currentPage,
+    limit: recentViewOnly ? 3 : ITEMS_PER_PAGE,
+    sort: sortOption,
+    status: filterStatus.join(","),
+  };
+
+  const buildUrl = (page: number, limit = ITEMS_PER_PAGE) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      sort: sortOption,
+    });
+    if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+    return `/api/reservation?${params}`;
+  };
+
+  const { data, isLoading } = useQuery({
+    queryKey: qk.reservations(filters),
+    queryFn: async () => {
+      const limit = recentViewOnly ? 3 : ITEMS_PER_PAGE;
+      const res = await fetch(buildUrl(currentPage, limit));
+      const json = await res.json();
+      return { data: json.data ?? [], total: json.total ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  const reservations = data?.data ?? [];
+  const total = data?.total ?? 0;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/reservation/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error("Failed to delete reservation");
+        return r.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.reservations() });
+      toast.success("Reservation deleted successfully");
+      setDeletingReservation(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete reservation");
+    },
+  });
 
   const toggleFilter = (
     value: string,
@@ -114,18 +163,8 @@ function ReservationTable({
     setIsModalOpen(true);
   };
 
-  const handleDeleteReservation = async (id: number) => {
-    try {
-      const response = await fetch(`/api/reservation/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete reservation");
-      fetchReservations();
-      toast.success("Reservation deleted successfully");
-    } catch (error) {
-      console.error("Error deleting reservation:", error);
-      toast.error("Failed to delete reservation");
-    }
+  const handleDeleteReservation = (row: Reservation) => {
+    setDeletingReservation(row);
   };
 
   const actionMenu = (row: Reservation) => [
@@ -139,7 +178,7 @@ function ReservationTable({
       label: "Delete",
       icon: Trash2,
       color: "text-red-600 focus:text-red-600 focus:bg-red-50",
-      onClick: () => handleDeleteReservation(row.id),
+      onClick: () => handleDeleteReservation(row),
     },
   ];
 
@@ -161,46 +200,15 @@ function ReservationTable({
     [recentViewOnly],
   );
 
-  const buildUrl = useCallback(
-    (page: number, limit = ITEMS_PER_PAGE) => {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        sort: sortOption,
-      });
-      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-      return `/api/reservation?${params}`;
-    },
-    [filterStatus, sortOption],
-  );
-
-  const fetchReservations = useCallback(async () => {
-    try {
-      const limit = recentViewOnly ? 3 : ITEMS_PER_PAGE;
-      const response = await fetch(buildUrl(currentPage, limit));
-      const { data, total: responseTotal } = await response.json();
-      setReservations(data ?? []);
-      setTotal(responseTotal ?? 0);
-    } catch (error) {
-      console.error("Error fetching reservation:", error);
-      setReservations([]);
-      setTotal(0);
-    }
-  }, [buildUrl, currentPage, recentViewOnly]);
-
-  useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]);
-
   const totalPages = recentViewOnly
     ? 1
     : Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
   const handleExportCSV = async () => {
     try {
-      const response = await fetch(buildUrl(1, 10000));
-      const { data } = await response.json();
-      const rows: Reservation[] = data ?? [];
+      const res = await fetch(buildUrl(1, 10000));
+      const { data: rows } = await res.json();
+      const list: Reservation[] = rows ?? [];
 
       const headers = [
         "Reservation ID",
@@ -214,7 +222,7 @@ function ReservationTable({
         "Lot",
         "Date Reserved",
       ];
-      const csvRows = rows.map((r) => [
+      const csvRows = list.map((r) => [
         r.reservationId,
         reservationStatus[r.status as keyof typeof reservationStatus] ||
           r.status,
@@ -247,16 +255,26 @@ function ReservationTable({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success(`Exported ${rows.length} reservations`);
+      toast.success(`Exported ${list.length} reservations`);
     } catch {
       toast.error("Failed to export CSV");
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="overflow-x-auto scrollbar-hide border rounded-xl">
+        <div className="p-4 border-b bg-background">
+          <h3 className="font-semibold text-xl">{table_name}</h3>
+        </div>
+        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} />
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="p-4 border-b bg-white flex justify-between items-center">
+    <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-fade-in-up">
+      <div className="p-4 border-b bg-background flex justify-between items-center">
         <h3 className="font-semibold text-xl">{table_name}</h3>
 
         <span className="flex items-center gap-2">
@@ -274,7 +292,6 @@ function ReservationTable({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-48">
-              {/* Sort */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   <ArrowUpDown className="size-3.5" /> Sort
@@ -305,7 +322,6 @@ function ReservationTable({
 
               <DropdownMenuSeparator />
 
-              {/* Status */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Status
@@ -357,14 +373,13 @@ function ReservationTable({
         </span>
       </div>
 
-      {/* Table */}
       <Table className="rounded-xl overflow-x-auto scrollbar-hide scroll-smooth">
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow>
             {visibleColumns.map((col, i) => (
               <TableHead
                 key={i}
-                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
               >
                 {col.label}
               </TableHead>
@@ -373,13 +388,13 @@ function ReservationTable({
         </TableHeader>
 
         <TableBody>
-          {reservations.map((row) => (
+          {reservations.map((row: Reservation) => (
             <TableRow
               key={row.id}
               className="hover:bg-blue-600/10 cursor-pointer"
               onClick={() => handleRowClick(row)}
             >
-              <TableCell className="px-6 py-4 font-medium text-neutral-500">
+              <TableCell className="px-6 py-4 font-medium text-muted-foreground">
                 {row.reservationId}
               </TableCell>
 
@@ -399,12 +414,12 @@ function ReservationTable({
                 {row.firstName} {row.lastName}
               </TableCell>
 
-              <TableCell className="px-6 py-4 text-gray-500">
+              <TableCell className="px-6 py-4 text-muted-foreground">
                 <span className="flex flex-col">
-                  <span className="flex items-center gap-2 text-sm font-medium text-neutral-500">
+                  <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <PhoneIcon size={12} /> {row.phone}
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
                     <MailIcon size={12} /> {row.email}
                   </span>
                 </span>
@@ -432,10 +447,9 @@ function ReservationTable({
         </TableBody>
       </Table>
 
-      {/* Footer with Pagination */}
       {!recentViewOnly && (
-        <div className="flex justify-between items-center bg-white px-6 py-4 border-t">
-          <p className="text-sm text-gray-600">
+        <div className="flex justify-between items-center bg-accent px-6 py-4 border-t">
+          <p className="text-sm text-muted-foreground">
             {activeFilterCount > 0
               ? `${total} matching reservations`
               : `${total} reservations total`}
@@ -443,7 +457,7 @@ function ReservationTable({
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 Showing {currentPage} of {totalPages} pages
               </span>
               {currentPage > 1 && (
@@ -489,8 +503,18 @@ function ReservationTable({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUpdate={() => {
-          fetchReservations();
+          queryClient.invalidateQueries({ queryKey: qk.reservations() });
         }}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deletingReservation !== null}
+        onClose={() => setDeletingReservation(null)}
+        onConfirm={() => deletingReservation && deleteMutation.mutate(deletingReservation.id)}
+        itemName={deletingReservation ? `${deletingReservation.reservationId}` : ""}
+        isDeleting={deleteMutation.isPending}
+        title="Delete Reservation"
+        confirmLabel="Delete Reservation"
       />
     </div>
   );

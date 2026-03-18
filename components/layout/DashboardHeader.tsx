@@ -1,5 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
+import { qk } from "@/lib/query-keys";
 import { dateFormatter } from "@/app/utils/dateFormatter";
 import {
   DropdownMenu,
@@ -7,6 +10,9 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,16 +23,17 @@ import {
   Bell,
   LogOut,
   Info,
-  MessageSquare,
-  Check,
   Sun,
+  Moon,
+  Monitor,
+  Check,
   AlertTriangle,
   AlertCircle,
 } from "lucide-react";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
-import { NotificationType, notificationTypeMeta } from "@/lib/types";
+import { notificationTypeMeta } from "@/lib/types";
 
 const notificationIcons = {
   info: <Info className="size-4 text-blue-500" />,
@@ -43,23 +50,19 @@ function DashboardHeader({
   description: string;
 }) {
   const { data: session } = useSession();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [today, setToday] = useState("");
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
+  const today = dateFormatter(new Date().toISOString());
 
-  useEffect(() => {
-    setToday(dateFormatter(new Date().toISOString()));
-    fetchNotifications();
-  }, []);
+  const { data: notifications = [] } = useQuery({
+    queryKey: qk.notifications(),
+    queryFn: async () => {
+      const res = await fetch("/api/notifications");
+      const json = await res.json();
+      return Array.isArray(json) ? json : [];
+    },
+  });
 
-  const fetchNotifications = async () => {
-    const response = await fetch("/api/notifications");
-    const data = await response.json();
-    setNotifications(data);
-    setUnreadCount(data.filter((n: any) => !n.read).length);
-    setLoading(false);
-  };
+  const unreadCount = notifications.filter((n: { read?: boolean }) => !n.read).length;
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -77,7 +80,6 @@ function DashboardHeader({
         <p className="hidden md:block text-sm text-muted-foreground">
           Date: <span className="font-bold text-blue-600">{today}</span>
         </p>
-        {/* NOTIFICATION DROPDOWN */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -110,40 +112,39 @@ function DashboardHeader({
             <ScrollArea className="h-[350px]">
               <DropdownMenuGroup>
                 {notifications.length === 0 ? (
-                  <DropdownMenuItem 
-                  className="flex justify-center gap-4 p-4 py-36 cursor-pointer focus:bg-zinc-50 ">
+                  <DropdownMenuItem
+                    className="flex justify-center gap-4 p-4 py-36 cursor-pointer focus:bg-zinc-50">
                     <span className="flex flex-col items-center justify-center gap-2">
-                    <Info className="size-8 text-zinc-500" />
-                    <p className="text-sm text-zinc-500">No notifications yet</p>
+                      <Info className="size-8 text-zinc-500" />
+                      <p className="text-sm text-zinc-500">No notifications yet</p>
                     </span>
-                 
                   </DropdownMenuItem>
                 ) : (
-                  notifications.map((n) => (
-                  <DropdownMenuItem
-                    key={n.id.toString()}
-                    className="flex items-start gap-4 p-4 cursor-pointer focus:bg-zinc-50"
-                  >
-                    <div className="mt-1 shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
-                      <span className={`size-4 rounded-full ${notificationTypeMeta[n.type].className}`}>
-                        {notificationIcons[n.type as keyof typeof notificationIcons]}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p
-                          className={`text-sm leading-none ${n.read ? "text-zinc-600 font-medium" : "text-zinc-900 font-bold"}`}
-                        >
-                          {n.title}
-                        </p>
-                        <span className="text-[10px] text-zinc-500 whitespace-nowrap">
-                          {dateFormatter(n.createdAt)}
+                  notifications.map((n: { id: number; type: string; read?: boolean; title: string; createdAt: string; description: string }) => (
+                    <DropdownMenuItem
+                      key={n.id.toString()}
+                      className="flex items-start gap-4 p-4 cursor-pointer focus:bg-zinc-50"
+                    >
+                      <div className="mt-1 shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
+                        <span className={`size-4 rounded-full ${notificationTypeMeta[n.type]?.className ?? ""}`}>
+                          {notificationIcons[n.type as keyof typeof notificationIcons]}
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                        {n.description}
-                      </p>
-                    </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p
+                            className={`text-sm leading-none ${n.read ? "text-zinc-600 font-medium" : "text-zinc-900 font-bold"}`}
+                          >
+                            {n.title}
+                          </p>
+                          <span className="text-[10px] text-zinc-500 whitespace-nowrap">
+                            {dateFormatter(n.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                          {n.description}
+                        </p>
+                      </div>
                     </DropdownMenuItem>
                   ))
                 )}
@@ -160,7 +161,6 @@ function DashboardHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* PROFILE DROPDOWN */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -194,7 +194,9 @@ function DashboardHeader({
                   </Avatar>
                   <span className="flex flex-col">
                     <h3 className="text-sm font-bold">
-                      {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
+                      {(session?.user?.firstName && session?.user?.lastName
+                        ? `${session.user.firstName} ${session.user.lastName}`
+                        : session?.user?.name) || "User"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {session?.user?.email ?? ""}
@@ -212,10 +214,29 @@ function DashboardHeader({
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Sun />
-                Theme
-              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2">
+                  <Sun className="size-4" />
+                  Theme
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="size-4 mr-2" />
+                    Light
+                    {theme === "light" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="size-4 mr-2" />
+                    Dark
+                    {theme === "dark" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
+                    <Monitor className="size-4 mr-2" />
+                    System
+                    {theme === "system" && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

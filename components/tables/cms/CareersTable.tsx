@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -37,6 +39,7 @@ import {
   Eye,
 } from "lucide-react";
 import { Career, careerStatus } from "@/lib/types";
+import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -45,7 +48,6 @@ type CareersTableProps = {
   onDelete: (career: Career) => void;
   onView: (career: Career) => void;
   onAdd: () => void;
-  refreshTrigger?: number;
 };
 
 export default function CareersTable({
@@ -53,18 +55,12 @@ export default function CareersTable({
   onDelete,
   onView,
   onAdd,
-  refreshTrigger = 0,
 }: CareersTableProps) {
-  const [careers, setCareers] = useState<Career[]>([]);
-  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
 
   const activeFilterCount = filterStatus.length;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const buildUrl = useCallback(
     (page: number) => {
@@ -79,35 +75,24 @@ export default function CareersTable({
     [filterStatus, sortOption]
   );
 
-  const fetchCareers = useCallback(
-    async (page: number) => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(buildUrl(page), { credentials: "include" });
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setCareers(data);
-          setTotal(data.length);
-        } else {
-          setCareers(data.data ?? []);
-          setTotal(data.total ?? 0);
-        }
-      } catch {
-        toast.error("Failed to load job postings.");
-      } finally {
-        setIsLoading(false);
+  const filters = { page: currentPage, sort: sortOption, status: filterStatus.join(",") };
+
+  const { data, isLoading } = useQuery({
+    queryKey: qk.careers(filters),
+    queryFn: async () => {
+      const res = await fetch(buildUrl(currentPage), { credentials: "include" });
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        return { data: json, total: json.length };
       }
+      return { data: json.data ?? [], total: json.total ?? 0 };
     },
-    [buildUrl]
-  );
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterStatus, sortOption]);
-
-  useEffect(() => {
-    fetchCareers(currentPage);
-  }, [currentPage, fetchCareers, refreshTrigger]);
+  const careers = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const clearFilters = () => setFilterStatus([]);
 
@@ -117,16 +102,8 @@ export default function CareersTable({
     );
 
   const actionMenu = (row: Career) => [
-    {
-      label: "View",
-      icon: Eye,
-      onClick: () => onView(row),
-    },
-    {
-      label: "Edit",
-      icon: Pencil,
-      onClick: () => onEdit(row),
-    },
+    { label: "View", icon: Eye, onClick: () => onView(row) },
+    { label: "Edit", icon: Pencil, onClick: () => onEdit(row) },
     {
       label: "Delete",
       icon: Trash2,
@@ -136,9 +113,20 @@ export default function CareersTable({
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+          <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
+          <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
+        </div>
+        <TableSkeleton columnCount={6} rowCount={5} showHeaderActions={false} showFooter={false} />
+      </div>
+    );
+  }
+
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      {/* Toolbar */}
+    <div className="border border-border rounded-xl overflow-hidden animate-fade-in-up">
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -204,7 +192,6 @@ export default function CareersTable({
         </Button>
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
@@ -222,17 +209,7 @@ export default function CareersTable({
         </TableHeader>
 
         <TableBody>
-          {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                {Array.from({ length: 6 }).map((_, j) => (
-                  <TableCell key={j} className="px-6 py-4">
-                    <div className="h-4 w-28 rounded bg-gray-100 animate-pulse" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : careers.length === 0 ? (
+          {careers.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={6}
@@ -250,7 +227,7 @@ export default function CareersTable({
               </TableCell>
             </TableRow>
           ) : (
-            careers.map((row) => (
+            careers.map((row: Career) => (
               <TableRow
                 key={row.id}
                 className="hover:bg-gray-50/50 cursor-pointer"
@@ -301,7 +278,6 @@ export default function CareersTable({
         </TableBody>
       </Table>
 
-      {/* Footer */}
       <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
         <p className="text-sm text-gray-600">
           {activeFilterCount > 0

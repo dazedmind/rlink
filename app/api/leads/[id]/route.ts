@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { leads } from '@/db/schema';
@@ -74,6 +75,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json(updated);
   } catch (error) {
     console.error('[PATCH /api/leads/:id]', error);
@@ -105,6 +107,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ message: 'Lead deleted', id: deleted.id });
   } catch (error) {
     console.error('[DELETE /api/leads/:id]', error);

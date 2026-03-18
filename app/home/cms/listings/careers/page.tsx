@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import CareerFormModal from "@/components/modal/cms/CareerFormModal";
@@ -10,39 +12,42 @@ import { Career } from "@/lib/types";
 import { toast } from "sonner";
 
 function CareersManager() {
+  const queryClient = useQueryClient();
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCareer, setEditingCareer] = useState<Career | null>(null);
   const [deletingCareer, setDeletingCareer] = useState<Career | null>(null);
   const [viewingCareer, setViewingCareer] = useState<Career | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleDelete = async () => {
-    if (!deletingCareer) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/careers/${deletingCareer.id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/careers/${id}`, {
         method: "DELETE",
         credentials: "include",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to delete posting.");
-        return;
-      }
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error ?? "Failed to delete posting.");
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.careers() });
       toast.success("Job posting deleted.");
       setDeletingCareer(null);
-      setRefreshTrigger((t) => t + 1);
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete posting.");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deletingCareer) return;
+    deleteMutation.mutate(deletingCareer.id);
   };
 
   const handleSuccess = useCallback(() => {
-    setRefreshTrigger((t) => t + 1);
-  }, []);
+    queryClient.invalidateQueries({ queryKey: qk.careers() });
+  }, [queryClient]);
 
   return (
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
@@ -64,7 +69,6 @@ function CareersManager() {
               setEditingCareer(null);
               setShowFormModal(true);
             }}
-            refreshTrigger={refreshTrigger}
           />
         </div>
       </div>
@@ -90,7 +94,7 @@ function CareersManager() {
         onClose={() => setDeletingCareer(null)}
         onConfirm={handleDelete}
         itemName={deletingCareer?.position ?? ""}
-        isDeleting={isDeleting}
+        isDeleting={deleteMutation.isPending}
         title="Delete Job Posting"
         confirmLabel="Delete Posting"
       />

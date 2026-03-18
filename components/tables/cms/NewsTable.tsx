@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -21,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "@/components/layout/ContextMenu";
 import { toast } from "sonner";
-import { articleType } from "@/lib/types";
+import { Article, articleType } from "@/lib/types";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import {
   PlusCircle,
@@ -38,19 +40,7 @@ import {
   Eye,
 } from "lucide-react";
 import Image from "next/image";
-
-export type Article = {
-  id: number;
-  headline: string;
-  body: string;
-  publishDate: string;
-  tags: string[];
-  type: "news" | "blog";
-  photoUrl: string | null;
-  isFeatured: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -59,7 +49,6 @@ type NewsTableProps = {
   onDelete: (article: Article) => void;
   onView: (article: Article) => void;
   onAdd: () => void;
-  refreshTrigger?: number;
 };
 
 export default function NewsTable({
@@ -67,18 +56,12 @@ export default function NewsTable({
   onDelete,
   onView,
   onAdd,
-  refreshTrigger = 0,
 }: NewsTableProps) {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-
   const [filterType, setFilterType] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
 
   const activeFilterCount = filterType.length;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const buildUrl = useCallback(
     (page: number) => {
@@ -93,25 +76,21 @@ export default function NewsTable({
     [filterType, sortOption]
   );
 
-  const fetchArticles = useCallback(
-    async (page: number) => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(buildUrl(page), { credentials: "include" });
-        const data = await res.json();
-        setArticles(data.data ?? []);
-        setTotal(data.total ?? 0);
-      } catch {
-        toast.error("Failed to load articles.");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [buildUrl]
-  );
+  const filters = { page: currentPage, sort: sortOption, type: filterType.join(",") };
 
-  useEffect(() => { setCurrentPage(1); }, [filterType, sortOption]);
-  useEffect(() => { fetchArticles(currentPage); }, [currentPage, fetchArticles, refreshTrigger]);
+  const { data, isLoading } = useQuery({
+    queryKey: qk.articles(filters),
+    queryFn: async () => {
+      const res = await fetch(buildUrl(currentPage), { credentials: "include" });
+      const json = await res.json();
+      return { data: json.data ?? [], total: json.total ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  const articles = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const clearFilters = () => setFilterType([]);
 
@@ -126,9 +105,20 @@ export default function NewsTable({
     { label: "Delete", icon: Trash2,   color: "text-red-600", separator: true, onClick: () => onDelete(row) },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+          <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
+          <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
+        </div>
+        <TableSkeleton columnCount={4} rowCount={5} showHeaderActions={false} showFooter={false} />
+      </div>
+    );
+  }
+
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      {/* Toolbar */}
+    <div className="border border-border rounded-xl overflow-hidden animate-fade-in-up">
       <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -192,7 +182,6 @@ export default function NewsTable({
         </Button>
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
@@ -208,17 +197,7 @@ export default function NewsTable({
         </TableHeader>
 
         <TableBody>
-          {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                {Array.from({ length: 4 }).map((_, j) => (
-                  <TableCell key={j} className="px-6 py-4">
-                    <div className="h-4 w-28 rounded bg-gray-100 animate-pulse" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : articles.length === 0 ? (
+          {articles.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="px-6 py-16 text-center text-sm text-muted-foreground">
                 No articles found.{" "}
@@ -230,23 +209,20 @@ export default function NewsTable({
               </TableCell>
             </TableRow>
           ) : (
-            articles.map((row) => (
+            articles.map((row: Article) => (
               <TableRow
                 key={row.id}
                 className="hover:bg-gray-50/50 cursor-pointer"
                 onClick={() => onView(row)}
               >
-                {/* ── Merged: star + thumbnail + headline ── */}
                 <TableCell className="px-6 py-4">
                   <div className="flex items-center gap-4">
-                    {/* Star — fixed width so it doesn't collapse */}
                     <div className="w-4 shrink-0">
                       {row.isFeatured && (
                         <Star size={14} className="text-amber-500 fill-amber-400" />
                       )}
                     </div>
 
-                    {/* Thumbnail */}
                     {row.photoUrl ? (
                       <Image
                         src={row.photoUrl}
@@ -261,26 +237,22 @@ export default function NewsTable({
                       </div>
                     )}
 
-                    {/* Headline */}
                     <p className="ml-4 font-medium line-clamp-2 max-w-lg text-wrap">
                       {row.headline}
                     </p>
                   </div>
                 </TableCell>
 
-                {/* Type */}
                 <TableCell className="px-6 py-4">
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs uppercase font-medium bg-slate-100 text-slate-700 border border-slate-200">
                     {row.type}
                   </span>
                 </TableCell>
 
-                {/* Published */}
                 <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                   {shortDateFormatter(row.publishDate)}
                 </TableCell>
 
-                {/* Actions */}
                 <TableCell
                   className="px-6 py-4 text-right"
                   onClick={(e) => e.stopPropagation()}
@@ -293,7 +265,6 @@ export default function NewsTable({
         </TableBody>
       </Table>
 
-      {/* Footer */}
       <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
         <p className="text-sm text-gray-600">
           {activeFilterCount > 0 ? `${total} matching articles` : `${total} articles total`}

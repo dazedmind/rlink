@@ -57,18 +57,17 @@ export const inquiryStatus = {
 export type InquiryStatus = (typeof inquiryStatus)[keyof typeof inquiryStatus];
 
 export const department = {
-    marketing: 'Sales & Marketing Department',
-    executive: 'Executive Department',
-    engineering: 'Engineering Department',
-    design: 'Design Department',
-    hr: 'Human Resources Department',
-    finance: 'Finance Department',
-    it: 'Information Technology Department',
-    legal: 'Legal Department',
-    operations: 'Operations Department',
-    customer_service: 'Customer Service Department',
-    product: 'Product Management Department',
-}
+    construction: 'Construction Management',
+    design: 'Architecture & Design',
+    hr: 'Human Resources',
+    it: 'Information Technology',
+    office_president: 'Office of the President',
+    project_development: 'Project Development',
+    property_management: 'Property Management',
+    sales_admin: 'Sales Admin',
+    sales_marketing: 'Sales & Marketing',
+    sales_documentation: 'Sales Documentation'
+  }
 
 export type Department = (typeof department)[keyof typeof department];
 
@@ -171,15 +170,78 @@ export const promoStatusMeta: Record<string, { label: string; className: string 
     expired: { label: 'Expired', className: 'bg-red-500 text-white border border-red-100' },
 };
 
+/** Promo from promos table */
+export type Promo = {
+    id: number;
+    title: string;
+    description: string | null;
+    imageUrl: string | null;
+    linkUrl: string | null;
+    status: string;
+    startDate: string | null;
+    endDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/** Campaign from campaigns table */
+export type Campaign = {
+    id: number;
+    name: string;
+    subject: string;
+    previewLine?: string;
+    body?: string;
+    status: string;
+    recipients: number;
+    openRate: number;
+    clickRate: number;
+    scheduledAt: string | null;
+    sentAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/** Inquiry from inquiry table */
+export type Inquiry = {
+    id: number;
+    inquiryId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    subject: string;
+    message: string;
+    source: string;
+    status: string;
+    createdAt: string;
+};
+
 /*
     ARTICLE / NEWS
 */
+
+export type Article = {
+    id: number;
+    headline: string;
+    slug: string;
+    body: string;
+    publishDate: string;
+    tags: string[];
+    type: ArticleType;
+    photoUrl: string | null;
+    isFeatured: boolean;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export const articleType = {
     news: 'News',
     blog: 'Blog',
-    announcements : 'Announcements'
+    announcement : 'Announcement'
 } as const;
 export type ArticleType = (typeof articleType)[keyof typeof articleType];
+
+export const articleTypeValues = ["news", "blog", "announcement"] as const;
 
 /*
     LEAD SOURCE (distinct from inquirySource)
@@ -249,21 +311,92 @@ export type Lead = {
     nextAction: LeadNextAction;
 }
 
+/** Project amenity (from projects.amenities jsonb) */
+export type ProjectAmenity = {
+    name: string;
+    photoUrl?: string;
+};
+
 /** Project from projects table (id is text/uuid) */
 export type Project = {
     id: string;
     projectCode: string;
     projectName: string;
-    logoUrl?: string;
-    status?: string;
-    location?: string;
-    stage?: string;
+    slug?: string;
+    status?: string | null;
+    location?: string | null;
+    stage?: string | null;
     type?: string;
-    photoUrl?: string;
-    accentColor?: string;
-    description?: string;
-    amenities?: unknown[];
+    photoUrl?: string | null;
+    logoUrl?: string | null;
+    mapLink?: string | null;
+    accentColor?: string | null;
+    description?: string | null;
+    dhsudNumber?: string | null;
+    address?: string | null;
+    completionDate?: string | null;
+    salesOffice?: string | null;
+    amenities?: ProjectAmenity[];
     landmarks?: unknown[];
+};
+
+/** Project model from project_models table */
+export type ProjectModel = {
+    id: string;
+    modelName: string;
+    description: string | null;
+    bathroom: number;
+    kitchen: number;
+    carport: number;
+    serviceArea: number;
+    livingRoom: number;
+    lotArea: number;
+    floorArea: number;
+    lotClass: string;
+    photoUrl: string | null;
+};
+
+/** Inventory unit from project_inventory (project-scoped view) */
+export type InventoryUnit = {
+    id: string;
+    modelId: string;
+    inventoryCode: string;
+    block: number;
+    lot: number;
+    sellingPrice: number;
+    isFeatured: boolean;
+};
+
+/** Form shape for project overview tab */
+export type OverviewForm = {
+    projectCode: string;
+    projectName: string;
+    slug: string;
+    status: string;
+    location: string;
+    stage: string;
+    type: string;
+    photoUrl: string;
+    logoUrl: string;
+    mapLink: string;
+    accentColor: string;
+    description: string;
+    dhsudNumber: string;
+    address: string;
+    completionDate: string;
+    salesOffice: string;
+    landmarks: Record<string, string[]>;
+};
+
+/** Gallery image from project_gallery */
+export type GalleryImage = {
+    id: string;
+    projectId: string;
+    modelId: string | null;
+    imageUrl: string;
+    caption: string | null;
+    sortOrder: number;
+    createdAt: string;
 };
 
 /** Inventory item from project_inventory (references projects.id via projectId) */
@@ -298,6 +431,7 @@ export type Reservation = {
 export type Career = {
     id: number;
     position: string;
+    slug: string;
     department: string;
     location: string;
     jobDescription: string;

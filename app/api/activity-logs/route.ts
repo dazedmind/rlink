@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { activityLogs } from "@/db/schema";
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
       userAgent,
     });
 
+    revalidatePath("/home");
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[POST /api/activity-logs]", error);

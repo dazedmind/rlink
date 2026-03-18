@@ -24,7 +24,7 @@ function DropSelect({
 }) {
   return (
     <Field className={cn("col-span-2 md:col-span-1 gap-2", className)}>
-      <FieldLabel className="text-xs uppercase text-gray-500">{label}{required && <span className="text-red-500">*</span>}</FieldLabel>
+      <FieldLabel className="text-xs uppercase text-primary font-medium">{label}{required && <span className="text-red-500">*</span>}</FieldLabel>
       <div className="relative">
         <ChevronDownIcon className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2" />
         <select

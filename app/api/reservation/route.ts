@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { reservation } from '@/db/schema';
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
       } as unknown as typeof reservation.$inferInsert)
       .returning();
 
+    revalidatePath("/home");
     return NextResponse.json(newReservation, { status: 201 });
   } catch (error) {
     console.error('[POST /api/reservation]', error);

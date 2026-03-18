@@ -1,9 +1,12 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { articles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { nameToSlug } from "@/app/utils/nameToSlug";
+import { articleTypeValues } from "@/lib/types";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -57,6 +60,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     const allowedFields = [
       "headline",
+      "slug",
       "body",
       "publishDate",
       "tags",
@@ -77,8 +81,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           (updates as Record<string, unknown>)[field] = Array.isArray(val) ? val : [];
         } else if (field === "isFeatured") {
           (updates as Record<string, unknown>)[field] = Boolean(val);
-        } else if (field === "type" && !["news", "blog"].includes(val)) {
+        } else if (field === "type" && !articleTypeValues.includes(val)) {
           continue;
+        } else if (field === "slug" && typeof val === "string") {
+          (updates as Record<string, unknown>)[field] = nameToSlug(val.trim()) || nameToSlug(body.headline ?? "");
         } else {
           (updates as Record<string, unknown>)[field] =
             typeof val === "string" ? val.trim() : val;
@@ -105,6 +111,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[PATCH /api/articles/:id]", error);
@@ -139,6 +146,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({ message: "Article deleted", id: deleted.id });
   } catch (error) {
     console.error("[DELETE /api/articles/:id]", error);

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { ExternalLink } from "lucide-react";
-import type { Promo } from "./PromoFormModal";
+import type { Promo } from "@/lib/types";
 import { promoStatusMeta } from "@/lib/types";
 
 export default function PromoDetailModal({

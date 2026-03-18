@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { reservation } from "@/db/schema";
@@ -51,6 +52,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
       }
   
+      revalidatePath("/home");
       return NextResponse.json({ 
           message: "Reservation updated successfully",
           data: updated 
@@ -79,6 +81,7 @@ export async function PATCH(
       if (!deletedReservation) {
         return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
       }
+      revalidatePath("/home");
       return NextResponse.json({ message: 'Reservation deleted successfully' }, { status: 200 });
     } catch (error) {
       console.error('[DELETE /api/reservation/:id]', error);

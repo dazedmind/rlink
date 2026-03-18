@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects } from "@/db/schema";
@@ -52,6 +53,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    revalidatePath("/home");
     return NextResponse.json({
       message: "Amenities updated successfully",
       data: updated,

@@ -9,19 +9,17 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 
-
 export const departmentEnum = pgEnum('department', [
-  'marketing',
-  'executive',
-  'engineering',
+  'construction',
   'design',
   'hr',
-  'finance',
   'it',
-  'legal',
-  'operations',
-  'customer_service',
-  'product'
+  'office_president',
+  'project_development',
+  'property_management',
+  'sales_admin',
+  'sales_marketing',
+  'sales_documentation',
 ])
 
 export const userStatusEnum = pgEnum('user_status', [
@@ -58,7 +56,7 @@ export const user = pgTable("user", {
   middleName: text("middle_name").default(""),
   phone: text("phone").default(""),
   position: text("position").default(""),
-  department: departmentEnum("department").default("marketing"),
+  department: departmentEnum("department").default("construction"),
   employeeId: text("employee_id").default(""),
   birthdate: text("birthdate"),
 });

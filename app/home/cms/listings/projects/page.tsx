@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import ProjectsTable, { type Project } from "@/components/tables/cms/ProjectsTable";
@@ -8,33 +10,37 @@ import ProjectDetailPage from "./ProjectDetailPage";
 import { toast } from "sonner";
 
 function ProjectsManager() {
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"list" | "detail">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleDelete = async () => {
-    if (!deletingProject) return;
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/projects/${deletingProject.id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/projects/${id}`, {
         method: "DELETE",
         credentials: "include",
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        toast.error(data.error ?? "Failed to delete project.");
-        return;
-      }
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error ?? "Failed to delete project.");
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.projects() });
+      queryClient.invalidateQueries({ queryKey: qk.projectInventory() });
       toast.success("Project deleted successfully.");
       setDeletingProject(null);
-      setRefreshTrigger((t) => t + 1);
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete project.");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deletingProject) return;
+    deleteMutation.mutate(deletingProject.id);
   };
 
   const goToDetail = (project: Project) => {
@@ -46,7 +52,8 @@ function ProjectsManager() {
   const goBackToList = () => {
     setView("list");
     setSelectedProjectId(null);
-    setRefreshTrigger((t) => t + 1);
+    queryClient.invalidateQueries({ queryKey: qk.projects() });
+    queryClient.invalidateQueries({ queryKey: qk.projectInventory() });
   };
 
   const handleAdd = () => {
@@ -57,7 +64,8 @@ function ProjectsManager() {
 
   const handleProjectCreated = (projectId: string) => {
     setSelectedProjectId(projectId);
-    setRefreshTrigger((t) => t + 1);
+    queryClient.invalidateQueries({ queryKey: qk.projects() });
+    queryClient.invalidateQueries({ queryKey: qk.projectInventory() });
   };
 
   if (view === "detail" && selectedProjectId) {
@@ -83,7 +91,6 @@ function ProjectsManager() {
             onEdit={goToDetail}
             onDelete={(p) => setDeletingProject(p)}
             onAdd={handleAdd}
-            refreshTrigger={refreshTrigger}
             onViewProject={goToDetail}
           />
         </div>
@@ -94,7 +101,7 @@ function ProjectsManager() {
         onClose={() => setDeletingProject(null)}
         onConfirm={handleDelete}
         itemName={deletingProject?.projectName ?? ""}
-        isDeleting={isDeleting}
+        isDeleting={deleteMutation.isPending}
         title="Delete Project"
         confirmLabel="Delete Project"
         warningMessage="This action cannot be undone and will also remove all associated inventory records."
