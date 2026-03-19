@@ -19,7 +19,7 @@
   --secondary-fg: #9C7C1C;
   --success: #229537;
   --warning: #FFC831;
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.52 0.1986 25.94);
   --info: #0D44AE;
   --border: oklch(0.922 0 0);
   --input: #F8F8F8;
@@ -123,15 +123,15 @@ body {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6 0.2174 273.77);
+  --primary: oklch(0.6 0.1674 253.76);
   --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.9 0.1714 110.48);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.15 0 none);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.64 0.2465 27.39);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -161,10 +161,35 @@ body {
   }
 }
 
+/* 1. Default state: Use muted-foreground */
 select {
   appearance: none;
   border: 1px solid var(--border);
   padding: 0.5rem 1rem;
+  color: var(--muted-foreground); /* Default color */
+  cursor: pointer;
+}
+
+/* 2. Selection state: If the selected option IS NOT the first/empty one, change to foreground */
+select:has(option:not([value=""]):checked) {
+  color: var(--foreground);
+}
+
+select:disabled {
+  color: var(--muted-foreground);
+  background-color: var(--input);
+}
+
+select option {
+  color: var(--foreground);
+}
+
+.dark select {
+  background-color: oklch(0.205 0 0);
+}
+
+select:focus {
+  outline: none;
 }
 
 .scrollbar-hide {

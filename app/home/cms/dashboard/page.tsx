@@ -19,7 +19,7 @@ export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
   const handleNav = (url: string) => onNavigate?.(url);
 
   return (
-    <main className="flex-1 overflow-auto m-4 border border-border rounded-xl h-full bg-white">
+    <main className="flex-1 overflow-auto m-4 border border-border rounded-xl h-full bg-background">
       <div className="mx-auto p-8">
         <header>
           <DashboardHeader

@@ -19,7 +19,7 @@ function ManageLinks() {
   const [tiktokLink, setTiktokLink] = useState("");
 
   return (
-    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl h-full bg-white">
+    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl h-full bg-background">
       <div className="mx-auto p-8">
         <DashboardHeader
           title="Manage Social Links"
@@ -35,7 +35,7 @@ function ManageLinks() {
                 <Globe className="size-5 text-primary" />
               </span>
               
-              <h1 className="text-lg font-medium text-neutral-800">
+              <h1 className="text-lg font-medium text-muted-foreground">
                 Social Media Links Manager
               </h1>
             </div>

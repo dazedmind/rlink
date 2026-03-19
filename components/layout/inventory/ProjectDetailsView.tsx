@@ -1,6 +1,5 @@
 // ProjectDetailsView.tsx — full updated file
 "use client";
-
 import React, { useMemo, useState } from "react";
 import { ArrowLeft, Box, LayoutGrid, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,14 +24,14 @@ import type { Project, InventoryItem, Reservation } from "@/lib/types";
 type ProjectDetailsViewProps = {
   project: Project;
   inventory: InventoryItem[];
-  reservation: Reservation[];
+  reservations: Reservation[];
   onBack: () => void;
 };
 
 function ProjectDetailsView({
   project,
   inventory,
-  reservation,
+  reservations,
   onBack,
 }: ProjectDetailsViewProps) {
   const [sortMode, setSortMode] = useState<"block" | "model">("block");
@@ -129,9 +128,9 @@ function ProjectDetailsView({
       </div>
 
       {/* Legend + Filter */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-slate-50/50 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-accent px-4 py-3">
         <div className="flex items-center gap-6">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Legend
           </span>
           <div className="flex items-center gap-2">
@@ -139,14 +138,14 @@ function ProjectDetailsView({
             <span className="text-sm font-medium">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded-md bg-slate-300" />
+            <div className="h-4 w-4 rounded-md bg-muted" />
             <span className="text-sm font-medium">Sold</span>
           </div>
         </div>
 
         <section className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               View
             </span>
             <Select
@@ -169,7 +168,7 @@ function ProjectDetailsView({
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Block
             </span>
             <Select value={selectedBlock} onValueChange={setSelectedBlock}>
@@ -187,7 +186,7 @@ function ProjectDetailsView({
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Model
             </span>
             <Select value={selectedModel} onValueChange={setSelectedModel}>
@@ -219,7 +218,7 @@ function ProjectDetailsView({
                 .sort(([a], [b]) => a - b)
                 .map(([block, modelMap]) => (
                   <section key={block} className="space-y-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-600">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                       Block {block}
                     </h3>
                     {Array.from(modelMap.entries())
@@ -227,10 +226,10 @@ function ProjectDetailsView({
                       .map(([model, lots]) => (
                         <div key={model} className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                               {model}
                             </span>
-                            <div className="flex-1 border-t border-dashed border-slate-200" />
+                            <div className="flex-1 border-t border-dashed border-border" />
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {lots.map((item) => renderLotButton(item, model))}
@@ -243,7 +242,7 @@ function ProjectDetailsView({
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([model, blockMap]) => (
                   <section key={model} className="space-y-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-600">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                       {model}
                     </h3>
                     {Array.from(blockMap.entries())
@@ -251,10 +250,10 @@ function ProjectDetailsView({
                       .map(([block, lots]) => (
                         <div key={block} className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                               Block {block}
                             </span>
-                            <div className="flex-1 border-t border-dashed border-slate-200" />
+                            <div className="flex-1 border-t border-dashed border-border" />
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {lots.map((item) => renderLotButton(item, model))}
@@ -280,7 +279,7 @@ function ProjectDetailsView({
     return (
       <div
         key={item.id}
-        className="flex items-center rounded-lg overflow-hidden border border-slate-200/80"
+        className="flex items-center rounded-lg overflow-hidden border border-border"
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -293,7 +292,7 @@ function ProjectDetailsView({
                 ${
                   isAvailable
                     ? "bg-primary text-primary-foreground hover:brightness-110"
-                    : "bg-slate-300 text-slate-600 cursor-default"
+                    : "bg-muted text-muted-foreground cursor-default"
                 }
               `}
             >
@@ -305,7 +304,7 @@ function ProjectDetailsView({
               <DropdownMenuLabel>
                 <span className="flex flex-col">
                   <span
-                    className={`w-full h-2 absolute top-0 left-0 ${isAvailable ? "bg-primary" : "bg-slate-300"}`}
+                    className={`w-full h-2 absolute top-0 left-0 ${isAvailable ? "bg-primary" : "bg-muted"}`}
                   />
                   <h1 className="text-lg font-bold text-primary">
                     {item.soldTo ? "SOLD" : "AVAILABLE"}
@@ -313,7 +312,7 @@ function ProjectDetailsView({
                   <p>
                     {project.projectCode} - Block {item.block} Lot {item.lot}
                   </p>
-                  <p className="text-xs text-slate-500">{model}</p>
+                  <p className="text-xs text-muted-foreground">{model}</p>
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -327,29 +326,29 @@ function ProjectDetailsView({
                 <>
                   {item.soldTo != null &&
                     (() => {
-                      const res = reservation.find(
-                        (r) => String(r.id) === String(item.soldTo),
+                      const res = reservations?.find(
+                        (r: Reservation) => String(r.id) === String(item.soldTo ?? ""),
                       );
                       return res ? (
                         <DropdownMenuLabel className="font-normal">
                           <div className="space-y-1">
-                            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                               Reserved to
                             </p>
-                            <p className="text-sm font-semibold text-neutral-950">
-                              {res.firstName} {res.lastName}
+                            <p className="text-sm font-semibold text-foreground">
+                              {res?.firstName} {res?.lastName}
                             </p>
-                            <p className="text-xs text-slate-600">
-                              {res.email}
+                            <p className="text-xs text-muted-foreground">
+                              {res?.email}
                             </p>
-                            <p className="text-xs text-slate-600">
-                              {res.phone}
+                            <p className="text-xs text-muted-foreground">
+                              {res?.phone}
                             </p>
                           </div>
                         </DropdownMenuLabel>
                       ) : (
                         <DropdownMenuItem disabled>
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-muted-foreground">
                             Reserved (details unavailable)
                           </span>
                         </DropdownMenuItem>

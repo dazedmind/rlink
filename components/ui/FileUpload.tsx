@@ -89,7 +89,7 @@ export function FileUpload({
         />
         {value ? (
           <>
-            <div className={cn("relative rounded-md overflow-hidden bg-slate-200", aspect === "square" ? "aspect-square h-auto w-auto xl:max-h-40 xl:w-full" : "aspect-video max-h-36 w-full")}>
+            <div className={cn("relative rounded-md overflow-hidden bg-accent", aspect === "square" ? "aspect-square h-auto w-auto xl:max-h-40 xl:w-full" : "aspect-video max-h-36 w-full")}>
               <img
                 src={value}
                 alt="Preview"
@@ -122,7 +122,7 @@ export function FileUpload({
           </div>
         )}
       </div>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       {hint && !error && <p className="text-[11px] text-muted-foreground">{hint}</p>}
     </div>
   );

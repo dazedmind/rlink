@@ -30,20 +30,9 @@ import {
 } from "lucide-react";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { toast } from "sonner";
+import { activityStatusMeta, ActivityLogRecord } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
-
-export type ActivityLogRecord = {
-  id: string;
-  userId: string;
-  activity: string;
-  ipAddress: string;
-  userAgent: string;
-  status: string;
-  createdAt: string;
-  userName?: string | null;
-  userEmail?: string | null;
-};
 
 function getActivityIcon(activity: string) {
   const lower = activity.toLowerCase();
@@ -115,7 +104,7 @@ export default function ActivityLogsTable({
   return (
     <div className="border border-border rounded-xl overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center justify-between w-full gap-2">
           <h3 className="font-semibold text-xl">Activity Logs</h3>
 
@@ -145,13 +134,13 @@ export default function ActivityLogsTable({
 
       {/* Table */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow>
             {["Activity", "User", "IP Address", "Device", "Date", "Status"].map(
               (col, i) => (
                 <TableHead
                   key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {col}
                 </TableHead>
@@ -166,7 +155,7 @@ export default function ActivityLogsTable({
               <TableRow key={i}>
                 {Array.from({ length: 6 }).map((_, j) => (
                   <TableCell key={j} className="px-6 py-4">
-                    <div className="h-4 w-28 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-28 rounded bg-accent/10 animate-pulse" />
                   </TableCell>
                 ))}
               </TableRow>
@@ -184,11 +173,11 @@ export default function ActivityLogsTable({
             logs.map((row) => {
               const Icon = getActivityIcon(row.activity);
               return (
-                <TableRow key={row.id} className="hover:bg-gray-50/50">
+                <TableRow key={row.id} className="hover:bg-accent/50">
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="size-4 text-primary" />
+                      <div className="h-8 w-8 rounded-full bg-info/10 flex items-center justify-center">
+                        <Icon className="size-4 text-info" />
                       </div>
                       <span className="font-medium">
                         {row.activity}
@@ -223,12 +212,10 @@ export default function ActivityLogsTable({
                   <TableCell className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        row.status === "success"
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : "bg-red-100 text-red-700 border border-red-200"
-                      }`}
+                          activityStatusMeta[row.status as keyof typeof activityStatusMeta].className
+                        }`}
                     >
-                      {row.status}
+                      {activityStatusMeta[row.status as keyof typeof activityStatusMeta].label}
                     </span>
                   </TableCell>
                 </TableRow>
@@ -239,8 +226,8 @@ export default function ActivityLogsTable({
       </Table>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {total} log{total !== 1 ? "s" : ""} total
         </p>
 
@@ -263,7 +250,7 @@ export default function ActivityLogsTable({
                     size="sm"
                     className={
                       currentPage === pageNum
-                        ? "bg-blue-600 min-w-8"
+                        ? "bg-primary min-w-8"
                         : "min-w-8"
                     }
                     onClick={() => setCurrentPage(pageNum)}

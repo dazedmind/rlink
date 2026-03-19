@@ -25,8 +25,8 @@ export function SettingsFormSection({
   submitLabel = "Save Changes",
 }: SettingsFormSectionProps) {
   return (
-    <form onSubmit={onSubmit} className="border border-border rounded-xl overflow-hidden bg-white">
-      <div className="flex items-center gap-3 px-6 py-4 border-b bg-gray-50">
+    <form onSubmit={onSubmit} className="border border-border rounded-xl overflow-hidden bg-background">
+      <div className="flex items-center gap-3 px-6 py-4 border-b bg-accent">
         {Icon && (
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Icon size={16} className="text-primary" />
@@ -40,7 +40,7 @@ export function SettingsFormSection({
         </div>
       </div>
       <div className="p-6 flex flex-col gap-4">{children}</div>
-      <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+      <div className="px-6 py-4 border-t bg-accent flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : submitLabel}
         </Button>

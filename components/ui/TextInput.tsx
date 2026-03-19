@@ -19,7 +19,7 @@ function getValidationType(name: string, type: string): ValidationType {
     lower === "last"
   )
     return "name";
-  if (type === "number" || type === "tel" || lower.includes("phone") || lower.includes("number"))
+  if (type === "number" || type === "tel" || lower.includes("phone"))
     return "phone";
   if (type === "text" && name.includes("employeeId"))
     return "Employee ID";
@@ -83,7 +83,7 @@ function TextInput({
           type={inputType}
           name={name}
           placeholder={placeholder}
-          className="w-full p-2 rounded-md text-black"
+          className="w-full rounded-md text-foreground"
           onChange={onChange}
           value={value ?? ""}
           disabled={disabled}
@@ -107,6 +107,7 @@ function TextInput({
             </Button>
           </span>
         )}
+        {/* <p>Invalid email. Please use your employee email.</p> */}
         {isInvalid && <p className="text-red-500 text-xs mt-1">Please enter a valid {validationType}</p>}
       </span>
     </Field>

@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "@/components/layout/ContextMenu";
-import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import {
@@ -38,7 +37,7 @@ import {
   MapPin,
   Eye,
 } from "lucide-react";
-import { Career, careerStatus } from "@/lib/types";
+import { Career, careerStatus, careerStatusMeta } from "@/lib/types";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 
 const ITEMS_PER_PAGE = 10;
@@ -107,7 +106,7 @@ export default function CareersTable({
     {
       label: "Delete",
       icon: Trash2,
-      color: "text-red-600",
+      color: "text-destructive",
       separator: true,
       onClick: () => onDelete(row),
     },
@@ -116,18 +115,18 @@ export default function CareersTable({
   if (isLoading) {
     return (
       <div className="border border-border rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
           <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
           <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
         </div>
-        <TableSkeleton columnCount={6} rowCount={5} showHeaderActions={false} showFooter={false} />
+        <TableSkeleton columnCount={6} rowCount={5} showFooter={false} />
       </div>
     );
   }
 
   return (
     <div className="border border-border rounded-xl overflow-hidden animate-fade-in-up">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -142,7 +141,7 @@ export default function CareersTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </p>
               {Object.values(careerStatus).map((opt) => (
@@ -158,7 +157,7 @@ export default function CareersTable({
                 <>
                   <DropdownMenuSeparator />
                   <button
-                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded"
                     onClick={clearFilters}
                   >
                     <X className="size-3" /> Clear all filters
@@ -193,13 +192,13 @@ export default function CareersTable({
       </div>
 
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-background">
           <TableRow>
             {["Position", "Location", "Status", "Posted", "Last Updated", ""].map(
               (col, i) => (
                 <TableHead
                   key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {col}
                 </TableHead>
@@ -230,7 +229,7 @@ export default function CareersTable({
             careers.map((row: Career) => (
               <TableRow
                 key={row.id}
-                className="hover:bg-gray-50/50 cursor-pointer"
+                className="hover:bg-accent cursor-pointer"
                 onClick={() => onView(row)}
               >
                 <TableCell className="px-6 py-4">
@@ -249,13 +248,7 @@ export default function CareersTable({
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      row.status === careerStatus.hiring.toLowerCase()
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : row.status === careerStatus.closed.toLowerCase()
-                          ? "bg-slate-100 text-slate-600 border border-slate-200"
-                          : "bg-red-50 text-red-700 border border-red-200"
-                    }`}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${careerStatusMeta[row.status as keyof typeof careerStatus]?.className}`}
                   >
                     {careerStatus[row.status as keyof typeof careerStatus]}
                   </span>
@@ -278,8 +271,8 @@ export default function CareersTable({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {activeFilterCount > 0
             ? `${total} matching job postings`
             : `${total} job postings total`}
@@ -302,7 +295,7 @@ export default function CareersTable({
                   variant={currentPage === pageNum ? "default" : "ghost"}
                   size="sm"
                   className={
-                    currentPage === pageNum ? "bg-blue-600 min-w-8" : "min-w-8"
+                    currentPage === pageNum ? "bg-primary min-w-8" : "min-w-8"
                   }
                   onClick={() => setCurrentPage(pageNum)}
                 >

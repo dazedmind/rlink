@@ -55,7 +55,7 @@ function Settings() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen w-full bg-neutral-50/50">
+      <div className="min-h-screen w-full bg-accent">
         <main className="flex flex-col gap-8 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
           <DashboardHeader title="RLink" description="" />
 

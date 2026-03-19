@@ -5,9 +5,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
-import ProjectsTable, { type Project } from "@/components/tables/cms/ProjectsTable";
+import ProjectsTable from "@/components/tables/cms/ProjectsTable";
 import ProjectDetailPage from "./ProjectDetailPage";
 import { toast } from "sonner";
+import { Project } from "@/lib/types";
 
 function ProjectsManager() {
   const queryClient = useQueryClient();
@@ -79,7 +80,7 @@ function ProjectsManager() {
   }
 
   return (
-    <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto m-4 border-border border rounded-xl bg-white">
+    <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto m-4 border-border border rounded-xl bg-background">
       <div className="mx-auto p-8 w-full max-w-full min-w-0 overflow-x-hidden">
         <DashboardHeader
           title="Projects Manager"

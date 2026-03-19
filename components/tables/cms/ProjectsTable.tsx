@@ -41,25 +41,8 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { projectStatus, projectStage, projectType, projectStatusMeta, projectStageMeta, projectTypeMeta } from "@/lib/types";
+import { projectStatus, projectStage, projectType, projectStatusMeta, projectStageMeta, projectTypeMeta, Project } from "@/lib/types";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
-
-export type Project = {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  status: string | null;
-  location: string | null;
-  stage: string | null;
-  type: string;
-  photoUrl: string | null;
-  accentColor: string | null;
-  description: string | null;
-  amenities: unknown[];
-  landmarks: unknown[];
-  createdAt: string;
-  updatedAt: string;
-};
 
 const ITEMS_PER_PAGE = 10;
 
@@ -164,18 +147,18 @@ export default function ProjectsTable({
   if (isLoading) {
     return (
       <div className="border border-border rounded-xl overflow-hidden min-w-0 w-full max-w-full">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
           <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
           <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
         </div>
-        <TableSkeleton columnCount={9} rowCount={5} showHeaderActions={false} showFooter={false} />
+        <TableSkeleton columnCount={9} rowCount={5} showFooter={false} />
       </div>
     );
   }
 
   return (
     <div className="border border-border rounded-xl overflow-hidden min-w-0 w-full max-w-full animate-fade-in-up">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -278,7 +261,7 @@ export default function ProjectsTable({
 
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-gray-50">
+          <TableHeader className="bg-background">
             <TableRow>
               {[
                 "Project Image",
@@ -293,7 +276,7 @@ export default function ProjectsTable({
               ].map((label, i) => (
                 <TableHead
                   key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {label}
                 </TableHead>
@@ -321,7 +304,7 @@ export default function ProjectsTable({
               </TableRow>
             ) : (
               paginatedProjects.map((row) => (
-                <TableRow key={row.id} className="hover:bg-gray-50/50 cursor-pointer" onClick={() => onViewProject(row)}>
+                <TableRow key={row.id} className="hover:bg-accent cursor-pointer" onClick={() => onViewProject(row)}>
                   <TableCell className="px-6 py-4">
                     {row.photoUrl ? (
                       <Image
@@ -332,7 +315,7 @@ export default function ProjectsTable({
                         className="rounded-md w-full h- aspect-video object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-auto bg-neutral-200 rounded-md w-full aspect-video object-cover">
+                      <div className="flex items-center justify-center h-auto bg-accent rounded-md w-full aspect-video object-cover">
                         <ImageIcon className="size-6 text-muted-foreground" />
                       </div>
                     )}
@@ -341,7 +324,7 @@ export default function ProjectsTable({
                     <p className="font-medium text-base">{row.projectName}</p>
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <span className="font-mono text-xs font-semibold text-muted-foreground bg-gray-100 px-2 py-1 rounded">
+                    <span className="font-mono text-xs font-semibold text-muted-foreground bg-accent px-2 py-1 rounded">
                       {row.projectCode}
                     </span>
                   </TableCell>
@@ -401,8 +384,8 @@ export default function ProjectsTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {activeFilterCount > 0
             ? `${total} matching projects`
             : `${total} projects total`}
@@ -425,7 +408,7 @@ export default function ProjectsTable({
                   variant={currentPage === pageNum ? "default" : "ghost"}
                   size="sm"
                   className={
-                    currentPage === pageNum ? "bg-blue-600 min-w-8" : "min-w-8"
+                    currentPage === pageNum ? "bg-primary min-w-8" : "min-w-8"
                   }
                   onClick={() => setCurrentPage(pageNum)}
                 >

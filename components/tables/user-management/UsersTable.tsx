@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import type { UserRecord } from "@/components/modal/user-management/UserFormModal";
-import { department } from "@/lib/types";
+import { department, userRoleMeta } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -108,7 +108,7 @@ export default function UsersTable({
     {
       label: "Delete",
       icon: Trash2,
-      color: "text-red-600",
+      color: "text-destructive",
       separator: true,
       onClick: () => onDelete(row),
     },
@@ -124,7 +124,7 @@ export default function UsersTable({
   return (
     <div className="border border-border rounded-xl overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center justify-between w-full gap-2">
           <h3 className="font-semibold text-xl">Users</h3>
 
@@ -155,7 +155,7 @@ export default function UsersTable({
 
       {/* Table */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow>
             {["User", "Email", "Employee ID", "Role", "Department", "Created", ""].map(
               (col, i) => (
@@ -176,7 +176,7 @@ export default function UsersTable({
               <TableRow key={i}>
                 {Array.from({ length: 6 }).map((_, j) => (
                   <TableCell key={j} className="px-6 py-4">
-                    <div className="h-4 w-28 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-28 rounded bg-accent/10 animate-pulse" />
                   </TableCell>
                 ))}
               </TableRow>
@@ -194,7 +194,7 @@ export default function UsersTable({
             users.slice(0, viewOnly ? 5 : undefined).map((row) => (
               <TableRow
                 key={row.id}
-                className="hover:bg-gray-50/50 cursor-pointer"
+                className="hover:bg-accent/50 cursor-pointer"
                 onClick={() => onEdit(row)}
               >
                 <TableCell className="px-6 py-4">
@@ -230,12 +230,10 @@ export default function UsersTable({
                 <TableCell className="px-6 py-4">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      row.role?.toLowerCase() === "admin"
-                        ? "bg-blue-600/10 text-blue-600 border border-blue-600/20"
-                        : "bg-gray-100 text-gray-600 border border-gray-200"
+                      userRoleMeta[row.role as keyof typeof userRoleMeta].className
                     }`}
                   >
-                    {(row.role?.charAt(0).toUpperCase() ?? "") + (row.role?.slice(1) ?? "")}
+                    {userRoleMeta[row.role as keyof typeof userRoleMeta].label}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-muted-foreground">
@@ -262,8 +260,8 @@ export default function UsersTable({
       </Table>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {total} user{total !== 1 ? "s" : ""} total
         </p>
 
@@ -286,7 +284,7 @@ export default function UsersTable({
                     size="sm"
                     className={
                       currentPage === pageNum
-                        ? "bg-blue-600 min-w-8"
+                        ? "bg-primary min-w-8"
                         : "min-w-8"
                     }
                     onClick={() => setCurrentPage(pageNum)}

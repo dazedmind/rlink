@@ -106,7 +106,7 @@ export default function PromosTable({
     {
       label: "Delete",
       icon: Trash2,
-      color: "text-red-600",
+      color: "text-destructive",
       separator: true,
       onClick: () => onDelete(row),
     },
@@ -115,18 +115,18 @@ export default function PromosTable({
   if (isLoading) {
     return (
       <div className="border border-border rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
           <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
           <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
         </div>
-        <TableSkeleton columnCount={5} rowCount={5} showHeaderActions={false} showFooter={false} />
+        <TableSkeleton columnCount={5} rowCount={5} showFooter={false} />
       </div>
     );
   }
 
   return (
     <div className="border border-border rounded-xl overflow-hidden animate-fade-in-up">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -157,7 +157,7 @@ export default function PromosTable({
                 <>
                   <DropdownMenuSeparator />
                   <button
-                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded"
                     onClick={clearFilters}
                   >
                     <X className="size-3" /> Clear all filters
@@ -190,13 +190,13 @@ export default function PromosTable({
       </div>
 
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-background">
           <TableRow>
             {["Promo", "Status", "Start Date", "End Date", ""].map(
               (col, i) => (
                 <TableHead
                   key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {col}
                 </TableHead>
@@ -215,7 +215,7 @@ export default function PromosTable({
                 No promos found.{" "}
                 {activeFilterCount > 0 && (
                   <button
-                    className="text-primary underline ml-1"
+                    className="text-primary underline ml-1 cursor-pointer"
                     onClick={clearFilters}
                   >
                     Clear filters
@@ -227,7 +227,7 @@ export default function PromosTable({
             promos.map((row: Promo) => (
               <TableRow
                 key={row.id}
-                className="hover:bg-gray-50/50 cursor-pointer"
+                className="hover:bg-background/50 cursor-pointer"
                 onClick={() => onView(row)}
               >
                 <TableCell className="px-6 py-4">
@@ -242,7 +242,7 @@ export default function PromosTable({
                           height={100}
                         />
                       ) : (
-                        <div className="h-12 w-20 rounded-md bg-neutral-200 flex items-center justify-center">
+                        <div className="h-12 w-20 rounded-md bg-accent flex items-center justify-center">
                           <ImageIcon className="size-5 text-muted-foreground" />
                         </div>
                       )}
@@ -263,7 +263,7 @@ export default function PromosTable({
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       promoStatusMeta[row.status]?.className ??
-                      "bg-slate-100 text-slate-600 border border-slate-200"
+                      "bg-background/10 text-muted-foreground border border-border"
                     }`}
                   >
                     {promoStatusMeta[row.status]?.label ?? row.status}
@@ -291,8 +291,8 @@ export default function PromosTable({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {activeFilterCount > 0
             ? `${total} matching promos`
             : `${total} promos total`}

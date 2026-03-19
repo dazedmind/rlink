@@ -7,10 +7,10 @@ import {
 import type { ActivityItem } from "./types";
 
 export const QUICK_LINKS = [
-  { label: "Projects", url: "listings/projects", icon: Building2, iconBg: "bg-blue-50", iconColor: "text-blue-600" },
-  { label: "News & Articles", url: "listings/news", icon: FileText, iconBg: "bg-purple-50", iconColor: "text-purple-600" },
-  { label: "Promos", url: "listings/promos", icon: Megaphone, iconBg: "bg-amber-50", iconColor: "text-amber-700" },
-  { label: "Careers", url: "listings/careers", icon: Briefcase, iconBg: "bg-green-50", iconColor: "text-green-700" },
+  { label: "Projects", url: "listings/projects", icon: Building2, iconBg: "bg-info", iconColor: "text-white" },
+  { label: "News & Articles", url: "listings/news", icon: FileText, iconBg: "bg-neutral-700", iconColor: "text-white" },
+  { label: "Promos", url: "listings/promos", icon: Megaphone, iconBg: "bg-warning", iconColor: "text-white" },
+  { label: "Careers", url: "listings/careers", icon: Briefcase, iconBg: "bg-success", iconColor: "text-white" },
 ] as const;
 
 export const ACTIVITY_FEED: ActivityItem[] = [

@@ -225,7 +225,7 @@ export function ReservationDetailModal({
         className="max-w-3xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto p-0 scrollbar-hide border-none"
         showCloseButton={false}
       >
-        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b sticky top-0 bg-white z-10 sm:text-left">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b sticky top-0 bg-background z-10 sm:text-left">
           <div>
             <DialogTitle className="text-xl sm:text-2xl font-bold">
               Reservation Details
@@ -336,7 +336,7 @@ export function ReservationDetailModal({
                         value={String(l)}
                         disabled={isReserved}
                         className={
-                          isReserved ? "text-gray-400 bg-gray-100" : ""
+                          isReserved ? "text-muted-foreground bg-accent" : ""
                         }
                       >
                         {String(l)} {isReserved ? "(Reserved)" : ""}
@@ -369,7 +369,7 @@ export function ReservationDetailModal({
           {/* Notes */}
           <div className="space-y-2">
             <Field>
-              <Label htmlFor="notes" className="text-xs uppercase text-gray-500 flex items-center gap-2">
+              <Label htmlFor="notes" className="text-xs uppercase text-primary flex items-center gap-2">
                 <StickyNote className="size-4" />
                 Notes
               </Label>
@@ -379,7 +379,7 @@ export function ReservationDetailModal({
                 rows={6}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="bg-slate-50 border border-border text-sm resize-none p-3 rounded-lg w-full min-h-[100px]"
+                className="bg-card/30 border border-border text-sm resize-none p-3 rounded-lg w-full min-h-[100px]"
                 placeholder="Add additional notes..."
               />
             </Field>
@@ -398,7 +398,7 @@ export function ReservationDetailModal({
           </div>
         </div>
 
-        <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 border-t sticky bottom-0 bg-white z-10 flex-row justify-end gap-2">
+        <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 border-t sticky bottom-0 bg-background z-10 flex-row justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

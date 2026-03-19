@@ -49,12 +49,27 @@ export const reservationStatus = {
 
 export type ReservationStatus = (typeof reservationStatus)[keyof typeof reservationStatus];
 
+export const reservationStatusMeta: Record<string, { label: string; className: string }> = {
+    pending: { label: 'For Validation', className: 'bg-blue-600/10 text-blue-700' },
+    reserved: { label: 'Reserved', className: 'bg-green-600/10 text-green-700' },
+    conditional: { label: 'Conditional', className: 'bg-yellow-600/10 text-yellow-700' },
+    cancelled: { label: 'Cancelled', className: 'bg-red-600/10 text-red-700' },
+    rejected: { label: 'Rejected', className: 'bg-neutral-600/10 text-neutral-700' },
+    expired: { label: 'Expired', className: 'bg-neutral-600/10 text-neutral-700' },
+    refunded: { label: 'Refunded', className: 'bg-purple-600/10 text-purple-700' },
+};
+
 export const inquiryStatus = {
     read: 'Read',
     unread: 'Unread',
 } as const;
 
 export type InquiryStatus = (typeof inquiryStatus)[keyof typeof inquiryStatus];
+
+export const inquiryStatusMeta: Record<string, { label: string; className: string }> = {
+    read: { label: 'Read', className: 'bg-neutral-600/10 text-muted-foreground' },
+    unread: { label: 'Unread', className: 'bg-blue-600/10 text-primary' },
+};
 
 export const department = {
     construction: 'Construction Management',
@@ -101,6 +116,12 @@ export const careerStatus = {
 
 export type CareerStatus = (typeof careerStatus)[keyof typeof careerStatus];
 
+export const careerStatusMeta: Record<string, { label: string; className: string }> = {
+    hiring: { label: 'Hiring', className: 'bg-success/10 text-success' },
+    closed: { label: 'Closed', className: 'bg-foreground/10 text-muted-foreground' },
+    archived: { label: 'Archived', className: 'bg-primary/10 text-primary' },
+};
+
 export const location = {
     'Quezon City (Head Office)': 'Quezon City (Head Office)',
     'Lipa, Batangas': 'Lipa, Batangas',
@@ -138,17 +159,18 @@ export type ProjectType = (typeof projectType)[keyof typeof projectType];
 
 /** Project status/stage/type meta for badge styling */
 export const projectStatusMeta: Record<string, { label: string; className: string }> = {
-    available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    sold: { label: 'Sold Out', className: 'bg-red-50 text-red-700 border border-red-200' },
-    on_hold: { label: 'On Hold', className: 'bg-amber-50 text-amber-700 border border-amber-200' },
+    available: { label: 'Available', className: 'bg-emerald-500/10 text-success' },
+    sold: { label: 'Sold Out', className: 'bg-foreground/10 text-muted-foreground' },
+    on_hold: { label: 'On Hold', className: 'bg-warning/10 text-warning' },
 };
 export const projectStageMeta: Record<string, { label: string; className: string }> = {
-    pre_selling: { label: 'Pre-Selling', className: 'bg-blue-50 text-blue-700 border border-blue-200' },
-    ongoing_development: { label: 'Ongoing Development', className: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
-    coming_soon: { label: 'Coming Soon', className: 'bg-purple-50 text-purple-700 border border-purple-200' },
-    completed: { label: 'Completed', className: 'bg-slate-100 text-slate-700 border border-slate-200' },
-    cancelled: { label: 'Cancelled', className: 'bg-red-50 text-red-400 border border-red-100' },
+    pre_selling: { label: 'Pre-Selling', className: 'bg-primary/10 text-primary' },
+    ongoing_development: { label: 'Ongoing Development', className: 'bg-purple-500/10 text-purple-700' },
+    coming_soon: { label: 'Coming Soon', className: 'bg-secondary/10 text-secondary' },
+    completed: { label: 'Completed', className: 'bg-success/10 text-success' },
+    cancelled: { label: 'Cancelled', className: 'bg-foreground/10 text-muted-foreground' },
 };
+
 export const projectTypeMeta: Record<string, { label: string }> = {
     houselot: { label: 'House & Lot' },
     condo: { label: 'Condominium' },
@@ -164,10 +186,11 @@ export const promoStatus = {
     expired: 'Expired',
 } as const;
 export type PromoStatus = (typeof promoStatus)[keyof typeof promoStatus];
+
 export const promoStatusMeta: Record<string, { label: string; className: string }> = {
-    draft: { label: 'Draft', className: 'bg-slate-500 text-white border border-slate-200' },
-    active: { label: 'Active', className: 'bg-emerald-500 text-white border border-emerald-200' },
-    expired: { label: 'Expired', className: 'bg-red-500 text-white border border-red-100' },
+    draft: { label: 'Draft', className: 'bg-foreground/10 text-muted-foreground' },
+    active: { label: 'Active', className: 'bg-success/10 text-success' },
+    expired: { label: 'Expired', className: 'bg-foreground/10 text-muted-foreground' },
 };
 
 /** Promo from promos table */
@@ -204,7 +227,7 @@ export type Campaign = {
 /** Inquiry from inquiry table */
 export type Inquiry = {
     id: number;
-    inquiryId: string;
+    inquiryId?: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -258,13 +281,13 @@ export type LeadSource = (typeof leadSource)[keyof typeof leadSource];
 
 /** Lead status meta for badge styling */
 export const leadStatusMeta: Record<string, { label: string; className: string }> = {
-    open: { label: 'Open', className: 'bg-blue-50 text-blue-700 border border-blue-200' },
-    ongoing: { label: 'Ongoing', className: 'bg-amber-50 text-amber-700 border border-amber-200' },
-    follow_up: { label: 'Follow-Up', className: 'bg-purple-50 text-purple-700 border border-purple-200' },
-    no_response: { label: 'No Response', className: 'bg-slate-100 text-slate-600 border border-slate-200' },
-    ineligible: { label: 'Ineligible', className: 'bg-red-50 text-red-400 border border-red-100' },
-    won: { label: 'Won', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    lost: { label: 'Lost', className: 'bg-red-50 text-red-700 border border-red-200' },
+    open: { label: 'Open', className: 'bg-blue-600/10 text-primary' },
+    ongoing: { label: 'Ongoing', className: 'bg-purple-600/10 text-purple-700' },
+    follow_up: { label: 'Follow-Up', className: 'bg-yellow-600/10 text-yellow-700' },
+    no_response: { label: 'No Response', className: 'bg-neutral-600/10 text-neutral-700' },
+    ineligible: { label: 'Ineligible', className: 'bg-neutral-600/10 text-neutral-700' },
+    won: { label: 'Won', className: 'bg-green-600/10 text-green-700' },
+    lost: { label: 'Lost', className: 'bg-red-600/10 text-red-700' },
 };
 
 /*
@@ -276,23 +299,33 @@ export const campaignStatus = {
     sent: 'Sent',
 } as const;
 export type CampaignStatus = (typeof campaignStatus)[keyof typeof campaignStatus];
+
+// Badge styling for campaign status
 export const campaignStatusMeta: Record<string, { label: string; className: string }> = {
-    draft: { label: 'Draft', className: 'bg-slate-100 text-slate-600 border border-slate-200' },
-    scheduled: { label: 'Scheduled', className: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
-    sent: { label: 'Sent', className: 'bg-blue-50 text-blue-700 border border-blue-200' },
+    draft: { label: 'Draft', className: 'bg-slate-600/10 text-muted-foreground' },
+    scheduled: { label: 'Scheduled', className: 'bg-yellow-600/10 text-secondary-fg' },
+    sent: { label: 'Sent', className: 'bg-blue-600/10 text-primary' },
 };
 
 /*
     NEWSLETTER SUBSCRIBER
 */
+export type Subscriber = {
+    id: number;
+    email: string;
+    status: string;
+    createdAt: string;
+}
+
 export const subscriberStatus = {
     subscribed: 'Subscribed',
     unsubscribed: 'Unsubscribed',
 } as const;
 export type SubscriberStatus = (typeof subscriberStatus)[keyof typeof subscriberStatus];
+
 export const subscriberStatusMeta: Record<string, { label: string; className: string }> = {
-    subscribed: { label: 'Subscribed', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    unsubscribed: { label: 'Unsubscribed', className: 'bg-slate-100 text-slate-500 border border-slate-200' },
+    subscribed: { label: 'Subscribed', className: 'bg-green-600/10 text-green-700 px-2 p-1 rounded-md' },
+    unsubscribed: { label: 'Unsubscribed', className: 'bg-neutral-600/10 text-neutral-700 px-2 p-1 rounded-md' },
 };
 
 /*
@@ -338,6 +371,8 @@ export type Project = {
     salesOffice?: string | null;
     amenities?: ProjectAmenity[];
     landmarks?: unknown[];
+    createdAt?: string | null;
+    updatedAt?: string | null;
 };
 
 /** Project model from project_models table */
@@ -426,6 +461,8 @@ export type Reservation = {
     block: number;
     lot: number;
     status?: string;
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type Career = {
@@ -475,6 +512,11 @@ export const userRole = {
 } as const;
 export type UserRole = (typeof userRole)[keyof typeof userRole];
 
+export const userRoleMeta: Record<string, { label: string; className: string }> = {
+    admin: { label: 'Admin', className: 'bg-info/10 text-info' },
+    user: { label: 'User', className: 'bg-muted-foreground/10 text-muted-foreground' },
+};
+
 export const userStatus = {
     active: 'Active',
     disabled: 'Disabled',
@@ -483,14 +525,33 @@ export const userStatus = {
 } as const;
 export type UserStatus = (typeof userStatus)[keyof typeof userStatus];
 
-export const userRoleMeta: Record<string, { label: string; className: string }> = {
-    admin: { label: 'Admin', className: 'bg-blue-50 text-blue-700 border border-blue-200' },
-    user: { label: 'User', className: 'bg-gray-50 text-gray-700 border border-gray-200' },
-};
-
 export const userStatusMeta: Record<string, { label: string; className: string }> = {
     active: { label: 'Active', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
     disabled: { label: 'Disabled', className: 'bg-red-50 text-red-700 border border-red-200' },
     locked: { label: 'Locked', className: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
     inactive: { label: 'Inactive', className: 'bg-gray-50 text-gray-700 border border-gray-200' },
+};
+
+
+export type ActivityLogRecord = {
+    id: string;
+    userId: string;
+    activity: string;
+    ipAddress: string;
+    userAgent: string;
+    status: ActivityStatus;
+    createdAt: string;
+    userName?: string | null;
+    userEmail?: string | null;
+};
+
+export const activityStatus = {
+    success: 'Success',
+    error: 'Error',
+} as const;
+export type ActivityStatus = (typeof activityStatus)[keyof typeof activityStatus];
+
+export const activityStatusMeta: Record<string, { label: string; className: string }> = {
+    success: { label: 'Success', className: 'bg-success/10 text-success' },
+    error: { label: 'Error', className: 'bg-destructive/10 text-destructive' },
 };

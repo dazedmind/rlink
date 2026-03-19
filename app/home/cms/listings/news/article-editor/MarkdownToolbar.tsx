@@ -32,7 +32,7 @@ type MarkdownToolbarProps = {
 
 export default function MarkdownToolbar({ applyFormat }: MarkdownToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 rounded-lg border border-border bg-slate-50/50">
+    <div className="flex flex-wrap items-center gap-1 p-2 rounded-lg border border-border bg-accent">
       <div className="flex items-center gap-0.5 border-r border-border pr-2 mr-1">
         <Button
           type="button"

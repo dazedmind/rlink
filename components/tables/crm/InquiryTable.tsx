@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCallback, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { inquirySource, inquiryStatus, inquirySubject } from "@/lib/types";
+import { inquirySource, inquiryStatus, inquiryStatusMeta, inquirySubject } from "@/lib/types";
 import { qk } from "@/lib/query-keys";
 import {
   Table,
@@ -48,22 +48,9 @@ import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
-
+import { Inquiry } from "@/lib/types";
 const ITEMS_PER_PAGE = 10;
 
-type InquiryRow = {
-  id: number;
-  inquiryId?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-  source: string;
-  status: string;
-  createdAt: string;
-};
 
 function InquiryTable({
   table_name,
@@ -74,8 +61,8 @@ function InquiryTable({
 }) {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRow | null>(null);
-  const [deletingInquiry, setDeletingInquiry] = useState<InquiryRow | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [deletingInquiry, setDeletingInquiry] = useState<Inquiry | null>(null);
 
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSubject, setFilterSubject] = useState<string[]>([]);
@@ -136,7 +123,7 @@ function InquiryTable({
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: qk.inquiries() });
       const previous = queryClient.getQueryData(qk.inquiries(filters));
-      queryClient.setQueryData(qk.inquiries(filters), (old: { data: InquiryRow[]; total: number } | undefined) => {
+      queryClient.setQueryData(qk.inquiries(filters), (old: { data: Inquiry[]; total: number } | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -195,7 +182,7 @@ function InquiryTable({
     updateStatusMutation.mutate({ id, status: newStatus });
   };
 
-  const handleRowClick = (row: InquiryRow) => {
+  const handleRowClick = (row: Inquiry) => {
     setSelectedInquiry(row);
   };
 
@@ -210,7 +197,7 @@ function InquiryTable({
     try {
       const res = await fetch(buildUrl(1, 10000));
       const { data: rows } = await res.json();
-      const list: InquiryRow[] = rows ?? [];
+      const list: Inquiry[] = rows ?? [];
 
       const headers = [
         "Client Name", "Email", "Phone", "Subject", "Message", "Source", "Status", "Date",
@@ -246,7 +233,7 @@ function InquiryTable({
     }
   };
 
-  const actionMenu = (row: InquiryRow) => [
+  const actionMenu = (row: Inquiry) => [
     { label: "View Inquiry", icon: EyeIcon, onClick: () => handleRowClick(row) },
     {
       label: row.status === "read" ? "Mark as Unread" : "Mark as Read",
@@ -272,7 +259,7 @@ function InquiryTable({
         <div className="p-4 border-b">
           <h3 className="font-semibold text-xl">{table_name}</h3>
         </div>
-        <TableSkeleton columnCount={8} rowCount={10} />
+        <TableSkeleton columnCount={8} rowCount={10} recentViewOnly={recentViewOnly} />
       </div>
     );
   }
@@ -402,7 +389,6 @@ function InquiryTable({
           <Button
             variant="default"
             size="sm"
-            className="bg-blue-600 text-primary-foreground hover:brightness-110"
             onClick={handleExportCSV}
           >
             <Download className="size-4 mr-2" />
@@ -428,12 +414,12 @@ function InquiryTable({
         </TableHeader>
 
         <TableBody>
-          {inquiries.map((row: InquiryRow) => (
+          {inquiries.map((row: Inquiry) => (
             <TableRow
               key={row.id}
               onClick={() => handleRowClick(row)}
               className={`hover:bg-blue-600/10 group transition-colors cursor-pointer ${
-                row.status === "unread" ? "font-bold bg-sidebar" : ""
+                row.status === "unread" ? "font-bold bg-accent" : ""
               }`}
             >
               <TableCell className="px-6 py-4">
@@ -472,7 +458,7 @@ function InquiryTable({
               <TableCell className="px-6 py-4">
                 <span
                   className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-2 w-fit ${
-                    statusStyles[row.status as keyof typeof statusStyles]
+                    inquiryStatusMeta[row.status as keyof typeof inquiryStatus]?.className
                   }`}
                 >
                   {row.status === "read" ? (

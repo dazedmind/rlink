@@ -4,16 +4,18 @@ type BadgeStatusProps = {
 
 export function BadgeStatus({ status }: BadgeStatusProps) {
   const map: Record<string, string> = {
-    published: "bg-green-50 text-green-700",
-    active: "bg-green-50 text-green-700",
-    open: "bg-violet-50 text-violet-700",
-    draft: "bg-slate-100 text-slate-600",
-    scheduled: "bg-slate-100 text-slate-600",
-    closed: "bg-red-50 text-red-700",
+    published: "bg-success/10 text-success",
+    active: "bg-success/10 text-success",
+    open: "bg-warning/10 text-warning",
+    draft: "bg-foreground/10 text-muted-foreground",
+    scheduled: "bg-warning/10 text-warning",
+    closed: "bg-destructive/10 text-destructive",
+    archived: "bg-primary/10 text-primary",
+    hiring: "bg-success/10 text-success",
   };
-  const cls = map[status.toLowerCase()] ?? "bg-slate-100 text-slate-600";
+  const cls = map[status.toLowerCase()] ?? "bg-muted text-muted-foreground";
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize ${cls}`}>
+    <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${cls}`}>
       {status}
     </span>
   );

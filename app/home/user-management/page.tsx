@@ -67,10 +67,10 @@ function UserManagementNavContent({
                   <SidebarMenuButton
                     tooltip={item.title}
                     isActive={activeTab === item.url}
-                    className={`transition-all ${
+                    className={`transition-all cursor-pointer ${
                       activeTab === item.url
-                        ? "bg-white border border-border shadow-sm font-medium"
-                        : "hover:bg-neutral-200"
+                        ? "bg-sidebar-accent border border-border shadow-sm font-medium"
+                        : "hover:bg-sidebar-accent"
                     }`}
                     onClick={() => handleNavClick(item.url)}
                   >
@@ -96,11 +96,11 @@ export default function UserManagementSidebar() {
   }, {} as Record<string, typeof navItems>);
   
   return (
-    <SidebarProvider className="bg-neutral-100 min-w-0 overflow-x-hidden">
+    <SidebarProvider className="bg-accent-100 min-w-0 overflow-x-hidden">
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="bg-neutral-100 p-4 border-none"
+        className="bg-accent p-4 border-none"
       >
         <SidebarHeader className="py-4">
           <div className="flex flex-col items-start gap-3 px-2">
@@ -120,17 +120,17 @@ export default function UserManagementSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/home" className="flex items-center gap-2 text-blue-600 hover:opacity-80 transition-opacity">
-                <span className="bg-neutral-200 p-2 rounded-full">
+                <span className="flex items-center p-2 gap-2">
                   <HiOutlineSquares2X2 className="size-6" />
+                  <p className="text-sm font-medium">Back to RLink</p>
                 </span>
-                <span className="text-sm font-medium">Back to RLink</span>
               </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-neutral-100 min-w-0 overflow-x-hidden">
+      <SidebarInset className="bg-accent min-w-0 overflow-x-hidden">
         {/* Mobile menu bar - visible only on small screens */}
         <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">

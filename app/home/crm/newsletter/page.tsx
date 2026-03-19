@@ -80,7 +80,7 @@ function Newsletter() {
   }, [fetchSubscriberStats, fetchCampaigns, currentPage]);
 
   return (
-    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
+    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-background">
       {showCompose && (
         <ComposerModal
           isOpen={showCompose}
@@ -115,12 +115,12 @@ function Newsletter() {
 
           {/* Tab Bar + Actions */}
           <div className="flex items-center justify-between flex-wrap gap-3 animate-fade-in-up">
-            <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+            <div className="flex bg-accent rounded-lg p-1 gap-1">
               {(["subscribers", "campaigns"] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === tab ? "bg-white shadow text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${activeTab === tab ? "bg-primary text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {tab === "campaigns" ? <Megaphone size={16} /> : <User size={16}/>}
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -130,7 +130,7 @@ function Newsletter() {
             <div className="flex gap-2">
               <Button
                 onClick={() => { setComposerMode("create"); setComposerCampaign(null); setShowCompose(true); }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
               >
                 <PlusCircle size={16} />
                 New Campaign

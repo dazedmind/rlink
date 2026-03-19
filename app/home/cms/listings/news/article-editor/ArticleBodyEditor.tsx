@@ -53,17 +53,17 @@ export default function ArticleBodyEditor({
       <div className="flex items-center justify-between">
         <div>
           <Label className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
-            Article Body <span className="text-red-500">*</span>
+            Article Body <span className="text-destructive">*</span>
           </Label>
         </div>
-        <div className="flex bg-[#F2F2F7] rounded-[10px] p-1 gap-1">
+        <div className="flex bg-accent rounded-[10px] p-1 gap-1">
           <button
             type="button"
             onClick={() => setMdTab("write")}
-            className={`px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all duration-150 ${
+            className={`px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all duration-150 cursor-pointer ${
               mdTab === "write"
                 ? "bg-primary text-white shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
-                : "text-[#8E8E93] hover:text-[#1C1C1E]"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Write
@@ -71,10 +71,10 @@ export default function ArticleBodyEditor({
           <button
             type="button"
             onClick={() => setMdTab("preview")}
-            className={`px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all duration-150 ${
+            className={`px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all duration-150 cursor-pointer ${
               mdTab === "preview"
                 ? "bg-primary text-white shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
-                : "text-[#8E8E93] hover:text-[#1C1C1E]"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Preview

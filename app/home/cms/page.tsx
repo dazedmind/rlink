@@ -127,10 +127,10 @@ function CmsNavContent({
                         tooltip={item.title}
                         isActive={activeTab === item.url}
                         onClick={() => handleNavClick(item.url)}
-                        className={`transition-all ${
+                        className={`transition-all cursor-pointer ${
                           activeTab === item.url
                             ? "bg-white border border-border shadow-sm font-medium"
-                            : "hover:bg-neutral-200"
+                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         }`}
                       >
                         <item.icon className="size-5" />
@@ -151,7 +151,7 @@ function CmsNavContent({
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           tooltip={item.title}
-                          className="hover:bg-neutral-200"
+                          className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
                         >
                           <item.icon className="size-5" />
                           <span>{item.title}</span>
@@ -167,7 +167,7 @@ function CmsNavContent({
                                 isActive={activeTab === subItem.url}
                                 className={activeTab === subItem.url ? "font-bold text-blue-600" : ""}
                               >
-                                <button onClick={() => handleNavClick(subItem.url)}>
+                                <button onClick={() => handleNavClick(subItem.url)} className="cursor-pointer">
                                   <span className={activeTab === subItem.url ? "font-bold text-blue-800" : ""}>{subItem.title}</span>
                                 </button>
                               </SidebarMenuSubButton>
@@ -216,11 +216,11 @@ export default function CmsSidebar() {
   const hasDevToolsAccess = canAccessDeveloperTools(session?.user?.role, session?.user?.department);
 
   return (
-    <SidebarProvider className="bg-neutral-100 min-w-0 overflow-x-hidden">
+    <SidebarProvider className="bg-accent min-w-0 overflow-x-hidden">
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="bg-neutral-100 p-4 border-none"
+        className="bg-accent p-4 border-none"
       >
         <SidebarHeader className="py-4">
           <div className="flex flex-col items-start gap-3 px-2">
@@ -239,17 +239,17 @@ export default function CmsSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
                 <Link href="/home" className="flex items-center gap-2 text-blue-600 ">
-                  <span className="bg-neutral-200 p-2 rounded-full">
-                    <HiOutlineSquares2X2 className="size-6 " />
+                  <span className="flex items-center p-2 gap-2">
+                    <HiOutlineSquares2X2 className="size-6" />
+                    <p className="text-sm font-medium">Back to RLink</p>
                   </span>
-                  <span className="text-sm ">Back to RLink</span>
                 </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-neutral-100 min-w-0 overflow-x-hidden">
+      <SidebarInset className="bg-accent min-w-0 overflow-x-hidden">
         {/* Mobile menu bar - visible only on small screens */}
         <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">

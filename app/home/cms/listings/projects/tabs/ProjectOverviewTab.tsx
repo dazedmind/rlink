@@ -31,7 +31,7 @@ const ACCENT_COLORS = [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+    <Label className="text-xs font-semibold text-primary uppercase tracking-wide">
       {children}
     </Label>
   );
@@ -120,7 +120,7 @@ function LandmarksByCategoryInput({
                 onKeyDown={(e) =>
                   e.key === "Enter" && (e.preventDefault(), addToCategory())
                 }
-                className="h-10 flex-1 rounded-md border border-border bg-transparent px-4 text-sm outline-none focus-visible:border-ring"
+                className="h-10 flex-1 rounded-md border border-border bg-input/30 px-4 text-sm outline-none focus-visible:border-ring"
               />
               <Button type="button" variant="outline" size="lg" onClick={addToCategory}>
                 <Plus size={14} className="mr-1" />
@@ -277,8 +277,8 @@ export default function ProjectOverviewTab({
             </span>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Project Code *</SectionLabel>
                 <TextInput
+                  label="Project Code"
                   name="projectCode"
                   type="text"
                   placeholder="e.g. AR"
@@ -289,8 +289,8 @@ export default function ProjectOverviewTab({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Type *</SectionLabel>
                 <DropSelect
+                  label="Type"
                   selectName="type"
                   selectId="type"
                   value={form.type}
@@ -298,7 +298,7 @@ export default function ProjectOverviewTab({
                     setForm((p) => ({ ...p, type: e.target.value }))
                   }
                 >
-                  <option value="">Select type</option>
+                  <option value="" disabled>Select type</option>
                   {Object.entries(projectType).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -308,8 +308,8 @@ export default function ProjectOverviewTab({
               </div>
             </div>
             <div className="flex flex-col gap-1.5 mt-4">
-              <SectionLabel>Project Name *</SectionLabel>
               <TextInput
+                label="Project Name"
                 name="projectName"
                 type="text"
                 placeholder="e.g. Arcoe Residence"
@@ -324,8 +324,8 @@ export default function ProjectOverviewTab({
               />
             </div>
             <div className="flex flex-col gap-1.5 mt-4">
-              <SectionLabel>Slug *</SectionLabel>
               <TextInput
+                label="Slug"
                 name="slug"
                 type="text"
                 placeholder="e.g. arcoe-residence"
@@ -340,8 +340,8 @@ export default function ProjectOverviewTab({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Status</SectionLabel>
                 <DropSelect
+                  label="Status"
                   selectName="status"
                   selectId="status"
                   value={form.status}
@@ -349,7 +349,7 @@ export default function ProjectOverviewTab({
                     setForm((p) => ({ ...p, status: e.target.value }))
                   }
                 >
-                  <option value="">Select status</option>
+                  <option value="" disabled>Select status</option>
                   {Object.entries(projectStatus).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -358,8 +358,8 @@ export default function ProjectOverviewTab({
                 </DropSelect>
               </div>
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Stage</SectionLabel>
                 <DropSelect
+                  label="Stage"
                   selectName="stage"
                   selectId="stage"
                   value={form.stage}
@@ -367,7 +367,7 @@ export default function ProjectOverviewTab({
                     setForm((p) => ({ ...p, stage: e.target.value }))
                   }
                 >
-                  <option value="">Select stage</option>
+                  <option value="" disabled>Select stage</option>
                   {Object.entries(projectStage).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
@@ -388,8 +388,8 @@ export default function ProjectOverviewTab({
             </span>
             <div className="flex flex-col gap-4 mt-4">
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Location</SectionLabel>
                 <TextInput
+                  label="Project Location"
                   name="location"
                   type="text"
                   placeholder="e.g. Cebu City"
@@ -400,8 +400,8 @@ export default function ProjectOverviewTab({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Full Address</SectionLabel>
                 <TextInput
+                  label="Project Address"
                   name="address"
                   type="text"
                   placeholder="Street, barangay, city"
@@ -413,8 +413,8 @@ export default function ProjectOverviewTab({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <SectionLabel>DHSUD Number</SectionLabel>
                   <TextInput
+                    label="DHSUD Number"
                     name="dhsudNumber"
                     type="text"
                     placeholder="DHSUD permit number"
@@ -440,8 +440,8 @@ export default function ProjectOverviewTab({
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <SectionLabel>Sales Office</SectionLabel>
                 <TextInput
+                  label="Sales Office"
                   name="salesOffice"
                   type="text"
                   placeholder="Sales office location"

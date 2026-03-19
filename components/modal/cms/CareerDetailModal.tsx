@@ -10,13 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { MapPin } from "lucide-react";
-import { Career } from "@/lib/types";
-
-const careerStatus = {
-  hiring: "Hiring",
-  closed: "Closed",
-  archived: "Archived",
-} as const;
+import { Career, careerStatus } from "@/lib/types";
+import { careerStatusMeta } from "@/lib/types";
 
 export default function CareerDetailModal({
     career,
@@ -49,8 +44,8 @@ export default function CareerDetailModal({
                     <MapPin size={11} /> {career.location}
                   </span>
                   <span className="text-muted-foreground">·</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${career.status === careerStatus.hiring.toLowerCase() ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : career.status === careerStatus.closed.toLowerCase() ? "bg-slate-100 text-slate-600 border border-slate-200" : "bg-red-50 text-red-400 border border-red-100"}`}>
-                    {careerStatus[career.status as keyof typeof careerStatus]}
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${careerStatusMeta[career.status as keyof typeof careerStatus]?.className}`}>
+                    {careerStatusMeta[career.status as keyof typeof careerStatus]?.label}
                   </span>
                 </div>
               </div>

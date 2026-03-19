@@ -38,17 +38,17 @@ function Inventory() {
   });
 
   const { data: reservationData, isLoading: loadingReservations } = useQuery({
-    queryKey: qk.reservations({ limit: "1000" }),
+    queryKey: qk.reservations(),
     queryFn: async () => {
-      const res = await fetch("/api/reservation?limit=1000");
+      const res = await fetch("/api/reservation");
       const json = await res.json();
-      return Array.isArray(json?.data) ? json.data : [];
+      return json.data ?? [];
     },
   });
 
   const projects: Project[] = projectsData ?? [];
   const inventory: InventoryItem[] = inventoryData ?? [];
-  const reservation: Reservation[] = reservationData ?? [];
+  const reservations: Reservation[] = reservationData ?? [];
 
   const loading = loadingProjects || loadingInventory || loadingReservations;
 
@@ -56,7 +56,7 @@ function Inventory() {
     ? inventory.filter((inv) => String(inv.projectId) === String(selectedProject.id))
     : [];
 
-  const allReservations = reservation;
+  const allReservations = reservations;
 
   const getProjectLogo = (project: Project) => {
     const code = project.projectCode?.toLowerCase().slice(0, 2) ?? "";
@@ -65,7 +65,7 @@ function Inventory() {
 
   if (selectedProject) {
     return (
-      <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
+      <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-background">
         <div className="mx-auto p-8">
           <DashboardHeader
             title="Inventory"
@@ -75,7 +75,7 @@ function Inventory() {
             <ProjectDetailsView
               project={selectedProject}
               inventory={projectInventory}
-              reservation={allReservations}
+              reservations={allReservations}
               onBack={() => setSelectedProject(null)}
             />
           </div>
@@ -85,7 +85,7 @@ function Inventory() {
   }
 
   return (
-    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-white">
+    <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-background">
       <div className="mx-auto p-8">
         <DashboardHeader
           title="Inventory"
@@ -102,7 +102,7 @@ function Inventory() {
                   key={project.id}
                   type="button"
                   onClick={() => setSelectedProject(project)}
-                  className="flex items-center justify-center hover:scale-95 transition-all duration-300 cursor-pointer h-auto aspect-video rounded-xl border bg-white shadow-sm hover:shadow-md hover:border-primary/30"
+                  className="flex items-center justify-center hover:scale-95 transition-all duration-300 cursor-pointer h-auto aspect-video rounded-xl border bg-card/30 shadow-sm hover:shadow-md "
                 >
                   <Image
                     src={project.logoUrl ?? getProjectLogo(project)}

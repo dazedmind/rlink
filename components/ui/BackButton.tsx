@@ -18,7 +18,7 @@ function BackButton({
         onClick={onClick}
         size="icon"
         variant="ghost"
-        className="flex items-center gap-2 border border-primary/20 bg-slate-100 hover:bg-primary hover:text-white rounded-full text-primary font-medium w-fit transition-all duration-300 ease-in-out p-1"
+        className="flex items-center gap-2 border border-primary/20 bg-accent hover:bg-primary hover:text-white rounded-full text-primary font-medium w-fit transition-all duration-300 ease-in-out p-1"
       >
         <ChevronLeft className="size-6" />
       </Button>

@@ -131,7 +131,7 @@ function PrivacyTabContent() {
                 />
 
                 {/* Password Strength Meter */}
-                <div className="h-1.5 w-full bg-neutral-100 rounded-full mt-2 overflow-hidden">
+                <div className="h-1.5 w-full bg-muted rounded-full my-4 overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-300 ${strengthColor()}`} 
                     style={{ width: `${(metCount / requirements.length) * 100}%` }}

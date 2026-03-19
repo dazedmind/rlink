@@ -185,16 +185,16 @@ export default function CareerFormModal({
         </DialogHeader>
 
         {/* Tab bar */}
-        <div className="flex bg-[#F2F2F7] rounded-[10px] p-1 gap-1 shrink-0">
+        <div className="flex bg-accent rounded-[10px] p-1 gap-1 shrink-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-1.5 rounded-[8px] text-[13px] font-medium transition-all duration-150 ${
+              className={`flex-1 px-4 py-1.5 rounded-[8px] text-[13px] font-medium transition-all duration-150 cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
-                  : "text-[#8E8E93] hover:text-[#1C1C1E]"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.label}

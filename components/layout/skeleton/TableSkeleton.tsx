@@ -13,39 +13,29 @@ type TableSkeletonProps = {
   columnCount?: number;
   /** Number of skeleton rows */
   rowCount?: number;
-  /** Show Filter + Export buttons in header */
-  showHeaderActions?: boolean;
   /** Show pagination footer */
   showFooter?: boolean;
+  /** Show only 5 rows for recent view */
+  recentViewOnly?: boolean;
 };
 
 export default function TableSkeleton({
   columnCount = 8,
-  rowCount = 10,
-  showHeaderActions = true,
   showFooter = true,
+  recentViewOnly = false,
 }: TableSkeletonProps) {
-  return (
-    <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="p-4 border-b bg-white flex justify-between items-center">
-        <Skeleton className="h-6 w-48 rounded-md" />
-        {showHeaderActions && (
-          <span className="flex items-center gap-2">
-            <Skeleton className="h-9 w-24 rounded-md" />
-            <Skeleton className="h-9 w-32 rounded-md" />
-          </span>
-        )}
-      </div>
 
+  const rowCount = recentViewOnly ? 3 : 10;
+  return (
+    <div className="overflow-x-auto scrollbar-hide animate-in slide-in-from-bottom-4 duration-500">
       {/* Table */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columnCount }).map((_, i) => (
               <TableHead
                 key={i}
-                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
               >
                 <Skeleton className="h-4 w-16 rounded-md" />
               </TableHead>
@@ -81,7 +71,7 @@ export default function TableSkeleton({
 
       {/* Footer */}
       {showFooter && (
-        <div className="flex justify-between items-center bg-white px-6 py-4 border-t">
+        <div className="flex justify-between items-center bg-background px-6 py-4 border-t">
           <Skeleton className="h-4 w-32 rounded-md" />
           <div className="flex items-center gap-2">
             <Skeleton className="h-4 w-24 rounded-md" />

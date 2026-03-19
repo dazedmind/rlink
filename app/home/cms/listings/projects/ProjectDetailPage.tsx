@@ -340,7 +340,7 @@ export default function ProjectDetailPage({
 
   if (isLoading) {
     return (
-      <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-white">
+      <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-background">
         <div className="mx-auto p-8 max-w-full flex items-center justify-center min-h-[300px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
@@ -350,7 +350,7 @@ export default function ProjectDetailPage({
 
   if (!project && !isCreateMode) {
     return (
-      <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-white">
+      <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-background">
         <div className="mx-auto p-8 max-w-full">
           <p className="text-muted-foreground">Project not found.</p>
           <Button variant="outline" onClick={onBack} className="mt-4">
@@ -368,7 +368,7 @@ export default function ProjectDetailPage({
     : `Edit ${project?.projectName} details and contents.`;
 
   return (
-    <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-white">
+    <main className="flex-1 min-w-0 overflow-auto m-4 border-border border rounded-xl bg-background">
       <div className="mx-auto p-8 max-w-full">
         <span className="flex items-center gap-4 mb-6">
           <BackButton href="/home/cms/listings/projects" mainPageName="Projects" onClick={onBack} />
@@ -380,7 +380,7 @@ export default function ProjectDetailPage({
           </div>
         </span>
         {!isCreateMode && (
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-start md:justify-start bg-[#F2F2F7] rounded-[10px] p-2 gap-1 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-start md:justify-start bg-accent rounded-[10px] p-2 gap-1 mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -389,7 +389,7 @@ export default function ProjectDetailPage({
                 className={`flex-1 w-full md:w-auto min-w-[80px] px-2 py-1.5 rounded-[8px] text-sm font-medium transition-all cursor-pointer ${
                   currentTab === tab.id
                     ? "bg-primary text-white"
-                    : "text-[#8E8E93] hover:text-[#1C1C1E]"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span className="flex items-center gap-2 justify-center">

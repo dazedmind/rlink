@@ -109,7 +109,7 @@ export function LeadDetailModal({
         className="max-w-3xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] overflow-y-auto p-0 scrollbar-hide border-none" 
         showCloseButton={false}
       >
-        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b sticky top-0 bg-white z-10 sm:text-left">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b sticky top-0 bg-background z-10 sm:text-left">
           <div>
             <DialogTitle className="text-xl sm:text-2xl font-bold">
               Lead Details
@@ -124,7 +124,7 @@ export function LeadDetailModal({
           {/* CLIENT INFORMATION */}
           <section className="space-y-4 sm:space-y-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-800 whitespace-nowrap shrink-0">
+              <h1 className="text-lg sm:text-xl font-bold text-primary whitespace-nowrap shrink-0">
                 Client Information
               </h1>
               <Separator className="flex-1" />
@@ -190,7 +190,7 @@ export function LeadDetailModal({
           {/* LEAD DETAILS */}
           <section className="space-y-4 sm:space-y-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-800 whitespace-nowrap shrink-0">
+              <h1 className="text-lg sm:text-xl font-bold text-primary whitespace-nowrap shrink-0">
                 Lead Details
               </h1>
               <Separator className="flex-1" />
@@ -253,7 +253,7 @@ export function LeadDetailModal({
             </div>
 
             <Field className="space-y-2">
-              <Label htmlFor="notes" className="text-xs uppercase text-gray-500 flex items-center gap-2">
+              <Label htmlFor="notes" className="text-xs uppercase text-primary flex items-center gap-2">
                 <StickyNote className="size-4" />
                 Notes
               </Label>
@@ -261,14 +261,14 @@ export function LeadDetailModal({
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="bg-slate-50 border-border text-sm resize-none p-3 rounded-lg w-full h-[100px]"
+                className="bg-card/30 border-border text-sm resize-none p-3 rounded-lg w-full h-[100px]"
                 placeholder="Add additional notes..."
               />
             </Field>
           </section>
         </div>
 
-        <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 border-t sticky bottom-0 bg-white z-10 flex-row justify-end gap-2">
+        <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 border-t sticky bottom-0 bg-background z-10 flex-row justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

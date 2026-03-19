@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
-import { ReservationStatus, reservationStatus } from "@/lib/types";
+import { ReservationStatus, reservationStatus, reservationStatusMeta } from "@/lib/types";
 import { qk } from "@/lib/query-keys";
 import {
   Table,
@@ -59,16 +59,6 @@ type Reservation = {
   projectName: string;
   block: number;
   lot: number;
-};
-
-const statusStyles: Record<string, string> = {
-  pending: "bg-blue-100 text-blue-700",
-  reserved: "bg-green-100 text-green-700",
-  conditional: "bg-yellow-100 text-yellow-700",
-  cancelled: "bg-red-100 text-red-700",
-  rejected: "bg-red-100 text-red-700",
-  expired: "bg-neutral-100 text-neutral-700",
-  refunded: "bg-purple-100 text-purple-700",
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -267,7 +257,7 @@ function ReservationTable({
         <div className="p-4 border-b bg-background">
           <h3 className="font-semibold text-xl">{table_name}</h3>
         </div>
-        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} />
+        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} recentViewOnly={recentViewOnly} />
       </div>
     );
   }
@@ -400,12 +390,10 @@ function ReservationTable({
 
               <TableCell className="px-6 py-4">
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[row.status]}`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${reservationStatusMeta[row.status as keyof typeof reservationStatus]?.className}`}
                 >
                   {
-                    reservationStatus[
-                      row.status as keyof typeof reservationStatus
-                    ]
+                    reservationStatusMeta[row.status as keyof typeof reservationStatus]?.label
                   }
                 </span>
               </TableCell>

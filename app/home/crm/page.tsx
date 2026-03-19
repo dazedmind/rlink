@@ -76,10 +76,10 @@ function CrmNavContent({
                   <SidebarMenuButton
                     tooltip={item.title}
                     isActive={activeTab === item.url}
-                    className={`transition-all ${
+                    className={`transition-all cursor-pointer ${
                       activeTab === item.url
-                        ? "bg-white border border-border shadow-sm font-medium"
-                        : "hover:bg-neutral-200"
+                        ? "bg-sidebar-accent border border-border shadow-sm font-medium"
+                        : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     }`}
                     onClick={() => handleNavClick(item.url)}
                   >
@@ -131,10 +131,10 @@ export default function CrmSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/home" className="flex items-center gap-2 text-blue-600 hover:opacity-80 transition-opacity">
-                <span className="bg-sidebar p-2 rounded-full">
+                <span className="flex items-center p-2 gap-2">
                   <HiOutlineSquares2X2 className="size-6" />
+                  <p className="text-sm font-medium">Back to RLink</p>
                 </span>
-                <span className="text-sm font-medium">Back to RLink</span>
               </Link>
             </SidebarMenuItem>
           </SidebarMenu>

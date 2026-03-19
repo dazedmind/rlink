@@ -35,7 +35,7 @@ export default function ContextMenu({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-slate-100"
+          className="h-8 w-8 hover:bg-accent"
         >
           <TriggerIcon size={16} />
           <span className="sr-only">Open menu</span>
@@ -51,7 +51,7 @@ export default function ContextMenu({
               <DropdownMenuItem
                 disabled={item.disabled}
                 className={cn(
-                  "gap-2 cursor-pointer focus:bg-slate-50",
+                  "gap-2 cursor-pointer focus:bg-accent",
                   item.color, // Applies custom colors like text-red-500
                 )}
                 onClick={(e) => {
@@ -59,7 +59,7 @@ export default function ContextMenu({
                   item.onClick();
                 }}
               >
-                {Icon && <Icon size={14} className="shrink-0" />}
+                {Icon && <Icon size={14} className={cn(item.color, "shrink-0")} />}
                 <span className="flex-1">{item.label}</span>
               </DropdownMenuItem>
             </div>

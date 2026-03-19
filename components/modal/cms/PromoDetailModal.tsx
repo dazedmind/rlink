@@ -25,11 +25,6 @@ export default function PromoDetailModal({
 }) {
   if (!promo) return null;
 
-  const meta = promoStatusMeta[promo.status] ?? {
-    label: promo.status,
-    className: "bg-slate-100 text-slate-600 border border-slate-200",
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-xl max-h-[90vh] flex flex-col">
@@ -39,9 +34,9 @@ export default function PromoDetailModal({
               <DialogTitle className="text-lg">{promo.title}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${meta.className}`}
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${promoStatusMeta[promo.status]?.className}`}
                 >
-                  {meta.label}
+                  {promoStatusMeta[promo.status as keyof typeof promoStatusMeta]?.label}
                 </span>
                 {promo.startDate && (
                   <span className="text-xs text-muted-foreground">
@@ -57,7 +52,7 @@ export default function PromoDetailModal({
         </DialogHeader>
 
         {promo.imageUrl && (
-          <div className="rounded-lg overflow-hidden border border-border h-48 bg-slate-50">
+          <div className="rounded-lg overflow-hidden h-48 bg-accent">
             <img
               src={promo.imageUrl}
               alt=""

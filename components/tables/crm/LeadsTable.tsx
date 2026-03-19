@@ -20,6 +20,7 @@ import {
   type LeadStatus,
   leadNextAction,
   type LeadNextAction,
+  leadStatusMeta,
 } from "@/lib/types";
 import { leadStage, type LeadStage } from "@/lib/types";
 import { qk } from "@/lib/query-keys";
@@ -189,16 +190,6 @@ function LeadsTable({
       : columns;
   }, [recentViewOnly]);
 
-  const statusStyles: Record<string, string> = {
-    open: "bg-blue-100 text-blue-700",
-    ongoing: "bg-purple-100 text-purple-700",
-    follow_up: "bg-yellow-100 text-yellow-700",
-    no_response: "bg-neutral-100 text-neutral-700",
-    ineligible: "bg-neutral-100 text-neutral-700",
-    won: "bg-green-100 text-green-700",
-    lost: "bg-red-100 text-red-700",
-  };
-
   const handleRowClick = (row: Lead) => {
     setSelectedLead(row);
     setIsModalOpen(true);
@@ -278,7 +269,7 @@ function LeadsTable({
         <div className="p-4 border-b">
           <h3 className="font-semibold text-xl">{table_name}</h3>
         </div>
-        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} />
+        <TableSkeleton columnCount={visibleColumns.length} rowCount={10} recentViewOnly={recentViewOnly} />
       </div>
     );
   }
@@ -385,7 +376,7 @@ function LeadsTable({
           <Button
             variant="default"
             size="sm"
-            className="bg-blue-600 text-primary-foreground hover:brightness-110"
+            className="bg-blue-600 text-white hover:brightness-110"
             onClick={handleExportCSV}
           >
             <Download className="size-4 mr-2" />
@@ -416,7 +407,7 @@ function LeadsTable({
               </TableCell>
 
               <TableCell className="px-6 py-4">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[row.status]}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${leadStatusMeta[row.status as keyof typeof leadStatus]?.className}`}>
                   {leadStatus[row.status as keyof typeof leadStatus]}
                 </span>
               </TableCell>

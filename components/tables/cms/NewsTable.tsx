@@ -102,24 +102,24 @@ export default function NewsTable({
   const actionMenu = (row: Article) => [
     { label: "View",   icon: Eye, onClick: () => onView(row) },
     { label: "Edit",   icon: Pencil,   onClick: () => onEdit(row) },
-    { label: "Delete", icon: Trash2,   color: "text-red-600", separator: true, onClick: () => onDelete(row) },
+    { label: "Delete", icon: Trash2,   color: "text-destructive", separator: true, onClick: () => onDelete(row) },
   ];
 
   if (isLoading) {
     return (
       <div className="border border-border rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
           <div className="h-9 w-48 rounded-md bg-muted animate-pulse" />
           <div className="h-9 w-32 rounded-md bg-muted animate-pulse" />
         </div>
-        <TableSkeleton columnCount={4} rowCount={5} showHeaderActions={false} showFooter={false} />
+        <TableSkeleton columnCount={4} rowCount={5} showFooter={false} />
       </div>
     );
   }
 
   return (
     <div className="border border-border rounded-xl overflow-hidden animate-fade-in-up">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -150,7 +150,7 @@ export default function NewsTable({
                 <>
                   <DropdownMenuSeparator />
                   <button
-                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded"
                     onClick={clearFilters}
                   >
                     <X className="size-3" /> Clear all filters
@@ -183,12 +183,12 @@ export default function NewsTable({
       </div>
 
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-background">
           <TableRow>
             {["Headline", "Type", "Published", ""].map((col, i) => (
               <TableHead
                 key={i}
-                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
               >
                 {col}
               </TableHead>
@@ -202,7 +202,7 @@ export default function NewsTable({
               <TableCell colSpan={4} className="px-6 py-16 text-center text-sm text-muted-foreground">
                 No articles found.{" "}
                 {activeFilterCount > 0 && (
-                  <button className="text-primary underline ml-1" onClick={clearFilters}>
+                  <button className="text-primary underline ml-1 cursor-pointer" onClick={clearFilters}>
                     Clear filters
                   </button>
                 )}
@@ -212,7 +212,7 @@ export default function NewsTable({
             articles.map((row: Article) => (
               <TableRow
                 key={row.id}
-                className="hover:bg-gray-50/50 cursor-pointer"
+                className="hover:bg-background/50 cursor-pointer"
                 onClick={() => onView(row)}
               >
                 <TableCell className="px-6 py-4">
@@ -232,7 +232,7 @@ export default function NewsTable({
                         height={200}
                       />
                     ) : (
-                      <div className="w-40 h-24 rounded-md bg-neutral-100 border border-border flex items-center justify-center shrink-0">
+                      <div className="w-40 h-24 rounded-md bg-accent flex items-center justify-center shrink-0">
                         <ImageIcon className="size-4 text-muted-foreground/50" />
                       </div>
                     )}
@@ -244,7 +244,7 @@ export default function NewsTable({
                 </TableCell>
 
                 <TableCell className="px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs uppercase font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs uppercase font-medium bg-background/10 text-muted-foreground border border-border">
                     {row.type}
                   </span>
                 </TableCell>
@@ -265,8 +265,8 @@ export default function NewsTable({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {activeFilterCount > 0 ? `${total} matching articles` : `${total} articles total`}
         </p>
 
@@ -286,7 +286,7 @@ export default function NewsTable({
                   key={pageNum}
                   variant={currentPage === pageNum ? "default" : "ghost"}
                   size="sm"
-                  className={currentPage === pageNum ? "bg-blue-600 min-w-8" : "min-w-8"}
+                  className={currentPage === pageNum ? "bg-primary min-w-8" : "min-w-8"}
                   onClick={() => setCurrentPage(pageNum)}
                 >
                   {pageNum}

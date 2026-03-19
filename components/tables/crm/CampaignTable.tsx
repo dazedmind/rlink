@@ -1,5 +1,7 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import {
@@ -51,21 +53,14 @@ type CampaignTableProps = {
 };
 
 function CampaignTable({ onOpenComposer }: CampaignTableProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Filter state
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
   const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const activeFilterCount = filterStatus.length;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  // Build API URL from current state
   const buildUrl = useCallback(
     (page: number, limit = ITEMS_PER_PAGE) => {
       const params = new URLSearchParams({
@@ -78,73 +73,77 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
     },
     [filterStatus, sortOption],
   );
-  
-  const fetchCampaigns = useCallback(async (page: number) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(buildUrl(page), { credentials: "include" });
-      const { data, total: responseTotal } = await response.json();
-      setCampaigns(data ?? []);
-      setTotal(responseTotal ?? 0);
-    } catch (error) {
-      console.error("Error fetching campaigns:", error);
-      setCampaigns([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [buildUrl]);
 
-  useEffect(() => {
-    fetchCampaigns(currentPage);
-  }, [currentPage, fetchCampaigns]);
+  const filters = { page: currentPage, limit: ITEMS_PER_PAGE, sort: sortOption, status: filterStatus.join(",") };
 
-  const handleDelete = useCallback(async (id: number) => {
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/newsletter/campaigns/${id}`, {
+  const { data, isLoading } = useQuery({
+    queryKey: qk.newsletterCampaigns(filters),
+    queryFn: async () => {
+      const res = await fetch(buildUrl(currentPage), { credentials: "include" });
+      const json = await res.json();
+      return { data: json.data ?? [], total: json.total ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  const campaigns = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/newsletter/campaigns/${id}`, {
         method: "DELETE",
         credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to delete");
+      }).then((r) => {
+        if (!r.ok) throw new Error("Failed to delete campaign");
+        return r.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.newsletterCampaigns() });
       toast.success("Campaign deleted");
       setDeletingCampaign(null);
-      fetchCampaigns(currentPage);
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete campaign");
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [currentPage, fetchCampaigns]);
+    },
+  });
 
-  const handleSendNow = useCallback(async (row: Campaign) => {
-    try {
-      const res = await fetch(`/api/newsletter/campaigns/${row.id}/send`, {
+  const sendMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/newsletter/campaigns/${id}/send`, {
         method: "POST",
         credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to send");
+      }).then((r) => {
+        if (!r.ok) throw new Error("Failed to send campaign");
+        return r.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.newsletterCampaigns() });
       toast.success("Campaign sent successfully");
-      fetchCampaigns(currentPage);
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to send campaign");
-    }
-  }, [currentPage, fetchCampaigns]);
+    },
+  });
 
-  const buildActionMenu = useCallback((row: Campaign) => {
-    const items: { label: string; icon: typeof SendHorizontal; onClick: () => void; separator?: boolean; color?: string }[] = [];
-    if (row.status !== "sent") {
-      items.push({ label: "Send Now", icon: SendHorizontal, onClick: () => handleSendNow(row) },
-      { label: "Edit Campaign", icon: Pencil, onClick: () => onOpenComposer?.("edit", row) },);
-    }
-    items.push(
-      { label: "View Campaign", icon: Eye, onClick: () => onOpenComposer?.("view", row) },
-      { label: "Delete", icon: Trash2, color: "text-red-600 focus:text-red-600 focus:bg-red-50", onClick: () => setDeletingCampaign(row), separator: true }
-    );
-    return items;
-  }, [handleSendNow, handleDelete, onOpenComposer]);
+  const buildActionMenu = useCallback(
+    (row: Campaign) => {
+      const items: { label: string; icon: typeof SendHorizontal; onClick: () => void; separator?: boolean; color?: string }[] = [];
+      if (row.status !== "sent") {
+        items.push(
+          { label: "Send Now", icon: SendHorizontal, onClick: () => sendMutation.mutate(row.id) },
+          { label: "Edit Campaign", icon: Pencil, onClick: () => onOpenComposer?.("edit", row) },
+        );
+      }
+      items.push(
+        { label: "View Campaign", icon: Eye, onClick: () => onOpenComposer?.("view", row) },
+        { label: "Delete", icon: Trash2, color: "text-red-600 focus:text-red-600 focus:bg-red-50", onClick: () => setDeletingCampaign(row), separator: true },
+      );
+      return items;
+    },
+    [sendMutation, onOpenComposer],
+  );
 
   const toggleFilter = (
     value: string,
@@ -156,18 +155,24 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
         ? current.filter((v) => v !== value)
         : [...current, value],
     );
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
     setFilterStatus([]);
     setSortOption("newest");
+    setCurrentPage(1);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingCampaign) deleteMutation.mutate(deletingCampaign.id);
   };
 
 
   return (
     <div className="overflow-x-auto scrollbar-hide border rounded-xl animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="p-4 border-b bg-white flex justify-between items-center">
+      <div className="p-4 border-b bg-background flex justify-between items-center">
         <h3 className="font-semibold text-xl">Campaigns List</h3>
 
         <DropdownMenu>
@@ -192,7 +197,10 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup
                   value={sortOption}
-                  onValueChange={setSortOption}
+                  onValueChange={(v) => {
+                    setSortOption(v);
+                    setCurrentPage(1);
+                  }}
                 >
                   <DropdownMenuRadioItem value="newest">Date: Newest first</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="oldest">Date: Oldest first</DropdownMenuRadioItem>
@@ -245,13 +253,13 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
 
       {/* Table */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-accent">
           <TableRow>
             {["Campaign", "Status", "Recipients", "Open Rate", "Click Rate", "Date", "Sent", ""].map(
               (label, i) => (
                 <TableHead
                   key={i}
-                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-gray-600"
+                  className="px-6 py-4 font-semibold uppercase text-[11px] tracking-wider text-muted-foreground"
                 >
                   {label}
                 </TableHead>
@@ -261,11 +269,30 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
         </TableHeader>
 
         <TableBody>
-          {campaigns.map((row) => (
-            <TableRow key={row.id} className="hover:bg-gray-50/50">
+          {isLoading ? (
+            <>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <TableCell key={j} className="px-6 py-4">
+                      <div className="h-4 w-20 rounded-md bg-muted animate-pulse" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </>
+          ) : campaigns.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                No campaigns found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            campaigns.map((row: Campaign) => (
+            <TableRow key={row.id} className="hover:bg-accent/50">
               <TableCell className="px-6 py-4">
                 <p className="font-medium text-sm">{row.name}</p>
-                <p className="text-xs text-gray-500">{row.subject}</p>
+                <p className="text-xs text-muted-foreground">{row.subject}</p>
               </TableCell>
 
               <TableCell className="px-6 py-4">
@@ -285,14 +312,14 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
 
               <TableCell className="px-6 py-4 min-w-[100px]">
                 <span className="text-sm">{row.openRate ? `${row.openRate}%` : "—"}</span>
-                <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
+                <div className="w-full h-1 bg-muted rounded-full mt-1">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${row.openRate}%` }} />
                 </div>
               </TableCell>
 
               <TableCell className="px-6 py-4 min-w-[100px]">
                 <span className="text-sm">{row.clickRate ? `${row.clickRate}%` : "—"}</span>
-                <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
+                <div className="w-full h-1 bg-muted rounded-full mt-1">
                   <div className="h-full bg-purple-500 rounded-full" style={{ width: `${row.clickRate}%` }} />
                 </div>
               </TableCell>
@@ -316,13 +343,13 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
                 />
               </TableCell>
             </TableRow>
-          ))}
+          )))}
         </TableBody>
       </Table>
 
          {/* Footer — count + pagination */}
-         <div className="flex items-center justify-between px-6 py-4 border-t bg-white">
-        <p className="text-sm text-gray-600">
+         <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <p className="text-sm text-muted-foreground">
           {activeFilterCount > 0
             ? `${total} matching campaigns`
             : `${total} campaigns total`}
@@ -334,9 +361,9 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft size={16} />
+                disabled={currentPage === 1}
+              >
+                <ArrowLeft size={16} />
             </Button>
 
             <div className="flex items-center gap-1">
@@ -368,9 +395,9 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
       <DeleteConfirmModal
         isOpen={deletingCampaign !== null}
         onClose={() => setDeletingCampaign(null)}
-        onConfirm={() => deletingCampaign && handleDelete(deletingCampaign.id)}
+        onConfirm={handleConfirmDelete}
         itemName={deletingCampaign?.name ?? ""}
-        isDeleting={isDeleting}
+        isDeleting={deleteMutation.isPending}
         title="Delete Campaign"
         confirmLabel="Delete Campaign"
       />

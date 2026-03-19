@@ -53,13 +53,13 @@ function TagInput({
           {values.map((v, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200"
+              className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-accent text-muted-foreground text-xs font-medium border border-border"
             >
               {v}
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="hover:text-red-500 transition-colors cursor-pointer bg-primary/10 hover:bg-destructive/10 p-0.5 rounded-full"
+                className="hover:text-destructive transition-colors cursor-pointer bg-primary/10 hover:bg-destructive/10 p-0.5 rounded-full"
               >
                 <X size={10} />
               </button>
@@ -196,7 +196,7 @@ export default function ArticleMetadataSidebar({
 
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Publish Date <span className="text-red-500">*</span>
+            Publish Date <span className="text-destructive">*</span>
           </Label>
           <Popover open={schedulePopoverOpen} onOpenChange={setSchedulePopoverOpen}>
             <PopoverTrigger className="w-full text-start flex items-center justify-between" asChild>
@@ -210,7 +210,7 @@ export default function ArticleMetadataSidebar({
                     })()}
                   </span>
                 ) : (
-                  <div className="flex items-center text-neutral-500 gap-2">
+                  <div className="flex items-center text-muted-foreground gap-2">
                     <CalendarIcon size={14} />
                     <p>Select Publish Date</p>
                   </div>
@@ -233,7 +233,7 @@ export default function ArticleMetadataSidebar({
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => setSchedulePopoverOpen(false)}>
                     Cancel
                   </Button>
-                  <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={handleConfirmSchedule}>
+                  <Button variant="default" size="sm" className="flex-1" onClick={handleConfirmSchedule}>
                     Confirm
                   </Button>
                 </div>
