@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { campaigns } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
 /**
  * POST /api/newsletter/campaigns/[id]/send
@@ -15,13 +15,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const limitResult = rateLimit(request, { maxRequests: 10, windowMs: 60_000 });
-  if (!limitResult.success) {
-    return NextResponse.json(
-      { error: limitResult.error },
-      { status: 429, headers: { "Retry-After": String(limitResult.retryAfter) } }
-    );
-  }
+  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 30);
 
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;

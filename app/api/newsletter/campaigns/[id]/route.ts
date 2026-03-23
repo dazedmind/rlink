@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { campaigns } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
 const MAX_NAME_LENGTH = 200;
 const MAX_SUBJECT_LENGTH = 300;
@@ -24,6 +24,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 100);
+
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
 
@@ -51,16 +54,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
-  if (!limitResult.success) {
-    return NextResponse.json(
-      { error: limitResult.error },
-      {
-        status: 429,
-        headers: { "Retry-After": String(limitResult.retryAfter) },
-      }
-    );
-  }
+  const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 60);
 
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
@@ -166,16 +161,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const limitResult = rateLimit(request, { maxRequests: 20, windowMs: 60_000 });
-  if (!limitResult.success) {
-    return NextResponse.json(
-      { error: limitResult.error },
-      {
-        status: 429,
-        headers: { "Retry-After": String(limitResult.retryAfter) },
-      }
-    );
-  }
+  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 30);
 
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;

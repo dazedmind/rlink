@@ -1,12 +1,12 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { projectModels } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { projectModels, projectInventory } from "@/db/schema";
+import { eq, asc, inArray, and } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
-/** Replace all models for a project. */
+/** Replace all models for a project. Uses upsert: update existing, insert new, delete only models with no inventory. */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,17 +18,59 @@ export async function PATCH(
   if (authResult.error) return authResult.error;
 
   try {
-    const { id } = await params;
+    const { id: projectId } = await params;
     const body = await request.json();
     const models = Array.isArray(body.models) ? body.models : [];
 
-    await db.delete(projectModels).where(eq(projectModels.projectId, id));
+    const existingModels = await db
+      .select({ id: projectModels.id })
+      .from(projectModels)
+      .where(eq(projectModels.projectId, projectId));
+
+    const inventoryRefs = await db
+      .select({ modelId: projectInventory.modelId })
+      .from(projectInventory)
+      .where(eq(projectInventory.projectId, projectId));
+    const modelIdsInUse = new Set(inventoryRefs.map((r) => r.modelId));
+
+    const incomingIds = new Set(
+      models
+        .map((m: { id: string }) => m.id)
+        .filter((v: string) => typeof v === "string" && v.length > 0),
+    );
+
+    const toDelete = existingModels.filter(
+      (em) => !incomingIds.has(em.id) && !modelIdsInUse.has(em.id),
+    );
+    const cannotDelete = existingModels.filter(
+      (em) => !incomingIds.has(em.id) && modelIdsInUse.has(em.id),
+    );
+
+    if (cannotDelete.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Cannot remove model(s) that have inventory units. Remove or reassign inventory first.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (toDelete.length > 0) {
+      await db.delete(projectModels).where(
+        inArray(projectModels.id, toDelete.map((d) => d.id)),
+      );
+    }
 
     for (const m of models) {
-      const modelId = crypto.randomUUID();
-      await db.insert(projectModels).values({
-        id: modelId,
-        projectId: id,
+      const existingId =
+        typeof m.id === "string" && m.id.length > 0 ? m.id : null;
+      const belongsToProject =
+        existingId &&
+        existingModels.some((em) => em.id === existingId);
+
+      const payload = {
+        projectId,
         modelName: String(m.modelName ?? "").trim(),
         description: m.description?.trim() || null,
         bathroom: Number(m.bathroom ?? 0),
@@ -40,7 +82,25 @@ export async function PATCH(
         floorArea: Number(m.floorArea ?? 0),
         lotClass: String(m.lotClass ?? "").trim() || "Standard",
         photoUrl: m.photoUrl?.trim() || null,
-      } as unknown as typeof projectModels.$inferInsert);
+      };
+
+      if (existingId && belongsToProject) {
+        await db
+          .update(projectModels)
+          .set(payload)
+          .where(
+            and(
+              eq(projectModels.id, existingId),
+              eq(projectModels.projectId, projectId),
+            ),
+          );
+      } else {
+        const modelId = crypto.randomUUID();
+        await db.insert(projectModels).values({
+          id: modelId,
+          ...payload,
+        } as unknown as typeof projectModels.$inferInsert);
+      }
     }
 
     revalidatePath("/home");

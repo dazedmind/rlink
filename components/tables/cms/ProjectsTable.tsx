@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ContextMenu from "@/components/layout/ContextMenu";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import {
@@ -123,6 +124,8 @@ export default function ProjectsTable({
     setFilterStatus([]);
     setFilterStage([]);
     setFilterType([]);
+    setSortOption("newest");
+    setCurrentPage(1);
   };
 
   const toggleFilter = (
@@ -132,6 +135,7 @@ export default function ProjectsTable({
     setter((prev) =>
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
+    setCurrentPage(1);
   };
 
   const actionMenu = (row: Project) => [
@@ -162,20 +166,55 @@ export default function ProjectsTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ListFilter size={14} />
+              <Button variant="outline" size="sm" className="relative">
+                <ListFilter className="size-4 mr-2" />
                 Filter
                 {activeFilterCount > 0 && (
-                  <span className="ml-1 rounded-full bg-primary text-white text-[10px] px-1.5 py-0.5">
+                  <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
                     {activeFilterCount}
-                  </span>
+                  </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  <ArrowUpDown className="size-3.5" /> Sort
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={sortOption}
+                    onValueChange={(v) => {
+                      setSortOption(v);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="newest">
+                      Date: Newest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">
+                      Date: Oldest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_asc">
+                      Name: A → Z
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_desc">
+                      Name: Z → A
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Status
+                  {filterStatus.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStatus.length}
+                    </Badge>
+                  )}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {Object.entries(projectStatus).map(([key, label]) => (
@@ -183,6 +222,7 @@ export default function ProjectsTable({
                       key={key}
                       checked={filterStatus.includes(key)}
                       onCheckedChange={() => toggleFilter(setFilterStatus, key)}
+                      onSelect={(e) => e.preventDefault()}
                     >
                       {label}
                     </DropdownMenuCheckboxItem>
@@ -190,8 +230,13 @@ export default function ProjectsTable({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Stage
+                  {filterStage.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStage.length}
+                    </Badge>
+                  )}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {Object.entries(projectStage).map(([key, label]) => (
@@ -199,6 +244,7 @@ export default function ProjectsTable({
                       key={key}
                       checked={filterStage.includes(key)}
                       onCheckedChange={() => toggleFilter(setFilterStage, key)}
+                      onSelect={(e) => e.preventDefault()}
                     >
                       {label}
                     </DropdownMenuCheckboxItem>
@@ -206,8 +252,13 @@ export default function ProjectsTable({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
                   Type
+                  {filterType.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterType.length}
+                    </Badge>
+                  )}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {Object.entries(projectType).map(([key, label]) => (
@@ -215,6 +266,7 @@ export default function ProjectsTable({
                       key={key}
                       checked={filterType.includes(key)}
                       onCheckedChange={() => toggleFilter(setFilterType, key)}
+                      onSelect={(e) => e.preventDefault()}
                     >
                       {label}
                     </DropdownMenuCheckboxItem>
@@ -232,23 +284,6 @@ export default function ProjectsTable({
                   </button>
                 </>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ArrowUpDown size={14} />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuRadioGroup value={sortOption} onValueChange={setSortOption}>
-                <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="name_asc">Name A–Z</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="name_desc">Name Z–A</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -315,7 +350,7 @@ export default function ProjectsTable({
                         className="rounded-md w-full h- aspect-video object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-auto bg-accent rounded-md w-full aspect-video object-cover">
+                      <div className="flex items-center justify-center h-auto bg-accent border border-border rounded-md w-full aspect-video object-cover">
                         <ImageIcon className="size-6 text-muted-foreground" />
                       </div>
                     )}

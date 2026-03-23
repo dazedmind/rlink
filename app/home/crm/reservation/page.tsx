@@ -6,7 +6,13 @@ import { PlusCircle, Table } from "lucide-react";
 import ReservationTable from "@/components/tables/crm/ReservationTable";
 import { ReservationForm } from "@/components/layout/forms/ReservationForm";
 
-function Reservation() {
+function Reservation({
+  prefill,
+  onPrefillClear,
+}: {
+  prefill?: { projectName: string; block: number; lot: number } | null;
+  onPrefillClear?: () => void;
+}) {
   const [view, setView] = useState<"form" | "table">("form");
 
   return (
@@ -37,7 +43,13 @@ function Reservation() {
         </div>
 
         {view === "form" ? (
-          <ReservationForm onComplete={() => setView("table")} />
+          <ReservationForm
+            onComplete={() => {
+              setView("table");
+              onPrefillClear?.();
+            }}
+            initialPrefill={prefill}
+          />
         ) : (
           <ReservationTable
             table_name="Reservations Table"

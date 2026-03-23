@@ -13,6 +13,7 @@ import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { ExternalLink } from "lucide-react";
 import type { Promo } from "@/lib/types";
 import { promoStatusMeta } from "@/lib/types";
+import Image from "next/image";
 
 export default function PromoDetailModal({
   promo,
@@ -27,7 +28,7 @@ export default function PromoDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl w-[calc(100%-2rem)] md:w-full flex flex-col">
         <DialogHeader className="shrink-0">
           <div className="flex items-start justify-between gap-4 pr-6">
             <div>
@@ -51,17 +52,20 @@ export default function PromoDetailModal({
           </div>
         </DialogHeader>
 
-        {promo.imageUrl && (
-          <div className="rounded-lg overflow-hidden h-48 bg-accent">
-            <img
-              src={promo.imageUrl}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
 
-        <div className="flex-1 overflow-y-auto py-2 scrollbar-hide flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto py-2 scrollbar-hide flex flex-col sm:flex-row gap-4">
+          {promo.imageUrl && (
+            <div className="rounded-lg aspect-square overflow-hidden bg-accent">
+              <Image
+                src={promo.imageUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                width={500}
+                height={500}
+              />
+            </div>
+          )}
+
           {promo.description && (
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

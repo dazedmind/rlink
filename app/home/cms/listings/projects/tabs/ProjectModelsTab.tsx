@@ -118,7 +118,7 @@ export default function ProjectModelsTab({
             <TableBody>
               {models.map((model, index) => (
                 <TableRow key={model.id}>
-                  <TableCell>
+                  <TableCell className="px-6 py-4">
                     {model.photoUrl ? (
                       <div className="relative aspect-square w-30 rounded-md overflow-hidden bg-muted shrink-0">
                         <Image
@@ -126,7 +126,7 @@ export default function ProjectModelsTab({
                           alt={model.modelName}
                           width={200}
                           height={200}
-                          className="object-cover"
+                          className="object-cover aspect-square"
                         />
                       </div>
                     ) : (

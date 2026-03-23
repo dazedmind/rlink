@@ -15,12 +15,13 @@ import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
 import { promoStatus, type Promo } from "@/lib/types";
+import { FileUpload } from "@/components/ui/FileUpload";
+import TextAreaField from "@/components/ui/TextAreaField";
 
 type FormData = {
   title: string;
   description: string;
   imageUrl: string;
-  linkUrl: string;
   status: string;
   startDate: string;
   endDate: string;
@@ -30,7 +31,6 @@ const EMPTY_FORM: FormData = {
   title: "",
   description: "",
   imageUrl: "",
-  linkUrl: "",
   status: "draft",
   startDate: "",
   endDate: "",
@@ -38,7 +38,7 @@ const EMPTY_FORM: FormData = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+    <Label className="text-xs font-medium text-primary uppercase tracking-wide">
       {children}
     </Label>
   );
@@ -65,7 +65,6 @@ export default function PromoFormModal({
         title: promo.title ?? "",
         description: promo.description ?? "",
         imageUrl: promo.imageUrl ?? "",
-        linkUrl: promo.linkUrl ?? "",
         status: promo.status ?? "draft",
         startDate: promo.startDate
           ? new Date(promo.startDate).toISOString().slice(0, 16)
@@ -108,7 +107,6 @@ export default function PromoFormModal({
           title: form.title.trim(),
           description: form.description.trim() || null,
           imageUrl: form.imageUrl.trim() || null,
-          linkUrl: form.linkUrl.trim() || null,
           status: form.status,
           startDate: form.startDate ? new Date(form.startDate).toISOString() : null,
           endDate: form.endDate ? new Date(form.endDate).toISOString() : null,
@@ -144,99 +142,79 @@ export default function PromoFormModal({
 
         <div className="flex-1 overflow-y-auto py-2 pr-0.5 scrollbar-hide flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <FieldLabel>
-              Title <span className="text-red-500">*</span>
-            </FieldLabel>
+            <FileUpload
+              label="PROMO BANNER"
+              value={form.imageUrl}
+              onChange={(url) => handleInputChange({ target: { name: "imageUrl", value: url } } as React.ChangeEvent<HTMLInputElement>)}
+            />
+          </div>
+          
+          <div className="flex flex-col gap-1.5">
             <TextInput
+              label="Promo Name"
               name="title"
               type="text"
               placeholder="Promo title..."
               value={form.title}
               onChange={handleInputChange}
+              required
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <FieldLabel>Description</FieldLabel>
-            <Textarea
+            <TextAreaField
+              label="Description"
               name="description"
               placeholder="Promo description..."
               value={form.description}
               onChange={handleInputChange}
-              className="min-h-20 resize-none"
+              className="min-h-30 resize-none"
+              required
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Image URL</FieldLabel>
-            <TextInput
-              name="imageUrl"
-              type="url"
-              placeholder="https://..."
-              value={form.imageUrl}
-              onChange={handleInputChange}
-            />
-            {form.imageUrl && (
-              <div className="mt-1 rounded-lg overflow-hidden border border-border h-28 bg-slate-50">
-                <img
-                  src={form.imageUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Link URL</FieldLabel>
-            <TextInput
-              name="linkUrl"
-              type="url"
-              placeholder="https://..."
-              value={form.linkUrl}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Status</FieldLabel>
-            <DropSelect
-              selectName="status"
-              selectId="status"
-              value={form.status}
-              onChange={(e) => handleSelectChange("status", e.target.value)}
-            >
-              {Object.entries(promoStatus).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </DropSelect>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>Start Date</FieldLabel>
+              <FieldLabel>
+                <p className="text-xs font-medium text-primary uppercase tracking-wide">Start Date <span className="text-red-500">*</span></p>
+              </FieldLabel>
               <input
-                type="datetime-local"
+                type="date"
                 name="startDate"
                 value={form.startDate}
                 onChange={handleInputChange}
                 className="h-10 w-full rounded-md border border-border bg-transparent px-3 text-sm outline-none focus-visible:border-ring"
               />
             </div>
+           
             <div className="flex flex-col gap-1.5">
-              <FieldLabel>End Date</FieldLabel>
+              <FieldLabel>
+                <p className="text-xs font-medium text-primary uppercase tracking-wide">End Date <span className="text-red-500">*</span></p>
+              </FieldLabel>
               <input
-                type="datetime-local"
+                type="date"
                 name="endDate"
                 value={form.endDate}
                 onChange={handleInputChange}
                 className="h-10 w-full rounded-md border border-border bg-transparent px-3 text-sm outline-none focus-visible:border-ring"
               />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <DropSelect
+                label="Status"
+                selectName="status"
+                selectId="status"
+                value={form.status}
+                onChange={(e) => handleSelectChange("status", e.target.value)}
+              >
+                <option value="" disabled>Select Status</option>
+                {Object.entries(promoStatus).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </DropSelect>
             </div>
           </div>
         </div>

@@ -380,7 +380,6 @@ export const promos = pgTable('promos', {
   title:       text('title').notNull(),
   description: text('description'),
   imageUrl:    text('image_url'),
-  linkUrl:     text('link_url'),
   status:      text('status').notNull().default('draft'),
   startDate:   timestamp('start_date'),
   endDate:     timestamp('end_date'),
@@ -469,7 +468,6 @@ export const activityLogs = pgTable('activity_logs', {
 /**
  * Notifications
  */
-
 export const notifications = pgTable('notifications', {
   id:        serial('id').primaryKey(),
   title:     text('title').notNull(),

@@ -67,11 +67,11 @@ function PersonalInfoTabContent() {
             </CardDescription>
             <Separator />
           </CardHeader>
-          <CardContent className="flex flex-col xl:flex-row items-start gap-6 space-y-6">
+          <CardContent className="flex flex-col xl:flex-row items-start gap-12 space-y-6">
             {/* PROFILE PHOTO SECTION */}
-            <div className="flex flex-row items-center gap-6 p-4 rounded-xl border-neutral-300 w-full xl:w-fit">
+            <div className="flex flex-row items-center bg-card/50 border border-border p-6 gap-6 rounded-xl w-full xl:w-fit">
               <div className="relative group size-20">
-                <div className="size-full rounded-full aspect-square bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                <div className="size-full rounded-full aspect-square bg-background flex items-center justify-center overflow-hidden shadow-sm">
                   {session?.user.image ? (
                     <img
                       src={session.user.image}
@@ -79,7 +79,7 @@ function PersonalInfoTabContent() {
                       className="object-cover"
                     />
                   ) : (
-                    <User className="size-10 text-neutral-400" />
+                    <User className="size-10 text-muted-foreground" />
                   )}
                 </div>
                 <button className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center cursor-pointer">
@@ -94,7 +94,7 @@ function PersonalInfoTabContent() {
               </div>
             </div>
 
-            {/* INFORMATION */}
+            {/* INFORMATION SECTION */}
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 w-full">
               <span className="col-span-2">
                 <h1 className="text-lg font-bold">Company Information</h1>
@@ -177,17 +177,6 @@ function PersonalInfoTabContent() {
                 <h1 className="text-lg font-bold">Other Information</h1>
                 <Separator className="my-2" />
               </span>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  placeholder="Enter Phone Number"
-                  onChange={handleInputChange}
-                />
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 
-const ALLOWED_SECTIONS = ["seo", "analytics", "security"] as const;
+const ALLOWED_SECTIONS = ["seo", "analytics", "security", "social-links", "module-access"] as const;
 type SectionId = (typeof ALLOWED_SECTIONS)[number];
 
 function canAccessDeveloperTools(session: { user: { role?: string | null; department?: string | null } }) {
@@ -15,21 +15,36 @@ function canAccessDeveloperTools(session: { user: { role?: string | null; depart
   return role === "admin" || role === "it" || dept === "it";
 }
 
+function canAccessSocialLinks(session: { user: { role?: string | null; department?: string | null } }) {
+  const role = session.user.role?.toLowerCase() ?? "";
+  return role === "user";
+}
+
+function canAccessSection(
+  session: { user: { role?: string | null; department?: string | null } },
+  section: SectionId | null,
+) {
+  if (canAccessDeveloperTools(session)) return true;
+  if (section === "social-links" && canAccessSocialLinks(session)) return true;
+  return false;
+}
+
 export async function GET(request: NextRequest) {
   const limitResult = rateLimit(request, { maxRequests: 100, windowMs: 60_000 });
   if (!limitResult.success) return rateLimit429(limitResult, 100);
 
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
-  if (!canAccessDeveloperTools(authResult.session!)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   try {
     const { searchParams } = request.nextUrl;
     const section = searchParams.get("section") as SectionId | null;
     if (section && !ALLOWED_SECTIONS.includes(section)) {
       return NextResponse.json({ error: "Invalid section" }, { status: 400 });
+    }
+    // module-access: any authenticated user can read (used by home page)
+    if (section !== "module-access" && !canAccessSection(authResult.session!, section)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const rows = section
@@ -48,20 +63,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
-  if (!limitResult.success) return rateLimit429(limitResult, 30);
+  const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 60);
 
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
-  if (!canAccessDeveloperTools(authResult.session!)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   try {
     const body = await request.json();
     const { section, value } = body as { section: SectionId; value: Record<string, unknown> };
     if (!section || !ALLOWED_SECTIONS.includes(section)) {
       return NextResponse.json({ error: "Invalid section" }, { status: 400 });
+    }
+    if (!canAccessSection(authResult.session!, section)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await db

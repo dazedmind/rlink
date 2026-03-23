@@ -19,8 +19,12 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import ContextMenu from "@/components/layout/ContextMenu";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
@@ -37,7 +41,7 @@ import {
   MapPin,
   Eye,
 } from "lucide-react";
-import { Career, careerStatus, careerStatusMeta } from "@/lib/types";
+import { Career, careerStatus, careerStatusMeta, department } from "@/lib/types";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 
 const ITEMS_PER_PAGE = 10;
@@ -58,8 +62,8 @@ export default function CareersTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("newest");
-
-  const activeFilterCount = filterStatus.length;
+  const [filterDepartment, setFilterDepartment] = useState<string[]>([]);
+  const activeFilterCount = filterStatus.length + filterDepartment.length;
 
   const buildUrl = useCallback(
     (page: number) => {
@@ -69,12 +73,13 @@ export default function CareersTable({
         sort: sortOption,
       });
       if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
+      if (filterDepartment.length > 0) params.set("department", filterDepartment.join(","));
       return `/api/careers?${params}`;
     },
-    [filterStatus, sortOption]
+    [filterStatus, filterDepartment, sortOption]
   );
 
-  const filters = { page: currentPage, sort: sortOption, status: filterStatus.join(",") };
+  const filters = { page: currentPage, sort: sortOption, status: filterStatus.join(","), department: filterDepartment.join(",") };
 
   const { data, isLoading } = useQuery({
     queryKey: qk.careers(filters),
@@ -93,12 +98,26 @@ export default function CareersTable({
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const clearFilters = () => setFilterStatus([]);
+  const clearFilters = () => {
+    setFilterStatus([]);
+    setFilterDepartment([]);
+    setSortOption("newest");
+    setCurrentPage(1);
+  };
 
-  const toggleFilter = (value: string) =>
+  const toggleStatusFilter = (value: string) => {
     setFilterStatus((prev) =>
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
+    setCurrentPage(1);
+  };
+
+  const toggleDepartmentFilter = (value: string) => {
+    setFilterDepartment((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+    setCurrentPage(1);
+  };
 
   const actionMenu = (row: Career) => [
     { label: "View", icon: Eye, onClick: () => onView(row) },
@@ -130,57 +149,104 @@ export default function CareersTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ListFilter size={14} />
+              <Button variant="outline" size="sm" className="relative">
+                <ListFilter className="size-4 mr-2" />
                 Filter
                 {activeFilterCount > 0 && (
-                  <span className="ml-1 rounded-full bg-primary text-white text-[10px] px-1.5 py-0.5">
+                  <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
                     {activeFilterCount}
-                  </span>
+                  </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Status
-              </p>
-              {Object.values(careerStatus).map((opt) => (
-                <DropdownMenuCheckboxItem
-                  key={opt}
-                  checked={filterStatus.includes(opt)}
-                  onCheckedChange={() => toggleFilter(opt)}
-                >
-                  {opt}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  <ArrowUpDown className="size-3.5" /> Sort
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={sortOption}
+                    onValueChange={(v) => {
+                      setSortOption(v);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="newest">
+                      Date: Newest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">
+                      Date: Oldest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_asc">
+                      Position: A → Z
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name_desc">
+                      Position: Z → A
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  Status
+                  {filterStatus.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStatus.length}
+                    </Badge>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.values(careerStatus).map((opt) => (
+                    <DropdownMenuCheckboxItem
+                      key={opt}
+                      checked={filterStatus.includes(opt)}
+                      onCheckedChange={() => toggleStatusFilter(opt)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {opt}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  Department
+                  {filterDepartment.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterDepartment.length}
+                    </Badge>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.entries(department).map(([key, label]) => (
+                    <DropdownMenuCheckboxItem
+                      key={key}
+                      checked={filterDepartment.includes(key)}
+                      onCheckedChange={() => toggleDepartmentFilter(key)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
               {activeFilterCount > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <button
-                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
                     onClick={clearFilters}
                   >
                     <X className="size-3" /> Clear all filters
                   </button>
                 </>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ArrowUpDown size={14} />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuRadioGroup value={sortOption} onValueChange={setSortOption}>
-                <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="name_asc">Position A–Z</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="name_desc">Position Z–A</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

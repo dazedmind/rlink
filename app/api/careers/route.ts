@@ -5,7 +5,7 @@ import { careers } from "@/db/schema";
 import { and, asc, count, desc, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
-import { Department } from "@/lib/types";
+import { Department, department } from "@/lib/types";
 import { nameToSlug } from "@/app/utils/nameToSlug";
 
 export async function GET(request: NextRequest) {
@@ -23,11 +23,18 @@ export async function GET(request: NextRequest) {
 
     const statusParam = searchParams.get("status");
     const statusValues = statusParam ? statusParam.split(",").filter(Boolean) : [];
+    const departmentParam = searchParams.get("department");
+    const departmentValues = departmentParam
+      ? departmentParam.split(",").filter(Boolean)
+      : [];
     const sort = searchParams.get("sort") ?? "newest";
 
     const conditions: Parameters<typeof and>[0][] = [];
     if (statusValues.length > 0) {
       conditions.push(inArray(careers.status, statusValues as ("hiring" | "closed" | "archived")[]));
+    }
+    if (departmentValues.length > 0) {
+      conditions.push(inArray(careers.department, departmentValues as (keyof typeof department)[]));
     }
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

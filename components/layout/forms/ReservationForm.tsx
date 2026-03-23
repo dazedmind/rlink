@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Table } from "lucide-react";
 import {
   ReservationFormStep1,
@@ -32,11 +32,23 @@ const STEPS = [
 
 type Props = {
   onComplete?: () => void;
+  initialPrefill?: { projectName: string; block: number; lot: number } | null;
 };
 
-export function ReservationForm({ onComplete }: Props) {
+export function ReservationForm({ onComplete, initialPrefill }: Props) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<ReservationFormData>(EMPTY_FORM);
+
+  useEffect(() => {
+    if (initialPrefill && (initialPrefill.block > 0 || initialPrefill.lot > 0)) {
+      setFormData((prev) => ({
+        ...prev,
+        project: initialPrefill.projectName,
+        blockNumber: String(initialPrefill.block),
+        lotNumber: String(initialPrefill.lot),
+      }));
+    }
+  }, [initialPrefill]);
 
   const resetForm = () => {
     setFormData(EMPTY_FORM);

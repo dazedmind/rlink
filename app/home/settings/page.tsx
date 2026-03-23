@@ -62,7 +62,7 @@ function Settings() {
           <div className="flex gap-8 flex-col justify-between h-full">
             <div className="flex gap-8 flex-col h-full">
               {/* Mobile menu bar - visible only on small screens */}
-              <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 -mx-8 mb-4">
+              <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-accent px-4 py-3 -mx-8 mb-4">
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="size-9">
@@ -84,8 +84,8 @@ function Settings() {
                           }}
                           className={`flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
                             tab === item.value
-                              ? "bg-white shadow-sm text-blue-600 font-medium"
-                              : "hover:bg-neutral-100"
+                              ? "bg-accent shadow-sm text-blue-600 font-medium"
+                              : "hover:bg-accent/50"
                           }`}
                         >
                           <item.icon className="size-4" />

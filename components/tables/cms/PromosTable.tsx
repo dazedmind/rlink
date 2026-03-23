@@ -19,8 +19,12 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import ContextMenu from "@/components/layout/ContextMenu";
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
@@ -49,6 +53,10 @@ type PromosTableProps = {
   onDelete: (promo: Promo) => void;
   onView: (promo: Promo) => void;
   onAdd: () => void;
+};
+
+const truncateDescription = (description: string) => {
+  return description.length > 250 ? description.substring(0, 250) + "..." : description;
 };
 
 export default function PromosTable({
@@ -93,12 +101,18 @@ export default function PromosTable({
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const clearFilters = () => setFilterStatus([]);
+  const clearFilters = () => {
+    setFilterStatus([]);
+    setSortOption("newest");
+    setCurrentPage(1);
+  };
 
-  const toggleFilter = (value: string) =>
+  const toggleFilter = (value: string) => {
     setFilterStatus((prev) =>
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
+    setCurrentPage(1);
+  };
 
   const actionMenu = (row: Promo) => [
     { label: "View", icon: Tag, onClick: () => onView(row) },
@@ -130,55 +144,75 @@ export default function PromosTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ListFilter size={14} />
+              <Button variant="outline" size="sm" className="relative">
+                <ListFilter className="size-4 mr-2" />
                 Filter
                 {activeFilterCount > 0 && (
-                  <span className="ml-1 rounded-full bg-primary text-white text-[10px] px-1.5 py-0.5">
+                  <Badge className="ml-2 h-5 min-w-5 rounded-full bg-blue-600 px-1.5 text-[11px] text-white">
                     {activeFilterCount}
-                  </span>
+                  </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
-              <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Status
-              </p>
-              {Object.entries(promoStatus).map(([key, label]) => (
-                <DropdownMenuCheckboxItem
-                  key={key}
-                  checked={filterStatus.includes(key)}
-                  onCheckedChange={() => toggleFilter(key)}
-                >
-                  {label}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  <ArrowUpDown className="size-3.5" /> Sort
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={sortOption}
+                    onValueChange={(v) => {
+                      setSortOption(v);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="newest">
+                      Date: Newest first
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">
+                      Date: Oldest first
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 text-sm">
+                  Status
+                  {filterStatus.length > 0 && (
+                    <Badge className="ml-auto h-4 min-w-4 rounded-full bg-blue-600 px-1 text-[10px] text-white">
+                      {filterStatus.length}
+                    </Badge>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.entries(promoStatus).map(([key, label]) => (
+                    <DropdownMenuCheckboxItem
+                      key={key}
+                      checked={filterStatus.includes(key)}
+                      onCheckedChange={() => toggleFilter(key)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
               {activeFilterCount > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <button
-                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded"
                     onClick={clearFilters}
                   >
                     <X className="size-3" /> Clear all filters
                   </button>
                 </>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <ArrowUpDown size={14} />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuRadioGroup value={sortOption} onValueChange={setSortOption}>
-                <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -192,7 +226,7 @@ export default function PromosTable({
       <Table>
         <TableHeader className="bg-background">
           <TableRow>
-            {["Promo", "Status", "Start Date", "End Date", ""].map(
+            {["Promo", "Status", "Promo Period", ""].map(
               (col, i) => (
                 <TableHead
                   key={i}
@@ -232,7 +266,7 @@ export default function PromosTable({
               >
                 <TableCell className="px-6 py-4">
                   <div className="flex items-center gap-4">
-                    <span>
+                    <span className="shrink-0">
                       {row.imageUrl ? (
                         <Image
                           src={row.imageUrl}
@@ -242,18 +276,18 @@ export default function PromosTable({
                           height={100}
                         />
                       ) : (
-                        <div className="h-12 w-20 rounded-md bg-accent flex items-center justify-center">
+                        <div className="h-30 w-30 rounded-md bg-accent border border-border flex items-center justify-center">
                           <ImageIcon className="size-5 text-muted-foreground" />
                         </div>
                       )}
                     </span>
-                    <span>
+                    <span className="flex-1 w-xs">
                       <p className="font-bold text-lg line-clamp-2 max-w-xs">
                         {row.title}
                       </p>
                       {row.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 max-w-xs">
-                          {row.description}
+                        <p className="flex text-xs text-muted-foreground mt-0.5 line-clamp-1 text-wrap">
+                          {truncateDescription(row.description)}
                         </p>
                       )}
                     </span>
@@ -273,8 +307,7 @@ export default function PromosTable({
                   {row.startDate
                     ? shortDateFormatter(row.startDate)
                     : "—"}
-                </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                  {" - "}
                   {row.endDate
                     ? shortDateFormatter(row.endDate)
                     : "—"}

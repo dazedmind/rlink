@@ -272,6 +272,7 @@ export default function ProjectDetailPage({
     setSavingSection("models");
     try {
       const payload = models.map((m) => ({
+        id: m.id,
         modelName: m.modelName,
         description: m.description,
         bathroom: m.bathroom,

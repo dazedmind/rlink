@@ -186,11 +186,6 @@ function InquiryTable({
     setSelectedInquiry(row);
   };
 
-  const statusStyles: Record<string, string> = {
-    read: "bg-neutral-100 text-neutral-700 hover:bg-neutral-100",
-    unread: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  };
-
   const totalPages = recentViewOnly ? 1 : Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
   const handleExportCSV = async () => {

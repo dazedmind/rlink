@@ -16,7 +16,13 @@ const LOGO_MAP: Record<string, typeof arcoeResidenceLogo> = {
   ae: arcoeEstatesLogo,
 };
 
-function Inventory() {
+function Inventory({
+  setActiveTab,
+  onReserveSelect,
+}: {
+  setActiveTab?: (tab: string) => void;
+  onReserveSelect?: (projectName: string, block: number, lot: number) => void;
+}) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const { data: projectsData, isLoading: loadingProjects } = useQuery({
@@ -77,6 +83,12 @@ function Inventory() {
               inventory={projectInventory}
               reservations={allReservations}
               onBack={() => setSelectedProject(null)}
+              onReserve={
+                (projectName, block, lot) => {
+                  onReserveSelect?.(projectName, block, lot);
+                  setActiveTab?.("reservation");
+                }
+              }
             />
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   User, 
   Menu,
   Logs,
+  KeySquare,
 } from "lucide-react";
 
 import {
@@ -30,13 +31,17 @@ import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import UserManagementDashboard from "./dashboard/page";
 import ManageUsers from "./manage-users/page";
 import ActivityLogs from "./activity-logs/page";
+import ModuleAccess from "./module-access/page";
+import { useSession } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "User Management" },
-  { title: "Manage Users", icon: User, url: "manage-users", group: "User Management" },
-  { title: "Activity Logs", icon: Logs, url: "activity-logs", group: "User Management" },
+  { title: "Manage Users", icon: User, url: "manage-users", group: "Access Control" },
+  { title: "Module Access", icon: KeySquare, url: "module-access", group: "Access Control" },
+  { title: "Activity Logs", icon: Logs, url: "activity-logs", group: "Logs" },
 ];
-    
+
 function UserManagementNavContent({
   groupedNav,
   activeTab,
@@ -52,6 +57,11 @@ function UserManagementNavContent({
     setActiveTab(url);
     if (isMobile) setOpenMobile(false);
   };
+
+  const { data: session } = useSession();
+  if (session?.user?.role !== "admin" && session?.user?.department !== "it") {
+    redirect("/home");
+  }
 
   return (
     <>
@@ -143,6 +153,7 @@ export default function UserManagementSidebar() {
         {activeTab === "dashboard" && <UserManagementDashboard />}
         {activeTab === "manage-users" && <ManageUsers />}
         {activeTab === "activity-logs" && <ActivityLogs />}
+        {activeTab === "module-access" && <ModuleAccess />}
 
       </SidebarInset>
     </SidebarProvider>

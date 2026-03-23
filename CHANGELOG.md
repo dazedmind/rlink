@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.12] - 2026-03-23
+
+### Added
+- IAM: Added a Module Access for easier access management and future scalability
+- Security Headers: Added security headers and middlewares for system security
+
+### Fixed
+- Inventory: Computation and Reserve buttons on the Project Inventory Details View are now functional.
+- API: Resolved a PATCH bug where the record ID was being deleted instead of updated.
+
+### Changes
+- Inventory: Refactored the Project Inventory Details View codebase.
+- Tables: Unified sort and filter controls across all CMS and IAM tables.
+- Added Export to CSV button to the User tables
+- System: Minor UI polish on table layouts, spacing, font size. 
+
 ## [0.0.11] - 2026-03-18
 
 ### Fixed
@@ -15,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - IAM: Removed the conditional "Set New Password" input that was previously shown only for Google-authenticated users.
 
-### Changed
+### Changes
 - Tables: Added a delete confirmation dialog to all tables that support record deletion.
 - IAM User Form: Added input validation to the User Form Modal.
 - UX: Improved overall user experience with response caching, smooth animations, and skeleton loaders for async content.

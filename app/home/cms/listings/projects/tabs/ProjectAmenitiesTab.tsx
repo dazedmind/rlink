@@ -115,8 +115,7 @@ export default function ProjectAmenitiesTab({
                           <ImageIcon className="size-6 text-muted-foreground/50" />
                         </div>
                       )}
-
-                      <span className="text-lg">
+                      <span>
                         {amenity.name || (
                           <span className="text-muted-foreground italic">
                             Untitled

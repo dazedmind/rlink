@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, imageUrl, linkUrl, status, startDate, endDate } = body;
+    const { title, description, imageUrl, status, startDate, endDate } = body;
 
     if (!title?.trim()) {
       return NextResponse.json(
@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
         title: title.trim(),
         description: description?.trim() ?? null,
         imageUrl: imageUrl?.trim() ?? null,
-        linkUrl: linkUrl?.trim() ?? null,
         status: status?.trim() ?? "draft",
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,

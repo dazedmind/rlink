@@ -164,13 +164,14 @@ export function ReservationFormStep1({
               onSelect("lotNumber", "");
             }}
           >
-            <option value="">Select Project</option>
+            <option value="" disabled>Select Project</option>
             {projectsList.map((p: { id: string; projectName: string; projectCode: string }) => (
               <option key={p.id} value={p.projectName}>
                 {p.projectName} ({p.projectCode})
               </option>
             ))}
           </DropSelect>
+
           <span className="flex gap-2">
             <DropSelect
               label="Block"
@@ -182,7 +183,7 @@ export function ReservationFormStep1({
                 onSelect("lotNumber", "");
               }}
             >
-              <option value="">Select Block</option>
+              <option value="" disabled>Select Block</option>
               {uniqueBlocks.map((b) => (
                 <option key={String(b)} value={String(b)}>
                   {String(b)}
@@ -198,7 +199,7 @@ export function ReservationFormStep1({
                 onSelect("lotNumber", e.target.value)
               }
             >
-              <option value="">Select Lot</option>
+              <option value="" disabled>Select Lot</option>
               {uniqueLots.map((l) => {
                 const isReserved = reservedLots.some(
                   (inv: { lot: string }) => inv.lot === l,

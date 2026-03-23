@@ -65,11 +65,11 @@ export function InquiryDetailModal({
         <DialogHeader className="px-6 py-5 border-b sticky top-0 bg-background z-10">
           <div className="flex justify-between items-start w-full">
             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-bold tracking-tight text-info">
+              <DialogTitle className="text-2xl font-bold tracking-tight text-blue-600">
                 {inquirySubject[inquiry.subject as keyof typeof inquirySubject]}
               </DialogTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="bg-accent px-2 py-0.5 rounded font-mono font-bold text-info">
+                <span className="bg-accent px-2 py-0.5 rounded font-mono font-bold text-primary">
                   {inquiry.inquiryId ?? `IN-${inquiry.id}`}
                 </span>
                 <span>•</span>
@@ -115,7 +115,7 @@ export function InquiryDetailModal({
 
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground font-medium uppercase">Message Content</p>
-            <div className="bg-card/30 border rounded-xl p-4 min-h-[200px] leading-relaxed text-primary">
+            <div className="bg-card/30 border rounded-xl p-4 min-h-[200px] leading-relaxed text-foreground">
               {inquiry.message}
             </div>
           </div>

@@ -9,7 +9,7 @@ import {
   FormField,
 } from "@/components/layout/forms/SettingsFormSection";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield } from "lucide-react";
+import { Shield, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -97,6 +97,27 @@ export default function SecurityToolsPage() {
     },
   });
 
+  const clearCacheMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/developer-tools/cache", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to clear cache.");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success("Landing page cache cleared successfully.");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to clear cache.");
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const domains =
@@ -157,6 +178,25 @@ export default function SecurityToolsPage() {
         />
 
         <div className="mt-8 flex flex-col gap-8 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-background p-4">
+            <div>
+              <h3 className="font-semibold text-foreground">Clear Website Cache</h3>
+              <p className="text-sm text-muted-foreground">
+                Clear the public landing page cache only. Requires SITE_URL and REVALIDATION_SECRET.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => clearCacheMutation.mutate()}
+              disabled={clearCacheMutation.isPending}
+              className="gap-2"
+            >
+              <Trash2 className="size-4" />
+              {clearCacheMutation.isPending ? "Clearing…" : "Clear Cache"}
+            </Button>
+          </div>
+
           <SettingsFormSection
             title="Security Configuration"
             description="Form protection and embed restrictions"

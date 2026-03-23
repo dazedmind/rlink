@@ -8,8 +8,8 @@ import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
  * No auth required. Rate limited to prevent abuse.
  */
 export async function GET(request: Request) {
-  const limitResult = rateLimit(request, { maxRequests: 60, windowMs: 60_000 });
-  if (!limitResult.success) return rateLimit429(limitResult, 60);
+  const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
+  if (!limitResult.success) return rateLimit429(limitResult, 30);
 
   try {
     const rows = await db.select().from(developerToolsSettings);

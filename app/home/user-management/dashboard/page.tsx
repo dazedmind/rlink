@@ -43,7 +43,7 @@ function UserManagementDashboard() {
                 <CardContent className="flex flex-col items-start">
                   <div className="flex items-center gap-2 text-4xl font-bold">
                     {isLoading ? (
-                      <span className="h-10 w-16 rounded-md bg-muted animate-pulse" />
+                      <span className="h-10 w-16 rounded-md text-muted-foreground animate-pulse" />
                     ) : (
                       user_stat.stats
                     )}

@@ -33,14 +33,14 @@ export function SettingsFormSection({
           </div>
         )}
         <div>
-          <h2 className="text-sm font-semibold">{title}</h2>
+          <h2 className="text-lg font-semibold">{title}</h2>
           {description && (
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
       <div className="p-6 flex flex-col gap-4">{children}</div>
-      <div className="px-6 py-4 border-t bg-accent flex justify-end">
+      <div className="px-6 py-4 border-t  flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : submitLabel}
         </Button>

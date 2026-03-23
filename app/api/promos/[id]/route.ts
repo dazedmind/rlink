@@ -60,7 +60,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       "title",
       "description",
       "imageUrl",
-      "linkUrl",
       "status",
       "startDate",
       "endDate",

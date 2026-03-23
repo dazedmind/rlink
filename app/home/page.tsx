@@ -1,72 +1,129 @@
 "use client";
 import { useSession } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import ProtectedRoute from "@/components/providers/ProtectedRoute";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
-import { ChartLine, Laptop, Users, ArrowUpRight } from "lucide-react";
+import { useMemo } from "react";
+import {
+  ChartLine,
+  Laptop,
+  Users,
+  ArrowUpRight,
+  HelpCircle,
+  BarChart3,
+  Settings,
+  FileText,
+  Folder,
+  type LucideIcon,
+} from "lucide-react";
+import { ModuleAccessConfig } from "@/components/tables/user-management/ModulesTable";
+import {
+  getModuleAccessCache,
+  setModuleAccessCache,
+} from "@/lib/module-access-cache";
 
-const modules = [
-  {
-    name: "Digital Sales Lead Tracker",
-    shortName: "CRM",
-    icon: ChartLine,
-    href: "/home/crm",
-    description: "View and manage leads",
-    accent: "#2563eb",
-    tag: "CRM",
-    permission: ["admin", "user"],
-  },
-  {
-    name: "Content Studio Manager",
-    shortName: "CMS",
-    icon: Laptop,
-    href: "/home/cms",
-    description: "Manage website content and pages",
-    accent: "#2563eb",
-    tag: "Content",
-    permission: ["admin", "user"],
-  },
-  {
-    name: "Identity & Access Management",
-    shortName: "IAM",
-    icon: Users,
-    href: "/home/user-management",
-    description: "Manage user accounts and permissions",
-    accent: "#2563eb",
-    tag: "Admin",
-    permission: ["admin"],
-  },
-];
+const ICON_MAP: Record<string, LucideIcon> = {
+  ChartLine,
+  Laptop,
+  Users,
+  HelpCircle,
+  BarChart3,
+  Settings,
+  FileText,
+  Folder,
+};
+
+function canAccessModule(
+  config: ModuleAccessConfig | undefined,
+  moduleConfigKey: string,
+  userRole: string,
+  userDept: string
+): boolean {
+  const entry = config?.[moduleConfigKey];
+  // Not configured: default to admin-only (backwards compat before first save)
+  if (!entry) return userRole === "admin";
+
+  const roles = Array.isArray(entry.roles) ? entry.roles : [];
+  const departments = Array.isArray(entry.departments) ? entry.departments : [];
+  const hasRoles = roles.length > 0;
+  const hasDepts = departments.length > 0;
+
+  if (!hasRoles && !hasDepts) return userRole === "admin";
+  return roles.includes(userRole) || departments.includes(userDept);
+}
 
 function Home() {
   const { data: session } = useSession();
-  const permissions = session?.user.role?.split(",") || [];
+  const userRole = (session?.user?.role as string)?.toLowerCase() ?? "";
+  const userDept = (session?.user?.department as string)?.toLowerCase() ?? "";
 
+  const { data: moduleAccessConfig } = useQuery({
+    queryKey: qk.developerToolsSettings("module-access"),
+    queryFn: async () => {
+      const cached = getModuleAccessCache();
+      if (cached != null) return cached as ModuleAccessConfig;
+
+      const res = await fetch("/api/developer-tools/settings?section=module-access", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
+      const json = await res.json();
+      const data = (json.data ?? {}) as ModuleAccessConfig;
+      setModuleAccessCache(data);
+      return data;
+    },
+    enabled: !!session?.user,
+    staleTime: 5 * 60 * 1000, // 5 min - skip refetch when navigating within app
+  });
+
+  const modules = useMemo(() => {
+    const fromConfig = Object.entries(moduleAccessConfig ?? {}).map(
+      ([configKey, entry]) => ({
+        configKey,
+        name: (entry.name as string) ?? configKey,
+        shortName: (entry.shortName as string) ?? configKey,
+        icon: (entry.icon as string) ?? "ChartLine",
+        href: (entry.href as string) ?? `/home/${configKey}`,
+        description: (entry.description as string) ?? "",
+      })
+    );
+    if (fromConfig.length > 0) return fromConfig;
+    return [];
+  }, [moduleAccessConfig]);
+
+  const filteredModules = modules.filter((module) =>
+    canAccessModule(moduleAccessConfig, module.configKey, userRole, userDept)
+  );
+  
   return (
     <ProtectedRoute>
-      <div className="h-screen w-full bg-accent">
+      <div className="h-screen overflow-y-auto w-full bg-accent">
         <main className="flex flex-col gap-10 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
           <DashboardHeader title="RLink" description="" />
 
-          <div className="flex flex-col gap-10 flex-1">
+          <div className="flex flex-col gap-8 flex-1">
             {/* Greeting */}
             <div className="flex flex-col gap-1">
               <p className="text-xs font-semibold tracking-widest text-neutral-400 uppercase">
-                Welcome back
+                  Welcome back
+                </p>
+                <h1 className="text-3xl font-bold text-accent-foreground tracking-tight">
+                  {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Select a module below to get started.
               </p>
-              <h1 className="text-3xl font-bold text-accent-foreground tracking-tight">
-                {(session?.user.firstName + " " + session?.user.lastName) || session?.user?.name || "User"}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Select a module below to get started.
-            </p>
             </div>
 
             {/* Module Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {modules.filter((module) => module.permission.some((permission) => permissions.includes(permission))).map((module, i) => (
-                <Link href={module.href} key={module.name} className="group animate-fade-in-up">
+              {filteredModules.map((module, i) => {
+                const IconComponent = ICON_MAP[module.icon] ?? ChartLine;
+                return (
+                <Link href={module.href} key={module.configKey} className="group animate-fade-in-up">
                   <div className="relative flex flex-col justify-between h-52 rounded-2xl border border-border bg-background p-6 overflow-hidden transition-all duration-300 hover:shadow-sm hover:-translate-y-1">
                     {/* Top row: tag + arrow */}
                     <div className="flex items-center justify-end">
@@ -79,9 +136,8 @@ function Home() {
                     <div className="flex flex-col gap-2">
                       <div
                         className="rounded-xl flex items-center">
-                        <module.icon
-                          className="size-10"
-                          style={{ color: module.accent }}
+                        <IconComponent
+                          className="size-10 text-blue-600"
                           strokeWidth={1.75}
                         />
                       </div>
@@ -99,7 +155,8 @@ function Home() {
                     </div>           
                   </div>
                 </Link>
-              ))}
+              );
+              })}
             </div>
           </div>
 

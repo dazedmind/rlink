@@ -12,6 +12,7 @@ type FileUploadProps = {
   label?: string;
   hint?: string;
   className?: string;
+  required?: boolean;
   aspect?: "square" | "rectangle";
 };
 
@@ -22,6 +23,7 @@ export function FileUpload({
   label,
   hint,
   className,
+  required = false,
   aspect = "rectangle",
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,8 +68,9 @@ export function FileUpload({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          {label}
+        <label className="text-xs font-medium text-primary uppercase tracking-wide">
+          {label} 
+          {required && <span className="text-red-500">*</span>}
         </label>
       )}
       <div

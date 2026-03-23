@@ -98,6 +98,11 @@ function CrmNavContent({
 
 export default function CrmSidebar() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [reservationPrefill, setReservationPrefill] = useState<{
+    projectName: string;
+    block: number;
+    lot: number;
+  } | null>(null);
 
   // 1. Grouping Logic: Reduces navItems into an object keyed by group name
   const groupedNav = navItems.reduce((acc, item) => {
@@ -152,9 +157,21 @@ export default function CrmSidebar() {
 
         {/* Content Area */}
         {activeTab === "dashboard" && <CRMDashboard setActiveTab={(tab) => setActiveTab(tab)}/>}
-        {activeTab === "reservation" && <Reservation />}
+        {activeTab === "reservation" && (
+          <Reservation
+            prefill={reservationPrefill}
+            onPrefillClear={() => setReservationPrefill(null)}
+          />
+        )}
         {activeTab === "lead-generation" && <LeadGeneration />}
-        {activeTab === "inventory" && <Inventory />}
+        {activeTab === "inventory" && (
+          <Inventory
+            setActiveTab={(tab) => setActiveTab(tab)}
+            onReserveSelect={(projectName, block, lot) => {
+              setReservationPrefill({ projectName, block, lot });
+            }}
+          />
+        )}
         {activeTab === "inquiries" && <Inquiries />}
         {activeTab === "newsletter" && <Newsletter />}
       </SidebarInset>

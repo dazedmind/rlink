@@ -517,6 +517,19 @@ export const userRoleMeta: Record<string, { label: string; className: string }> 
     user: { label: 'User', className: 'bg-muted-foreground/10 text-muted-foreground' },
 };
 
+export const deptBadgeClass: Record<string, string> = {
+    construction: "bg-amber-600/10 text-amber-800 font-bold",
+    design: "bg-violet-600/10 text-violet-700 font-bold",
+    hr: "bg-emerald-600/10 text-emerald-700 font-bold",
+    it: "bg-cyan-600/10 text-cyan-700 font-bold",
+    office_president: "bg-rose-600/10 text-rose-700 font-bold",
+    project_development: "bg-orange-600/10 text-orange-700",
+    property_management: "bg-lime-600/10 text-lime-700 font-bold",
+    sales_admin: "bg-sky-600/10 text-sky-700 font-bold",
+    sales_marketing: "bg-fuchsia-600/10 text-fuchsia-700 font-bold",
+    sales_documentation: "bg-teal-600/10 text-teal-700 font-bold",
+};
+  
 export const userStatus = {
     active: 'Active',
     disabled: 'Disabled',
