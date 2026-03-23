@@ -8,7 +8,10 @@ const PUBLIC_PATHS = [
 ];
 
 const isDev = process.env.NODE_ENV === "development";
-const ALLOWED_ORIGIN = isDev ? "http://localhost:3000" : "https://rlink-dev.vercel.app";
+// Must match next.config.ts — never use "*"
+const ALLOWED_ORIGIN =
+  process.env.ALLOWED_ORIGIN ??
+  (isDev ? "http://localhost:3000" : "https://rlink-dev.vercel.app");
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p));

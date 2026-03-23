@@ -2,8 +2,11 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
-// Trusted origins — add staging/preview URLs here if needed
-const ALLOWED_ORIGIN = isDev ? "http://localhost:3000" : "https://rlink-dev.vercel.app";
+// CORS: Never use "*" — only allow specific trusted domains.
+// Set ALLOWED_ORIGIN in env for production (e.g. https://rlink.vercel.app).
+const ALLOWED_ORIGIN =
+  process.env.ALLOWED_ORIGIN ??
+  (isDev ? "http://localhost:3000" : "https://rlink-dev.vercel.app");
 
 // Trusted image hosts already in use by the app
 const IMG_HOSTS = "https://www.rland.ph https://i.imgur.com";
