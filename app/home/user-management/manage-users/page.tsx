@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import UsersTable from "@/components/tables/user-management/UsersTable";
 import UserFormModal, {
@@ -10,12 +12,11 @@ import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import { toast } from "sonner";
 
 function ManageUsers() {
+  const queryClient = useQueryClient();
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const handleDelete = async () => {
     if (!deletingUser) return;
     setIsDeleting(true);
@@ -35,7 +36,8 @@ function ManageUsers() {
       }).catch(() => {});
       toast.success("User deleted.");
       setDeletingUser(null);
-      setRefreshTrigger((t) => t + 1);
+      queryClient.invalidateQueries({ queryKey: qk.userManagementDashboard() });
+      queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
@@ -44,8 +46,9 @@ function ManageUsers() {
   };
 
   const handleSuccess = useCallback(() => {
-    setRefreshTrigger((t) => t + 1);
-  }, []);
+    queryClient.invalidateQueries({ queryKey: qk.userManagementDashboard() });
+    queryClient.invalidateQueries({ queryKey: ["activity-logs"] });
+  }, [queryClient]);
 
   return (
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl h-full bg-background">
@@ -66,7 +69,6 @@ function ManageUsers() {
               setEditingUser(null);
               setShowFormModal(true);
             }}
-            refreshTrigger={refreshTrigger}
           />
         </div>
       </div>

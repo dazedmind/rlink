@@ -33,15 +33,7 @@ function SystemSettingsTabContent() {
               </div>
               <Switch defaultChecked />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Analytics Tracking</Label>
-                <p className="text-xs text-neutral-500">
-                  Allow system to collect anonymous usage data.
-                </p>
-              </div>
-              <Switch />
-            </div>
+          
           </CardContent>
         </Card>
       </TabsContent>

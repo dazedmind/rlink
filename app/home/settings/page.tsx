@@ -55,8 +55,8 @@ function Settings() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen w-full bg-accent">
-        <main className="flex flex-col gap-8 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
+      <div className="scrollbar-accent h-dvh overflow-y-auto overflow-x-hidden w-full bg-accent">
+        <main className="flex flex-col gap-8 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-full">
           <DashboardHeader title="RLink" description="" />
 
           <div className="flex gap-8 flex-col justify-between h-full">

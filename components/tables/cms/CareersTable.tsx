@@ -30,8 +30,6 @@ import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import {
   PlusCircle,
-  ArrowLeft,
-  ArrowRight,
   ListFilter,
   ArrowUpDown,
   X,
@@ -43,6 +41,7 @@ import {
 } from "lucide-react";
 import { Career, careerStatus, careerStatusMeta, department } from "@/lib/types";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
+import { TablePagination } from "@/components/tables/TablePagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -344,43 +343,12 @@ export default function CareersTable({
             : `${total} job postings total`}
         </p>
 
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft size={16} />
-            </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "ghost"}
-                  size="sm"
-                  className={
-                    currentPage === pageNum ? "bg-primary min-w-8" : "min-w-8"
-                  }
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
-              disabled={currentPage === totalPages}
-            >
-              <ArrowRight size={16} />
-            </Button>
-          </div>
-        )}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          activeClassName="bg-primary min-w-8"
+        />
       </div>
     </div>
   );

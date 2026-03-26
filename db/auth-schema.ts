@@ -59,7 +59,22 @@ export const user = pgTable("user", {
   department: departmentEnum("department").default("construction"),
   employeeId: text("employee_id").default(""),
   birthdate: text("birthdate"),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
 });
+
+export const twoFactor = pgTable(
+  "two_factor",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("two_factor_userId_idx").on(table.userId)],
+);
 
 export const session = pgTable(
   "session",
@@ -121,9 +136,20 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
+  twoFactor: one(twoFactor, {
+    fields: [user.id],
+    references: [twoFactor.userId],
+  }),
+}));
+
+export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
+  user: one(user, {
+    fields: [twoFactor.userId],
+    references: [user.id],
+  }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

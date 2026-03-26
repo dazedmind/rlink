@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { userManagementCacheOptions } from "@/lib/query-client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -67,6 +68,7 @@ export default function ModulesTable() {
       const json = await res.json();
       return (json.data ?? {}) as ModuleAccessConfig;
     },
+    ...userManagementCacheOptions,
   });
 
   const saveMutation = useMutation({

@@ -4,8 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUpDown,
   Download,
   ListFilter,
@@ -41,6 +39,7 @@ import { qk } from "@/lib/query-keys";
 import { subscriberStatusMeta } from "@/lib/types";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import { Subscriber } from "@/lib/types";
+import { TablePagination } from "@/components/tables/TablePagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -366,41 +365,12 @@ function NewsletterTable() {
             : `${total} subscribers total`}
         </p>
 
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft size={16} />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "ghost"}
-                  size="sm"
-                  className={currentPage === pageNum ? "bg-info min-w-8" : "min-w-8"}
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              ))}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              <ArrowRight size={16} />
-            </Button>
-          </div>
-        )}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          activeClassName="bg-info min-w-8"
+        />
       </div>
 
       <DeleteConfirmModal

@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
+import { userManagementCacheOptions } from "@/lib/query-client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,8 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUpDown,
   LogIn,
   LogOut,
@@ -31,6 +32,7 @@ import {
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { toast } from "sonner";
 import { activityStatusMeta, ActivityLogRecord } from "@/lib/types";
+import { TablePagination } from "@/components/tables/TablePagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -44,62 +46,58 @@ function getActivityIcon(activity: string) {
   return Activity;
 }
 
-type ActivityLogsTableProps = {
-  refreshTrigger?: number;
-};
-
-export default function ActivityLogsTable({
-  refreshTrigger = 0,
-}: ActivityLogsTableProps) {
-  const [logs, setLogs] = useState<ActivityLogRecord[]>([]);
-  const [total, setTotal] = useState(0);
+export default function ActivityLogsTable() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
 
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  const queryFilters = useMemo(
+    () => ({
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      sort: sortOption,
+    }),
+    [currentPage, sortOption]
+  );
 
-  const fetchLogs = useCallback(async (page: number) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(
-        `/api/activity-logs?page=${page}&limit=${ITEMS_PER_PAGE}&sort=${sortOption}`
-      );
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? "Failed to load activity logs.");
-        setLogs([]);
-        setTotal(0);
-        return;
+  const { data, isLoading } = useQuery({
+    queryKey: qk.activityLogs(queryFilters),
+    queryFn: async () => {
+      try {
+        const res = await fetch(
+          `/api/activity-logs?page=${currentPage}&limit=${ITEMS_PER_PAGE}&sort=${sortOption}`,
+          { credentials: "include" }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast.error((err as { error?: string }).error ?? "Failed to load activity logs.");
+          return { logs: [] as ActivityLogRecord[], total: 0 };
+        }
+        const json = await res.json();
+        const rows = (json.data ?? []).map((r: Record<string, unknown>) => ({
+          ...r,
+          createdAt:
+            typeof r.createdAt === "string"
+              ? r.createdAt
+              : r.createdAt
+                ? new Date(r.createdAt as Date).toISOString()
+                : "",
+        })) as ActivityLogRecord[];
+        return { logs: rows, total: json.total ?? 0 };
+      } catch {
+        toast.error("Failed to load activity logs.");
+        return { logs: [] as ActivityLogRecord[], total: 0 };
       }
-      const json = await res.json();
-      const rows = (json.data ?? []).map((r: Record<string, unknown>) => ({
-        ...r,
-        createdAt:
-          typeof r.createdAt === "string"
-            ? r.createdAt
-            : r.createdAt
-              ? new Date(r.createdAt as Date).toISOString()
-              : "",
-      }));
-      setLogs(rows);
-      setTotal(json.total ?? 0);
-    } catch {
-      toast.error("Failed to load activity logs.");
-      setLogs([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sortOption]);
+    },
+    ...userManagementCacheOptions,
+  });
+
+  const logs = data?.logs ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [sortOption]);
-
-  useEffect(() => {
-    fetchLogs(currentPage);
-  }, [currentPage, fetchLogs, refreshTrigger]);
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
@@ -231,47 +229,12 @@ export default function ActivityLogsTable({
           {total} log{total !== 1 ? "s" : ""} total
         </p>
 
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft size={16} />
-            </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    className={
-                      currentPage === pageNum
-                        ? "bg-primary min-w-8"
-                        : "min-w-8"
-                    }
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                )
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
-              disabled={currentPage === totalPages}
-            >
-              <ArrowRight size={16} />
-            </Button>
-          </div>
-        )}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          activeClassName="bg-primary min-w-8"
+        />
       </div>
     </div>
   );

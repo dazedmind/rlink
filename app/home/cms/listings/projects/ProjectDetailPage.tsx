@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -102,6 +104,7 @@ export default function ProjectDetailPage({
   onBack,
   onProjectCreated,
 }: ProjectDetailPageProps) {
+  const queryClient = useQueryClient();
   const id = projectId;
   const isCreateMode = id === "new";
 
@@ -220,6 +223,7 @@ export default function ProjectDetailPage({
         }
         const created = await res.json();
         toast.success("Project created.");
+        queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
         onProjectCreated?.(String(created.id));
       } else {
         const res = await fetch(`/api/projects/${id}`, {

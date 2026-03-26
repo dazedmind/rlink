@@ -32,6 +32,7 @@ function PromosManager() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.promos() });
+      queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Promo deleted.");
       setDeletingPromo(null);
     },
@@ -47,6 +48,7 @@ function PromosManager() {
 
   const handleSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.promos() });
+    queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
   }, [queryClient]);
 
   return (

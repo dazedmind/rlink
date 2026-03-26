@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
@@ -60,14 +59,6 @@ const EMPTY_FORM: FormData = {
   employeeId: "",
 };
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-      {children}
-    </Label>
-  );
-}
-
 export default function UserFormModal({
   isOpen,
   onClose,
@@ -108,6 +99,18 @@ export default function UserFormModal({
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
+
+  const sendEmail = async () => {
+    const response = await fetch("/api/resend", {
+      method: "POST",
+      body: JSON.stringify({ email: form.email, firstName: form.firstName, lastName: form.lastName, password: form.password }),
+    });
+    if (response.ok) {
+      toast.success("Email sent successfully!");
+    } else {
+      toast.error("Failed to send email.");
+    }
+  }
 
   const handleSelectChange = (name: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -152,6 +155,7 @@ export default function UserFormModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ activity: "Updated user " + form.email }),
         }).catch(() => {});
+
         toast.success("User updated successfully!");
       } else {
         const { error } = await authClient.admin.createUser({
@@ -178,6 +182,8 @@ export default function UserFormModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ activity: "Created user " + form.email }),
         }).catch(() => {});
+
+        sendEmail();
         toast.success("User created successfully!");
       }
       onSuccess();

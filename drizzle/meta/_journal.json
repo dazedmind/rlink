@@ -15,6 +15,13 @@
       "when": 1738368000000,
       "tag": "0001_add_promos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1743000000000,
+      "tag": "0006_two_factor_auth",
+      "breakpoints": true
     }
   ]
 }

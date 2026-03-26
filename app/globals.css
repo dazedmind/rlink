@@ -102,9 +102,10 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* PREVENT LAYOUT SHIFT WHEN OPENING MODALS */
+/* Only reserve gutter when the root scrolls; stable on :root left a permanent white strip
+   beside inner scroll areas (e.g. Settings) that use their own overflow. */
 :root {
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
 }
 
 html body[data-scroll-locked] {
@@ -195,12 +196,32 @@ select:focus {
 .scrollbar-hide {
   scrollbar-width: none;        /* Firefox */
   -ms-overflow-style: none;     /* IE / Edge */
-  scrollbar-color: transparent transparent;
+  scrollbar-color: var(--accent) var(--accent) ;
   scrollbar-width: thin;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Scrollbar track matches page background (avoids default light strip next to content). */
+.scrollbar-accent {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 55%, transparent) var(--accent);
+}
+
+.scrollbar-accent::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-accent::-webkit-scrollbar-track {
+  background: var(--accent);
+}
+
+.scrollbar-accent::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 50%, transparent);
+  border-radius: 9999px;
+  border: 2px solid var(--accent);
 }
 
 @keyframes fade-in-up {

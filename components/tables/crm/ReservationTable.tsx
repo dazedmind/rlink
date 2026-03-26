@@ -2,8 +2,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUpDown,
   Download,
   EllipsisVertical,
@@ -46,6 +44,7 @@ import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
+import { TablePagination } from "@/components/tables/TablePagination";
 
 type Reservation = {
   id: number;
@@ -444,44 +443,18 @@ function ReservationTable({
           </p>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Showing {currentPage} of {totalPages} pages
-              </span>
-              {currentPage > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ArrowLeft size={16} />
-                </Button>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    className={currentPage === pageNum ? "bg-blue-600" : ""}
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                ),
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                <ArrowRight size={16} />
-              </Button>
-            </div>
+            <TablePagination
+              pageInfo={
+                <span className="text-sm text-muted-foreground">
+                  Showing {currentPage} of {totalPages} pages
+                </span>
+              }
+              hidePreviousOnFirstPage
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              activeClassName="bg-blue-600 min-w-8"
+            />
           </div>
         </div>
       )}

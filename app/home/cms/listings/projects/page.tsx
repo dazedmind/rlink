@@ -31,6 +31,7 @@ function ProjectsManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.projects() });
       queryClient.invalidateQueries({ queryKey: qk.projectInventory() });
+      queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Project deleted successfully.");
       setDeletingProject(null);
     },

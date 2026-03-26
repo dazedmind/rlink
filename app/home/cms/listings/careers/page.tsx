@@ -32,6 +32,7 @@ function CareersManager() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.careers() });
+      queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Job posting deleted.");
       setDeletingCareer(null);
     },
@@ -47,6 +48,7 @@ function CareersManager() {
 
   const handleSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.careers() });
+    queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
   }, [queryClient]);
 
   return (

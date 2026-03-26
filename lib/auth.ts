@@ -2,13 +2,15 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { db } from "@/lib/db";
-import { user, session, account, verification } from "@/db/auth-schema";
+import { user, session, account, verification, twoFactor } from "@/db/auth-schema";
 import { activityLogs } from "@/db/schema";
-import { admin } from "better-auth/plugins";
+import { admin, twoFactor as twoFactorPlugin } from "better-auth/plugins";
 
 export const auth = betterAuth({
+  appName: "R Link",
   plugins: [
-    admin()
+    twoFactorPlugin({ issuer: "R Link" }),
+    admin(),
   ],
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
@@ -32,7 +34,7 @@ export const auth = betterAuth({
   },
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema: { user, session, account, verification },
+    schema: { user, session, account, verification, twoFactor },
   }),
   emailAndPassword: {
     enabled: true,

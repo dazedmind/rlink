@@ -18,4 +18,6 @@ export const qk = {
   notifications:    ()                                  => ["notifications"] as const,
   config:           ()                                  => ["config"] as const,
   health:           ()                                  => ["health"] as const,
+  cmsDashboard:     ()                                  => ["cms-dashboard"] as const,
+  userManagementDashboard: ()                           => ["user-management-dashboard"] as const,
 };

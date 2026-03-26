@@ -2,6 +2,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { userManagementCacheOptions } from "@/lib/query-client";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import {
   Card, CardContent } from "@/components/ui/card";
@@ -10,12 +11,13 @@ import { Users, Building, Ban } from "lucide-react";
 
 function UserManagementDashboard() {
   const { data, isLoading } = useQuery({
-    queryKey: qk.users(),
+    queryKey: [...qk.userManagementDashboard(), "stats"] as const,
     queryFn: async () => {
       const res = await fetch("/api/users");
       const json = await res.json();
       return { total: json.total ?? 0 };
     },
+    ...userManagementCacheOptions,
   });
 
   const totalUsers = data?.total ?? 0;

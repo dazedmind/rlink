@@ -86,6 +86,7 @@ export default function ArticleEditor({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.articles() });
+      queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success(`Article ${isEdit ? "updated" : "created"} successfully!`);
       onSave();
     },

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.13] - 2026-03-26
+
+### Added
+- 2FA Setup: Users can now setup their 2FA on Settings using their preferred authenticator app
+- 2FA Code prompt on login screen on accounts with enabled 2FA
+
+### Changes
+- System Optimization: All modules now calls data once and fetches cached data for a smoother user experience
+- Added stale data invalidation when new data is inserted
+- Codebase: Extracted shared pagination logic into a single reusable file for easier navigation and maintenance.
+
 ## [0.0.12] - 2026-03-23
 
 ### Added

@@ -30,6 +30,7 @@ function NewsManager() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.articles() });
+      queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Article deleted.");
       setDeletingArticle(null);
     },

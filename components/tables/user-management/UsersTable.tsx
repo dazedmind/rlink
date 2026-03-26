@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
+import { userManagementCacheOptions } from "@/lib/query-client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -27,8 +30,6 @@ import ContextMenu from "@/components/layout/ContextMenu";
 import { toast } from "sonner";
 import {
   PlusCircle,
-  ArrowLeft,
-  ArrowRight,
   ArrowUpDown,
   Pencil,
   Trash2,
@@ -41,6 +42,7 @@ import {
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import type { UserRecord } from "@/components/modal/user-management/UserFormModal";
 import { department, userRole, userRoleMeta } from "@/lib/types";
+import { TablePagination } from "@/components/tables/TablePagination";
 
 const ITEMS_PER_PAGE = 10;
 const EXPORT_LIMIT = 10000;
@@ -49,7 +51,6 @@ type UsersTableProps = {
   onEdit: (user: UserRecord) => void;
   onDelete: (user: UserRecord) => void;
   onAdd: () => void;
-  refreshTrigger?: number;
   viewOnly?: boolean;
 };
 
@@ -57,54 +58,48 @@ export default function UsersTable({
   onEdit,
   onDelete,
   onAdd,
-  refreshTrigger = 0,
   viewOnly,
 }: UsersTableProps) {
-  const [allUsers, setAllUsers] = useState<UserRecord[]>([]);
-  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
   const [filterRole, setFilterRole] = useState<string[]>([]);
   const [filterDepartment, setFilterDepartment] = useState<string[]>([]);
 
   const activeFilterCount = filterRole.length + filterDepartment.length;
 
-  const fetchAllUsers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { authClient } = await import("@/lib/auth-client");
-      const result = await authClient.admin.listUsers({
-        query: {
-          limit: EXPORT_LIMIT,
-          offset: 0,
-          sortBy: "createdAt",
-          sortDirection: "desc",
-        },
-      });
+  const { data: listData, isLoading } = useQuery({
+    queryKey: [...qk.userManagementDashboard(), "users-list"] as const,
+    queryFn: async () => {
+      try {
+        const { authClient } = await import("@/lib/auth-client");
+        const result = await authClient.admin.listUsers({
+          query: {
+            limit: EXPORT_LIMIT,
+            offset: 0,
+            sortBy: "createdAt",
+            sortDirection: "desc",
+          },
+        });
 
-      if (result.error) {
-        toast.error(result.error.message ?? "Failed to load users.");
-        setAllUsers([]);
-        setTotal(0);
-        return;
+        if (result.error) {
+          toast.error(result.error.message ?? "Failed to load users.");
+          return { users: [] as UserRecord[], total: 0 };
+        }
+
+        const data = result.data as { users?: UserRecord[]; total?: number } | undefined;
+        return {
+          users: (data?.users ?? []) as UserRecord[],
+          total: data?.total ?? 0,
+        };
+      } catch {
+        toast.error("Failed to load users.");
+        return { users: [] as UserRecord[], total: 0 };
       }
+    },
+    ...userManagementCacheOptions,
+  });
 
-      const data = result.data as { users?: UserRecord[]; total?: number } | undefined;
-      setAllUsers((data?.users ?? []) as UserRecord[]);
-      setTotal(data?.total ?? 0);
-    } catch {
-      toast.error("Failed to load users.");
-      setAllUsers([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAllUsers();
-  }, [fetchAllUsers, refreshTrigger]);
+  const allUsers = listData?.users ?? [];
 
   const filteredAndSorted = useMemo(() => {
     let result = [...allUsers];
@@ -525,46 +520,13 @@ export default function UsersTable({
             : `${totalFiltered} user${totalFiltered !== 1 ? "s" : ""} total`}
         </p>
 
-        {totalPages > 1 && !viewOnly && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowLeft size={16} />
-            </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    className={
-                      currentPage === pageNum
-                        ? "bg-primary min-w-8"
-                        : "min-w-8"
-                    }
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                )
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
-              disabled={currentPage === totalPages}
-            >
-              <ArrowRight size={16} />
-            </Button>
-          </div>
+        {!viewOnly && (
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            activeClassName="bg-primary min-w-8"
+          />
         )}
       </div>
     </div>

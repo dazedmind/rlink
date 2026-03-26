@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import {
   StatusPill,
@@ -9,14 +11,90 @@ import {
   QuickLinksCard,
   ActivityFeedCard,
 } from "./components";
-import { useDashboardData } from "./hooks/useDashboardData";
 import { formatDate } from "./utils";
 import { STAT_CARD_CONFIG } from "./constants";
-import type { CMSDashboardProps, RecentArticle, RecentPromo, RecentCareer } from "./types";
+import type {
+  CMSDashboardProps,
+  RecentArticle,
+  RecentPromo,
+  RecentCareer,
+  Stats,
+  RecentData,
+  SiteStatus,
+} from "./types";
 
 export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
-  const { stats, recent, loading, siteStatus, siteUrl } = useDashboardData();
   const handleNav = (url: string) => onNavigate?.(url);
+
+  const { data: stats = { projects: 0, articles: 0, promos: 0, careers: 0 }, isPending: loadingStats } =
+    useQuery({
+      queryKey: [...qk.cmsDashboard(), "stats"] as const,
+      queryFn: async (): Promise<Stats> => {
+        const [projectsRes, articlesRes, promosRes, careersRes] = await Promise.all([
+          fetch("/api/projects", { credentials: "include" }),
+          fetch("/api/articles?limit=1", { credentials: "include" }),
+          fetch("/api/promos?limit=1", { credentials: "include" }),
+          fetch("/api/careers?limit=1", { credentials: "include" }),
+        ]);
+        const [projectsData, articlesData, promosData, careersData] = await Promise.all([
+          projectsRes.json(),
+          articlesRes.json(),
+          promosRes.json(),
+          careersRes.json(),
+        ]);
+        return {
+          projects: Array.isArray(projectsData) ? projectsData.length : 0,
+          articles: articlesData?.total ?? 0,
+          promos: promosData?.total ?? 0,
+          careers: careersData?.total ?? 0,
+        };
+      },
+    });
+
+  const {
+    data: recent = { articles: [], promos: [], careers: [] },
+    isPending: loadingRecent,
+  } = useQuery({
+    queryKey: [...qk.cmsDashboard(), "recent"] as const,
+    queryFn: async (): Promise<RecentData> => {
+      const [articlesRes, promosRes, careersRes] = await Promise.all([
+        fetch("/api/articles?limit=3&sort=newest", { credentials: "include" }),
+        fetch("/api/promos?limit=3&sort=newest", { credentials: "include" }),
+        fetch("/api/careers?limit=3&sort=newest", { credentials: "include" }),
+      ]);
+      const [articlesData, promosData, careersData] = await Promise.all([
+        articlesRes.json(),
+        promosRes.json(),
+        careersRes.json(),
+      ]);
+      return {
+        articles: articlesData?.data ?? [],
+        promos: promosData?.data ?? [],
+        careers: careersData?.data ?? [],
+      };
+    },
+  });
+
+  const { data: health } = useQuery({
+    queryKey: [...qk.cmsDashboard(), "health"] as const,
+    queryFn: async (): Promise<{ status: SiteStatus; siteUrl: string | null }> => {
+      try {
+        const res = await fetch("/api/health", { cache: "no-store" });
+        const data = await res.json();
+        return {
+          status: data.site ?? (res.ok ? "operational" : "degraded"),
+          siteUrl: data.siteUrl ?? null,
+        };
+      } catch {
+        return { status: "degraded", siteUrl: null };
+      }
+    },
+    refetchInterval: 60_000,
+  });
+
+  const loading = loadingStats || loadingRecent;
+  const siteStatus = health?.status ?? "checking";
+  const siteUrl = health?.siteUrl ?? null;
 
   return (
     <main className="flex-1 overflow-auto m-4 border border-border rounded-xl h-full bg-background">
@@ -60,7 +138,9 @@ export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
                 renderItem={(a) => (
                   <>
                     <p className="text-sm font-medium truncate">{a.headline}</p>
-                    <p className="text-xs text-muted-foreground">{a.type} · {formatDate(a.publishDate)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {a.type} · {formatDate(a.publishDate)}
+                    </p>
                   </>
                 )}
                 getStatus={() => "published"}
