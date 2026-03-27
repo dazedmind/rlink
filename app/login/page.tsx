@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
 import { Field } from "@/components/ui/field";
@@ -243,9 +244,12 @@ function LoginPage() {
                               }
                               value={field.state.value}
                             />
-                            <span className="text-xs text-primary cursor-pointer hover:underline font-medium">
+                            <Link
+                              href="/forgot-password"
+                              className="text-xs text-primary hover:underline font-medium"
+                            >
                               Forgot password?
-                            </span>
+                            </Link>
                           </Field>
                         )}
                       </form.Field>

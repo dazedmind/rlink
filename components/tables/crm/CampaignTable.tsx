@@ -2,6 +2,8 @@
 import React, { useCallback, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import { fetchNewsletterCampaigns } from "@/lib/crm/crm-fetchers";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import {
@@ -60,32 +62,15 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
 
   const activeFilterCount = filterStatus.length;
 
-  const buildUrl = useCallback(
-    (page: number, limit = ITEMS_PER_PAGE) => {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        sort: sortOption,
-      });
-      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-      return `/api/newsletter/campaigns?${params}`;
-    },
-    [filterStatus, sortOption],
-  );
-
   const filters = { page: currentPage, limit: ITEMS_PER_PAGE, sort: sortOption, status: filterStatus.join(",") };
 
   const { data, isLoading } = useQuery({
     queryKey: qk.newsletterCampaigns(filters),
-    queryFn: async () => {
-      const res = await fetch(buildUrl(currentPage), { credentials: "include" });
-      const json = await res.json();
-      return { data: json.data ?? [], total: json.total ?? 0 };
-    },
-    placeholderData: (prev) => prev,
+    queryFn: () => fetchNewsletterCampaigns(filters),
+    ...crmQueryOptions,
   });
 
-  const campaigns = data?.data ?? [];
+  const campaigns = (data?.data ?? []) as Campaign[];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
@@ -119,6 +104,7 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.newsletterCampaigns() });
+      queryClient.invalidateQueries({ queryKey: qk.newsletter() });
       toast.success("Campaign sent successfully");
     },
     onError: (err) => {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
@@ -36,6 +36,8 @@ import {
 import { toast } from "sonner";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import { buildNewsletterSubscriptionsUrl, fetchNewsletterSubscriptions } from "@/lib/crm/crm-fetchers";
 import { subscriberStatusMeta } from "@/lib/types";
 import DeleteConfirmModal from "@/components/modal/DeleteConfirmModal";
 import { Subscriber } from "@/lib/types";
@@ -52,32 +54,15 @@ function NewsletterTable() {
 
   const activeFilterCount = filterStatus.length;
 
-  const buildUrl = useCallback(
-    (page: number, limit = ITEMS_PER_PAGE) => {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        sort: sortOption,
-      });
-      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-      return `/api/newsletter/subscriptions?${params}`;
-    },
-    [filterStatus, sortOption],
-  );
-
   const filters = { page: currentPage, limit: ITEMS_PER_PAGE, sort: sortOption, status: filterStatus.join(",") };
 
   const { data, isLoading } = useQuery({
     queryKey: qk.newsletter(filters),
-    queryFn: async () => {
-      const res = await fetch(buildUrl(currentPage), { credentials: "include" });
-      const json = await res.json();
-      return { data: json.data ?? [], total: json.total ?? 0 };
-    },
-    placeholderData: (prev) => prev,
+    queryFn: () => fetchNewsletterSubscriptions(filters),
+    ...crmQueryOptions,
   });
 
-  const subscribers = data?.data ?? [];
+  const subscribers = (data?.data ?? []) as Subscriber[];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
@@ -146,7 +131,15 @@ function NewsletterTable() {
   // CSV exports ALL filtered records (separate unbounded fetch)
   const handleExportCSV = async () => {
     try {
-      const response = await fetch(buildUrl(1, 10000), { credentials: "include" });
+      const response = await fetch(
+        buildNewsletterSubscriptionsUrl({
+          page: 1,
+          limit: 100,
+          sort: sortOption,
+          status: filterStatus.join(","),
+        }),
+        { credentials: "include" },
+      );
       const { data } = await response.json();
       const rows: Subscriber[] = data ?? [];
 

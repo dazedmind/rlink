@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inquirySource, inquiryStatus, inquiryStatusMeta, inquirySubject } from "@/lib/types";
 import { TablePagination } from "@/components/tables/TablePagination";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import { buildInquiriesUrl, fetchInquiriesList } from "@/lib/crm/crm-fetchers";
 import {
   Table,
   TableBody,
@@ -71,21 +73,6 @@ function InquiryTable({
   const activeFilterCount =
     filterStatus.length + filterSubject.length + filterSource.length;
 
-  const buildUrl = useCallback(
-    (page: number, limit = ITEMS_PER_PAGE) => {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-        sort: sortOption,
-      });
-      if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-      if (filterSubject.length > 0) params.set("subject", filterSubject.join(","));
-      if (filterSource.length > 0) params.set("source", filterSource.join(","));
-      return `/api/inquiries?${params}`;
-    },
-    [filterStatus, filterSubject, filterSource, sortOption],
-  );
-
   const filters = {
     page: currentPage,
     limit: recentViewOnly ? 5 : ITEMS_PER_PAGE,
@@ -97,16 +84,11 @@ function InquiryTable({
 
   const { data, isLoading } = useQuery({
     queryKey: qk.inquiries(filters),
-    queryFn: async () => {
-      const limit = recentViewOnly ? 5 : ITEMS_PER_PAGE;
-      const res = await fetch(buildUrl(currentPage, limit));
-      const json = await res.json();
-      return { data: json.data ?? [], total: json.total ?? 0 };
-    },
-    placeholderData: (prev) => prev,
+    queryFn: () => fetchInquiriesList(filters),
+    ...crmQueryOptions,
   });
 
-  const inquiries = data?.data ?? [];
+  const inquiries = (data?.data ?? []) as Inquiry[];
   const total = data?.total ?? 0;
 
   const updateStatusMutation = useMutation({
@@ -189,7 +171,16 @@ function InquiryTable({
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch(buildUrl(1, 10000));
+      const res = await fetch(
+        buildInquiriesUrl({
+          page: 1,
+          limit: 100,
+          sort: sortOption,
+          status: filterStatus.join(","),
+          subject: filterSubject.join(","),
+          source: filterSource.join(","),
+        }),
+      );
       const { data: rows } = await res.json();
       const list: Inquiry[] = rows ?? [];
 

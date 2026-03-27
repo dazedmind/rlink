@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateAfterCmsCareerMutation } from "@/lib/cms/cms-invalidation";
 import type { Career } from "@/lib/types";
 import { careerStatus, department, location } from "@/lib/types";
 import { nameToSlug } from "@/app/utils/nameToSlug";
@@ -70,6 +72,7 @@ export default function CareerFormModal({
   onSuccess: () => void;
   career?: Career | null;
 }) {
+  const queryClient = useQueryClient();
   const isEdit = !!career;
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -166,6 +169,7 @@ export default function CareerFormModal({
       toast.success(
         `Job posting ${isEdit ? "updated" : "created"} successfully!`,
       );
+      invalidateAfterCmsCareerMutation(queryClient);
       onSuccess();
       onClose();
     } catch {

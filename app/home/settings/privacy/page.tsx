@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
-import { setPasswordAction } from "@/lib/setpassword";
 import Footer from "@/components/layout/Footer";
 import TextInput from "@/components/ui/TextInput";
 import { HelpCircle, Check, Circle } from "lucide-react";
@@ -24,6 +23,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import QRCode from "react-qr-code";
+import { setPasswordAction } from "@/lib/setpassword";
+import { passwordStrengthMeta } from "@/app/utils/password-strength";
 
 function PrivacyTabContent() {
   const { data: session, refetch: refetchSession } = authClient.useSession();
@@ -48,29 +49,8 @@ function PrivacyTabContent() {
   const [verifyCode, setVerifyCode] = useState("");
   const [mfaBusy, setMfaBusy] = useState(false);
 
-  const requirements = useMemo(
-    () => [
-      { label: "At least 8 characters", met: newPassword.length >= 8 },
-      { label: "Lowercase letter (a-z)", met: /[a-z]/.test(newPassword) },
-      { label: "Uppercase letter (A-Z)", met: /[A-Z]/.test(newPassword) },
-      { label: "Number (0-9)", met: /[0-9]/.test(newPassword) },
-      {
-        label: "Special character (!@#$...)",
-        met: /[^A-Za-z0-9]/.test(newPassword),
-      },
-    ],
-    [newPassword],
-  );
-
-  const metCount = requirements.filter((r) => r.met).length;
-  const isStrong = metCount === requirements.length;
-
-  const strengthColor = () => {
-    if (metCount === 0) return "bg-neutral-200";
-    if (metCount <= 2) return "bg-red-500";
-    if (metCount <= 4) return "bg-yellow-500";
-    return "bg-green-500";
-  };
+  const { requirements, metCount, isStrong, strengthLabel, barColor } =
+    useMemo(() => passwordStrengthMeta(newPassword), [newPassword]);
 
   useEffect(() => {
     const checkProvider = async () => {
@@ -254,7 +234,7 @@ function PrivacyTabContent() {
 
                 <div className="h-1.5 w-full bg-muted rounded-full my-4 overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-300 ${strengthColor()}`}
+                    className={`h-full transition-all duration-300 ${barColor}`}
                     style={{
                       width: `${(metCount / requirements.length) * 100}%`,
                     }}
@@ -262,12 +242,7 @@ function PrivacyTabContent() {
                 </div>
                 <span className="flex items-center justify-between gap-1">
                   <p className="text-xs text-muted-foreground">
-                    Strength:{" "}
-                    {metCount <= 2
-                      ? "Weak"
-                      : metCount <= 4
-                        ? "Medium"
-                        : "Strong"}
+                    Strength: {strengthLabel}
                   </p>
                   <TooltipProvider>
                     <Tooltip delayDuration={100}>

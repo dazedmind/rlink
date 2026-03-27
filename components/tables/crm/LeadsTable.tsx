@@ -22,6 +22,8 @@ import {
 } from "@/lib/types";
 import { leadStage, type LeadStage } from "@/lib/types";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import { buildLeadsUrl, fetchLeadsList } from "@/lib/crm/crm-fetchers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -94,21 +96,6 @@ function LeadsTable({
   const activeFilterCount =
     filterStatus.length + filterStage.length + filterNextAction.length;
 
-  const buildUrl = (
-    page: number,
-    limit = ITEMS_PER_PAGE,
-  ) => {
-    const params = new URLSearchParams({
-      page: String(page),
-      limit: String(limit),
-      sort: sortOption,
-    });
-    if (filterStatus.length > 0) params.set("status", filterStatus.join(","));
-    if (filterStage.length > 0) params.set("stage", filterStage.join(","));
-    if (filterNextAction.length > 0) params.set("nextAction", filterNextAction.join(","));
-    return `/api/leads?${params}`;
-  };
-
   const filters = {
     page: currentPage,
     limit: recentViewOnly ? 3 : ITEMS_PER_PAGE,
@@ -120,16 +107,11 @@ function LeadsTable({
 
   const { data, isLoading } = useQuery({
     queryKey: qk.leads(filters),
-    queryFn: async () => {
-      const limit = recentViewOnly ? 3 : ITEMS_PER_PAGE;
-      const res = await fetch(buildUrl(currentPage, limit));
-      const json = await res.json();
-      return { data: json.data ?? [], total: json.total ?? 0 };
-    },
-    placeholderData: (prev) => prev,
+    queryFn: () => fetchLeadsList(filters),
+    ...crmQueryOptions,
   });
 
-  const leadsData = data?.data ?? [];
+  const leadsData = (data?.data ?? []) as Lead[];
   const totalData = data?.total ?? 0;
 
   const deleteMutation = useMutation({
@@ -219,7 +201,16 @@ function LeadsTable({
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch(buildUrl(1, 10000));
+      const res = await fetch(
+        buildLeadsUrl({
+          page: 1,
+          limit: 100,
+          sort: sortOption,
+          status: filterStatus.join(","),
+          stage: filterStage.join(","),
+          nextAction: filterNextAction.join(","),
+        }),
+      );
       const { data: rows } = await res.json();
       const list: Lead[] = rows ?? [];
 

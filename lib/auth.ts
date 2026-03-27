@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { user, session, account, verification, twoFactor } from "@/db/auth-schema";
 import { activityLogs } from "@/db/schema";
 import { admin, twoFactor as twoFactorPlugin } from "better-auth/plugins";
+import { sendForgotPasswordEmail } from "@/lib/email/mailer";
 
 export const auth = betterAuth({
   appName: "R Link",
@@ -38,6 +39,13 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user: u, url }) => {
+      void sendForgotPasswordEmail(u.email, {
+        email: u.email,
+        displayName: u.name?.trim() || u.email,
+        resetUrl: url,
+      }).catch((e) => console.error("[sendResetPassword]", e));
+    },
   },
   account: {
     accountLinking: {

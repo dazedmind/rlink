@@ -8,7 +8,7 @@ import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
 export async function GET(request: Request) {
   const limitResult = rateLimit(request, { maxRequests: 30, windowMs: 60_000 });
   if (!limitResult.success) return rateLimit429(limitResult, 30);
-  const siteUrl = process.env.SITE_URL || process.env.BETTER_AUTH_URL;
+  const siteUrl = process.env.SITE_URL;
   let siteStatus: "operational" | "degraded" | "unknown" = "operational";
 
   if (siteUrl) {

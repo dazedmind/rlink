@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateAfterCmsPromoMutation } from "@/lib/cms/cms-invalidation";
 import { promoStatus, type Promo } from "@/lib/types";
 import { FileUpload } from "@/components/ui/FileUpload";
 import TextAreaField from "@/components/ui/TextAreaField";
@@ -55,6 +57,7 @@ export default function PromoFormModal({
   onSuccess: () => void;
   promo?: Promo | null;
 }) {
+  const queryClient = useQueryClient();
   const isEdit = !!promo;
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,6 +125,7 @@ export default function PromoFormModal({
       }
 
       toast.success(`Promo ${isEdit ? "updated" : "created"} successfully!`);
+      invalidateAfterCmsPromoMutation(queryClient);
       onSuccess();
       onClose();
     } catch {

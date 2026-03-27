@@ -2,6 +2,12 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import {
+  crmLeadsStatsFilters,
+  crmReservationsRecentFilters,
+} from "@/lib/crm/crm-filters";
+import { fetchLeadsList, fetchReservationsList } from "@/lib/crm/crm-fetchers";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import LeadsTable from "@/components/tables/crm/LeadsTable";
@@ -17,27 +23,28 @@ function CRMDashboard({
 }: {
   setActiveTab: (tab: string) => void;
 }) {
-  const { data: leadsData, isLoading: loadingLeads } = useQuery({
-    queryKey: qk.leads(),
-    queryFn: async () => {
-      const res = await fetch("/api/leads");
-      const json = await res.json();
-      return json.data || [];
-    },
+  const leadsStatsQuery = useQuery({
+    queryKey: qk.leads(crmLeadsStatsFilters),
+    queryFn: () => fetchLeadsList(crmLeadsStatsFilters),
+    ...crmQueryOptions,
   });
 
-  const { data: reservationsData, isLoading: loadingReservations } = useQuery({
-    queryKey: qk.reservations({ limit: "1000" }),
-    queryFn: async () => {
-      const res = await fetch("/api/reservation?limit=1000");
-      const json = await res.json();
-      return { total: json.total ?? 0 };
-    },
+  const reservationsSummaryQuery = useQuery({
+    queryKey: qk.reservations(crmReservationsRecentFilters),
+    queryFn: () => fetchReservationsList(crmReservationsRecentFilters),
+    ...crmQueryOptions,
   });
 
-  const allLeads = leadsData ?? [];
-  const totalReservations = reservationsData?.total ?? 0;
-  const loading = loadingLeads || loadingReservations;
+  const allLeads = (leadsStatsQuery.data?.data ?? []) as { createdAt: string }[];
+  const totalReservations = reservationsSummaryQuery.data?.total ?? 0;
+
+  const statsError = leadsStatsQuery.isError || reservationsSummaryQuery.isError;
+  const bothStatsLoaded =
+    leadsStatsQuery.data !== undefined && reservationsSummaryQuery.data !== undefined;
+  const showStatsSkeleton =
+    !statsError &&
+    !bothStatsLoaded &&
+    (leadsStatsQuery.isPending || reservationsSummaryQuery.isPending);
 
   const { leadsThisMonth, leadsLastMonth, totalLeads } = useMemo(() => {
     const now = new Date();
@@ -47,12 +54,12 @@ function CRMDashboard({
     const lastM = lastMonthDate.getMonth();
     const lastY = lastMonthDate.getFullYear();
 
-    const thisMonthCount = allLeads.filter((lead: { createdAt: string }) => {
+    const thisMonthCount = allLeads.filter((lead) => {
       const d = new Date(lead.createdAt);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     }).length;
 
-    const lastMonthCount = allLeads.filter((lead: { createdAt: string }) => {
+    const lastMonthCount = allLeads.filter((lead) => {
       const d = new Date(lead.createdAt);
       return d.getMonth() === lastM && d.getFullYear() === lastY;
     }).length;
@@ -79,7 +86,7 @@ function CRMDashboard({
       label: "Leads Last Month",
       hasIncrease: false,
       color: "text-neutral-500",
-      increase: 0
+      increase: 0,
     },
     {
       id: 3,
@@ -104,6 +111,11 @@ function CRMDashboard({
     return ((increase / leadsThisMonth) * 100).toFixed(0);
   };
 
+  const handleRetryStats = () => {
+    void leadsStatsQuery.refetch();
+    void reservationsSummaryQuery.refetch();
+  };
+
   return (
     <main className="flex-1 overflow-auto m-4 border-border border rounded-xl bg-background">
       <div className="mx-auto p-8">
@@ -112,24 +124,26 @@ function CRMDashboard({
           description="Track your leads, client inquiries, and sales progression."
         />
 
-        {loading ? (
+        {statsError && (
+          <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">Could not load dashboard metrics.</span>
+            <Button type="button" size="sm" variant="outline" onClick={handleRetryStats}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {showStatsSkeleton ? (
           <DashboardSkeleton />
         ) : (
           <div className="flex flex-col gap-8 animate-fade-in-up">
             <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
               {leadsCard.map((lead) => (
-                <Card
-                  key={lead.id}
-                  className="flex flex-col justify-end h-[150px]"
-                >
+                <Card key={lead.id} className="flex flex-col justify-end h-[150px]">
                   <CardContent className="flex flex-col items-start">
-                    <div className={`text-4xl font-bold ${lead.color}`}>
-                      {lead.leads}
-                    </div>
+                    <div className={`text-4xl font-bold ${lead.color}`}>{lead.leads}</div>
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold text-muted-foreground">
-                        {lead.label}
-                      </p>
+                      <p className="text-lg font-semibold text-muted-foreground">{lead.label}</p>
                       {lead.hasIncrease && (
                         <p className="flex items-center text-xs text-green-600">
                           <FaCaretUp className="size-4 text-green-600" />{" "}
@@ -161,10 +175,7 @@ function CRMDashboard({
                   </Button>
                 </div>
 
-                <LeadsTable
-                  table_name="Leads"
-                  recentViewOnly={true}
-                />
+                <LeadsTable table_name="Leads" recentViewOnly={true} />
               </div>
 
               <div className="flex flex-col gap-4">
@@ -184,10 +195,7 @@ function CRMDashboard({
                   </Button>
                 </div>
 
-                <ReservationTable
-                  table_name="Reservations"
-                  recentViewOnly={true}
-                />
+                <ReservationTable table_name="Reservations" recentViewOnly={true} />
               </div>
             </div>
 

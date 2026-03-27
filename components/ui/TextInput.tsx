@@ -4,7 +4,7 @@ import { Input } from "./input";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "./button";
-import { validateEmail, validatePhone, validateName, validateEmployeeId } from "@/lib/form-validator";
+import { validateEmail, validatePhone, validateName, validateEmployeeId } from "@/app/utils/form-validator";
 
 type ValidationType = "email" | "name" | "phone" | "Employee ID" | "none";
 
@@ -98,6 +98,7 @@ function TextInput({
               onClick={() =>
                 setInputType(inputType === "password" ? "text" : "password")
               }
+              className="hover:bg-transparent"
             >
               {inputType === "password" ? (
                 <Eye className="size-4 text-gray-500" />

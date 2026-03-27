@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = [
   "/login",
+  "/forgot-password",
+  "/reset-password",
   "/api/auth",   // better-auth handles its own auth
   "/api/config", // intentionally public
   "/api/health", // intentionally public

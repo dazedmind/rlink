@@ -113,19 +113,19 @@ function DashboardHeader({
               <DropdownMenuGroup>
                 {notifications.length === 0 ? (
                   <DropdownMenuItem
-                    className="flex justify-center gap-4 p-4 py-36 cursor-pointer focus:bg-zinc-50">
+                    className="flex justify-center gap-4 p-4 py-36 cursor-pointer">
                     <span className="flex flex-col items-center justify-center gap-2">
-                      <Info className="size-8 text-zinc-500" />
-                      <p className="text-sm text-zinc-500">No notifications yet</p>
+                      <Info className="size-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">No notifications yet</p>
                     </span>
                   </DropdownMenuItem>
                 ) : (
                   notifications.map((n: { id: number; type: string; read?: boolean; title: string; createdAt: string; description: string }) => (
                     <DropdownMenuItem
                       key={n.id.toString()}
-                      className="flex items-start gap-4 p-4 cursor-pointer focus:bg-zinc-50"
+                      className="flex items-start gap-4 p-4 cursor-pointer"
                     >
-                      <div className="mt-1 shrink-0 size-8 rounded-full bg-zinc-100 flex items-center justify-center">
+                      <div className="mt-1 shrink-0 size-8 rounded-full bg-muted-foreground/10 flex items-center justify-center">
                         <span className={`size-4 rounded-full ${notificationTypeMeta[n.type]?.className ?? ""}`}>
                           {notificationIcons[n.type as keyof typeof notificationIcons]}
                         </span>
@@ -133,15 +133,15 @@ function DashboardHeader({
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between gap-2">
                           <p
-                            className={`text-sm leading-none ${n.read ? "text-zinc-600 font-medium" : "text-zinc-900 font-bold"}`}
+                            className={`text-sm leading-none ${n.read ? "text-muted-foreground font-medium" : "text-foreground font-bold"}`}
                           >
                             {n.title}
                           </p>
-                          <span className="text-[10px] text-zinc-500 whitespace-nowrap">
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                             {dateFormatter(n.createdAt)}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                           {n.description}
                         </p>
                       </div>

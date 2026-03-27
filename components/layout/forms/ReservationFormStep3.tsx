@@ -82,7 +82,7 @@ export function ReservationFormStep3({ formData, onBack, onComplete }: Props) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white border rounded-xl p-6 space-y-4 shadow-sm">
+      <div className="bg-background border rounded-xl p-6 space-y-4 shadow-sm">
         <h3 className="font-bold text-foreground flex items-center gap-2 border-b pb-2">
           <FileText size={18} className="text-blue-600" /> Summary of Details
         </h3>
@@ -119,7 +119,7 @@ export function ReservationFormStep3({ formData, onBack, onComplete }: Props) {
         </Button>
         <Button
           onClick={handleSubmitReservation}
-          className="bg-success text-white px-10 py-3 rounded-lg font-bold hover:bg-success/90 shadow-lg shadow-success/10"
+          className="bg-success text-white rounded-lg font-bold hover:bg-success/90 shadow-lg shadow-success/10"
         >
           Confirm & Submit Reservation
         </Button>

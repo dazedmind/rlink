@@ -19,7 +19,7 @@ import {
   Folder,
   type LucideIcon,
 } from "lucide-react";
-import { ModuleAccessConfig } from "@/components/tables/user-management/ModulesTable";
+import type { ModuleAccessConfig } from "@/lib/iam/module-access-types";
 import {
   getModuleAccessCache,
   setModuleAccessCache,

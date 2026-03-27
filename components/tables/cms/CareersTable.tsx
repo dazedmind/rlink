@@ -38,6 +38,7 @@ import {
   EllipsisVertical,
   MapPin,
   Eye,
+  Building2,
 } from "lucide-react";
 import { Career, careerStatus, careerStatusMeta, department } from "@/lib/types";
 import TableSkeleton from "@/components/layout/skeleton/TableSkeleton";
@@ -259,7 +260,7 @@ export default function CareersTable({
       <Table>
         <TableHeader className="bg-background">
           <TableRow>
-            {["Position", "Location", "Status", "Posted", "Last Updated", ""].map(
+            {["Position", "Location", "Department", "Status", "Posted", "Last Updated", ""].map(
               (col, i) => (
                 <TableHead
                   key={i}
@@ -309,6 +310,12 @@ export default function CareersTable({
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin size={12} />
                     {row.location}
+                  </span>
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Building2 size={12} />
+                    {department[row.department as keyof typeof department]}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4">

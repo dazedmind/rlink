@@ -5,11 +5,11 @@ import { campaigns } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { deliverCampaignToSubscribers } from "@/lib/email/deliver-campaign";
 
 /**
  * POST /api/newsletter/campaigns/[id]/send
- * Marks a draft campaign as sent (status=sent, sentAt=now).
- * Actual email delivery would be handled by a separate job/worker.
+ * Marks campaign as sent and emails all subscribed recipients.
  */
 export async function POST(
   request: NextRequest,
@@ -48,8 +48,19 @@ export async function POST(
       .where(eq(campaigns.id, numericId))
       .returning();
 
+    const { sent, failed } = await deliverCampaignToSubscribers(numericId);
+    if (failed > 0) {
+      console.warn(
+        `[POST /api/newsletter/campaigns/:id/send] sent ${sent}, failed ${failed}`
+      );
+    }
+
     revalidatePath("/home");
-    return NextResponse.json({ data: updated, message: "Campaign sent successfully" });
+    return NextResponse.json({
+      data: updated,
+      message: "Campaign sent successfully",
+      delivery: { sent, failed },
+    });
   } catch (error) {
     console.error("[POST /api/newsletter/campaigns/:id/send]", error);
     return NextResponse.json({ error: "Failed to send campaign" }, { status: 500 });

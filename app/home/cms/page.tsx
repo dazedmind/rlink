@@ -9,7 +9,6 @@ import {
   Code,
   Menu,
   ShieldX,
-  UserIcon,
   Link2,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
@@ -67,6 +66,7 @@ import SeoToolsPage from "./developer-tools/seo-tools/page";
 import AnalyticsToolsPage from "./developer-tools/analytics-tools/page";
 import SecurityToolsPage from "./developer-tools/security-tools/page";
 import ManageLinks from "./manage-links/page";
+import { CmsQueryBootstrap } from "@/lib/cms/cms-bootstrap";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "CMS Menu" },
@@ -250,6 +250,7 @@ export default function CmsSidebar() {
       </Sidebar>
 
       <SidebarInset className="bg-accent min-w-0 overflow-x-hidden">
+        <CmsQueryBootstrap />
         {/* Mobile menu bar - visible only on small screens */}
         <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">

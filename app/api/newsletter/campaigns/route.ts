@@ -5,6 +5,7 @@ import { campaigns, newsletter } from "@/db/schema";
 import { asc, count, desc, eq, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/api-auth";
 import { rateLimit, rateLimit429 } from "@/lib/rate-limit";
+import { deliverCampaignToSubscribers } from "@/lib/email/deliver-campaign";
 
 const MAX_NAME_LENGTH = 200;
 const MAX_SUBJECT_LENGTH = 300;
@@ -120,6 +121,15 @@ export async function POST(request: NextRequest) {
         sentAt: status === "sent" ? new Date() : null,
       })
       .returning();
+
+    if (status === "sent" && created?.id) {
+      const { sent, failed } = await deliverCampaignToSubscribers(created.id);
+      if (failed > 0) {
+        console.warn(
+          `[POST /api/newsletter/campaigns] Campaign ${created.id} sent: ${sent} ok, ${failed} failed`
+        );
+      }
+    }
 
     revalidatePath("/home");
     return NextResponse.json({ data: created }, { status: 201 });

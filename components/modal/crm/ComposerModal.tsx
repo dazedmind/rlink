@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@/lib/query-keys";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +73,7 @@ type ComposerModalProps = {
 };
 
 function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }: ComposerModalProps) {
+  const queryClient = useQueryClient();
   const defaultTab = mode === "view" ? "preview" : "write";
   const isEdit = mode === "edit" || mode === "view";
   const isCreate = mode === "create";
@@ -216,6 +219,8 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
         setScheduleTime("10:00");
         setForm({ name: "", subject: "", preview: "", body: "", status: "" });
         onClose();
+        void queryClient.invalidateQueries({ queryKey: qk.newsletterCampaigns() });
+        void queryClient.invalidateQueries({ queryKey: qk.newsletter() });
         onSuccess?.();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to save campaign");
@@ -223,7 +228,7 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
         setIsSubmitting(false);
       }
     },
-    [form, onClose, onSuccess, isEdit, campaign]
+    [form, onClose, onSuccess, isEdit, campaign, queryClient]
   );
 
   const handleSaveDraft = () => submitCampaign("draft");
@@ -249,7 +254,12 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent 
         className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden gap-0"
         showCloseButton={false}

@@ -36,6 +36,7 @@ import Inventory from "./inventory/page";
 import CRMDashboard from "./dashboard/page";
 import Inquiries from "./inquiries/page";
 import Newsletter from "./newsletter/page";
+import { CrmQueryBootstrap } from "@/lib/crm/crm-bootstrap";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "dashboard", group: "CRM Menu" },
@@ -147,6 +148,7 @@ export default function CrmSidebar() {
       </Sidebar>
 
       <SidebarInset className="bg-accent min-w-0 overflow-x-hidden">
+        <CrmQueryBootstrap />
         {/* Mobile menu bar - visible only on small screens */}
         <header className="sticky top-0 z-40 flex lg:hidden items-center gap-3 border-b bg-white px-4 py-3 shrink-0">
           <SidebarTrigger className="size-9">

@@ -3,11 +3,18 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { crmQueryOptions } from "@/lib/crm/crm-query-options";
+import { crmReservationsInventoryFilters } from "@/lib/crm/crm-filters";
+import {
+  fetchProjectsList,
+  fetchProjectInventoryAll,
+  fetchReservationsList,
+} from "@/lib/crm/crm-fetchers";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import Image from "next/image";
 import arcoeResidenceLogo from "@/public/project-logo/ar-logo.png";
 import arcoeEstatesLogo from "@/public/project-logo/ae-logo.png";
-import ProjectDetailsView from "@/components/layout/inventory/ProjectDetailsView";
+import ProjectDetailsView from "@/app/home/crm/inventory/components/ProjectDetailsView";
 import InventorySkeleton from "@/components/layout/skeleton/InventorySkeleton";
 import type { Project, InventoryItem, Reservation } from "@/lib/types";
 
@@ -27,34 +34,25 @@ function Inventory({
 
   const { data: projectsData, isLoading: loadingProjects } = useQuery({
     queryKey: qk.projects(),
-    queryFn: async () => {
-      const res = await fetch("/api/projects");
-      const json = await res.json();
-      return Array.isArray(json) ? json : [];
-    },
+    queryFn: fetchProjectsList,
+    ...crmQueryOptions,
   });
 
   const { data: inventoryData, isLoading: loadingInventory } = useQuery({
     queryKey: qk.projectInventory(),
-    queryFn: async () => {
-      const res = await fetch("/api/projects/inventory");
-      const json = await res.json();
-      return Array.isArray(json) ? json : [];
-    },
+    queryFn: fetchProjectInventoryAll,
+    ...crmQueryOptions,
   });
 
   const { data: reservationData, isLoading: loadingReservations } = useQuery({
-    queryKey: qk.reservations(),
-    queryFn: async () => {
-      const res = await fetch("/api/reservation");
-      const json = await res.json();
-      return json.data ?? [];
-    },
+    queryKey: qk.reservations(crmReservationsInventoryFilters),
+    queryFn: () => fetchReservationsList(crmReservationsInventoryFilters),
+    ...crmQueryOptions,
   });
 
   const projects: Project[] = projectsData ?? [];
   const inventory: InventoryItem[] = inventoryData ?? [];
-  const reservations: Reservation[] = reservationData ?? [];
+  const reservations: Reservation[] = (reservationData?.data ?? []) as Reservation[];
 
   const loading = loadingProjects || loadingInventory || loadingReservations;
 

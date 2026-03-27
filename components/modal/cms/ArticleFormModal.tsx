@@ -14,7 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import TextInput from "@/components/ui/TextInput";
 import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { articleType } from "@/lib/types";
+import { invalidateAfterCmsArticleMutation } from "@/lib/cms/cms-invalidation";
 
 export type Article = {
   id: number;
@@ -68,6 +70,7 @@ export default function ArticleFormModal({
   onSuccess: () => void;
   article?: Article | null;
 }) {
+  const queryClient = useQueryClient();
   const isEdit = !!article;
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,6 +153,7 @@ export default function ArticleFormModal({
       }
 
       toast.success(`Article ${isEdit ? "updated" : "created"} successfully!`);
+      invalidateAfterCmsArticleMutation(queryClient);
       onSuccess();
       onClose();
     } catch {
