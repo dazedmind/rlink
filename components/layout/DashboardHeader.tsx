@@ -34,6 +34,8 @@ import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { notificationTypeMeta } from "@/lib/types";
+import Image from "next/image";
+import rlinkLogo from "@/public/rlink_logo.png";
 
 const notificationIcons = {
   info: <Info className="size-4 text-blue-500" />,
@@ -46,7 +48,7 @@ function DashboardHeader({
   title,
   description,
 }: {
-  title: string;
+  title?: string;
   description: string;
 }) {
   const { data: session } = useSession();
@@ -72,7 +74,11 @@ function DashboardHeader({
   return (
     <div className="flex items-center justify-between">
       <span>
-        <h1 className="text-xl md:text-3xl text-primary font-bold">{title}</h1>
+        {title ? (
+          <h1 className="text-xl md:text-3xl text-primary font-bold">{title}</h1>
+        ) : (
+          <Image src={rlinkLogo} alt="RLink" width={100} height={100} />
+        )}
         <p className="hidden md:block text-sm text-muted-foreground">{description}</p>
       </span>
 

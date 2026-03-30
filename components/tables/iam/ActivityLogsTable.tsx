@@ -31,11 +31,11 @@ import {
   Activity,
 } from "lucide-react";
 import { shortDateFormatter } from "@/app/utils/shortDateFormatter";
-import { toast } from "sonner";
-import { activityStatusMeta, ActivityLogRecord } from "@/lib/types";
+import { activityStatusMeta } from "@/lib/types";
 import { TablePagination } from "@/components/tables/TablePagination";
 
-const ITEMS_PER_PAGE = 10;
+const DEFAULT_ITEMS_PER_PAGE = 10;
+const RECENT_ITEMS_LIMIT = 4;
 
 function getActivityIcon(activity: string) {
   const lower = activity.toLowerCase();
@@ -47,25 +47,35 @@ function getActivityIcon(activity: string) {
   return Activity;
 }
 
-export default function ActivityLogsTable() {
+type ActivityLogsTableProps = {
+  /** Dashboard preview: fetch first page with limit 5, no pagination. */
+  recentViewOnly?: boolean;
+};
+
+export default function ActivityLogsTable({
+  recentViewOnly = false,
+}: ActivityLogsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("newest");
 
+  const pageSize = recentViewOnly ? RECENT_ITEMS_LIMIT : DEFAULT_ITEMS_PER_PAGE;
+  const effectivePage = recentViewOnly ? 1 : currentPage;
+
   const queryFilters = useMemo(
     () => ({
-      page: currentPage,
-      limit: ITEMS_PER_PAGE,
+      page: effectivePage,
+      limit: pageSize,
       sort: sortOption,
     }),
-    [currentPage, sortOption]
+    [effectivePage, pageSize, sortOption]
   );
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: qk.activityLogs(queryFilters),
     queryFn: () =>
       fetchActivityLogsPage({
-        page: currentPage,
-        limit: ITEMS_PER_PAGE,
+        page: effectivePage,
+        limit: pageSize,
         sort: sortOption,
       }),
     ...iamTableQueryOptions,
@@ -73,7 +83,7 @@ export default function ActivityLogsTable() {
 
   const logs = data?.logs ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -119,6 +129,7 @@ export default function ActivityLogsTable() {
       </div>
 
       {/* Table */}
+      <div className="overflow-x-auto scrollbar-hide min-w-0">
       <Table>
         <TableHeader className="bg-accent">
           <TableRow>
@@ -210,20 +221,23 @@ export default function ActivityLogsTable() {
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
-        <p className="text-sm text-muted-foreground">
-          {total} log{total !== 1 ? "s" : ""} total
-        </p>
+      {!recentViewOnly && (
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+          <p className="text-sm text-muted-foreground">
+            {total} log{total !== 1 ? "s" : ""} total
+          </p>
 
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          activeClassName="bg-primary min-w-8"
-        />
-      </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            activeClassName="bg-primary min-w-8"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -18,12 +18,14 @@ import {
   FileText,
   Folder,
   type LucideIcon,
+  Loader2,
 } from "lucide-react";
 import type { ModuleAccessConfig } from "@/lib/iam/module-access-types";
 import {
   getModuleAccessCache,
   setModuleAccessCache,
 } from "@/lib/module-access-cache";
+import ModuleCardSkeleton from "@/components/layout/skeleton/ModuleCardSkeleton";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   ChartLine,
@@ -60,7 +62,7 @@ function Home() {
   const userRole = (session?.user?.role as string)?.toLowerCase() ?? "";
   const userDept = (session?.user?.department as string)?.toLowerCase() ?? "";
 
-  const { data: moduleAccessConfig } = useQuery({
+  const { data: moduleAccessConfig, isLoading } = useQuery({
     queryKey: qk.developerToolsSettings("module-access"),
     queryFn: async () => {
       const cached = getModuleAccessCache();
@@ -102,7 +104,7 @@ function Home() {
     <ProtectedRoute>
       <div className="h-screen overflow-y-auto w-full bg-accent">
         <main className="flex flex-col gap-10 p-8 px-8 md:px-16 lg:px-24 xl:px-44 h-screen">
-          <DashboardHeader title="RLink" description="" />
+          <DashboardHeader description="" />
 
           <div className="flex flex-col gap-8 flex-1">
             {/* Greeting */}
@@ -120,6 +122,9 @@ function Home() {
 
             {/* Module Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {isLoading && (
+                <ModuleCardSkeleton />
+              )}
               {filteredModules.map((module, i) => {
                 const IconComponent = ICON_MAP[module.icon] ?? ChartLine;
                 return (

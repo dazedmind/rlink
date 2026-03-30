@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -42,6 +42,71 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "model", label: "Model" },
 ];
 
+type InventoryRowProps = {
+  unit: InventoryUnit;
+  modelName: string;
+  originalIndex: number;
+  onEdit: (index: number) => void;
+  onRemove: (index: number) => void;
+};
+
+const InventoryTableRow = memo(function InventoryTableRow({
+  unit,
+  modelName,
+  originalIndex,
+  onEdit,
+  onRemove,
+}: InventoryRowProps) {
+  return (
+    <TableRow>
+      <TableCell className="text-center">
+        {unit.isFeatured ? (
+          <Star size={14} className="text-yellow-500 fill-yellow-400 mx-auto" />
+        ) : (
+          <span className="text-muted-foreground" />
+        )}
+      </TableCell>
+      <TableCell className="font-mono font-medium">
+        {unit.inventoryCode || (
+          <span className="text-muted-foreground italic">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {modelName || <span className="text-muted-foreground italic">—</span>}
+      </TableCell>
+      <TableCell className="text-center">{unit.block || "—"}</TableCell>
+      <TableCell className="text-center">{unit.lot || "—"}</TableCell>
+      <TableCell className="text-right">
+        {unit.sellingPrice > 0 ? formatCurrency(unit.sellingPrice) : "—"}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onEdit(originalIndex)}
+            aria-label="Edit unit"
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={() => onRemove(originalIndex)}
+            aria-label="Remove unit"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+
 type ProjectInventoryTabProps = {
   inventory: InventoryUnit[];
   setInventory: React.Dispatch<React.SetStateAction<InventoryUnit[]>>;
@@ -64,10 +129,22 @@ export default function ProjectInventoryTab({
 
   const editingUnit = editingIndex !== null ? inventory[editingIndex] : null;
 
+  const modelNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const mod of models) m.set(mod.id, mod.modelName);
+    return m;
+  }, [models]);
+
+  const indexByUnitId = useMemo(() => {
+    const m = new Map<string, number>();
+    inventory.forEach((u, i) => m.set(u.id, i));
+    return m;
+  }, [inventory]);
+
   const sortedInventory = useMemo(() => {
     const sorted = [...inventory];
     const getModelName = (u: InventoryUnit) =>
-      models.find((m) => m.id === u.modelId)?.modelName ?? "";
+      modelNameById.get(u.modelId) ?? "";
 
     const cmp = (a: InventoryUnit, b: InventoryUnit): number => {
       let diff = 0;
@@ -94,22 +171,22 @@ export default function ProjectInventoryTab({
     };
     sorted.sort(cmp);
     return sorted;
-  }, [inventory, models, sortField, sortDir]);
+  }, [inventory, modelNameById, sortField, sortDir]);
 
-  const openAdd = () => {
+  const openAdd = useCallback(() => {
     setEditingIndex(null);
     setModalOpen(true);
-  };
+  }, []);
 
-  const openEdit = (index: number) => {
+  const openEdit = useCallback((index: number) => {
     setEditingIndex(index);
     setModalOpen(true);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingIndex(null);
-  };
+  }, []);
 
   const handleSave = (data: Omit<InventoryUnit, "id">) => {
     if (editingIndex !== null) {
@@ -130,13 +207,13 @@ export default function ProjectInventoryTab({
     closeModal();
   };
 
-  const removeUnit = (index: number) => {
+  const removeUnit = useCallback((index: number) => {
     setInventory((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, [setInventory]);
 
-  const toggleSortDir = () => {
+  const toggleSortDir = useCallback(() => {
     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-  };
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -214,68 +291,17 @@ export default function ProjectInventoryTab({
             </TableHeader>
             <TableBody>
               {sortedInventory.map((unit) => {
-                const model = models.find((m) => m.id === unit.modelId);
-                const originalIndex = inventory.findIndex((u) => u.id === unit.id);
+                const originalIndex = indexByUnitId.get(unit.id);
+                if (originalIndex === undefined) return null;
                 return (
-                  <TableRow key={unit.id}>
-                    <TableCell className="text-center">
-                      {unit.isFeatured ? (
-                        <Star
-                          size={14}
-                          className="text-yellow-500 fill-yellow-400 mx-auto"
-                        />
-                      ) : (
-                        <span className="text-muted-foreground"></span>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-mono font-medium">
-                      {unit.inventoryCode || (
-                        <span className="text-muted-foreground italic">
-                          —
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {model?.modelName || (
-                        <span className="text-muted-foreground italic">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {unit.block || "—"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {unit.lot || "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {unit.sellingPrice > 0
-                        ? formatCurrency(unit.sellingPrice)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEdit(originalIndex)}
-                          aria-label="Edit unit"
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => removeUnit(originalIndex)}
-                          aria-label="Remove unit"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <InventoryTableRow
+                    key={unit.id}
+                    unit={unit}
+                    modelName={modelNameById.get(unit.modelId) ?? ""}
+                    originalIndex={originalIndex}
+                    onEdit={openEdit}
+                    onRemove={removeUnit}
+                  />
                 );
               })}
             </TableBody>

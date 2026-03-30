@@ -340,13 +340,13 @@ export default function ProjectsTable({
               paginatedProjects.map((row) => (
                 <TableRow key={row.id} className="hover:bg-accent cursor-pointer" onClick={() => onViewProject(row)}>
                   <TableCell className="px-6 py-4">
-                    {row.photoUrl ? (
+                    {row.logoUrl ? (
                       <Image
-                        src={row.photoUrl}
+                        src={row.logoUrl}
                         alt={row.projectName}
                         width={100}
                         height={100}
-                        className="rounded-md w-full h- aspect-video object-cover"
+                        className="rounded-md w-fit h-fit aspect-video object-contain"
                       />
                     ) : (
                       <div className="flex items-center justify-center h-auto bg-accent border border-border rounded-md w-full aspect-video object-cover">

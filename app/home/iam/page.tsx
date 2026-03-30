@@ -152,7 +152,9 @@ export default function IamSidebar() {
         </header>
 
         {/* Content Area */}
-        {activeTab === "dashboard" && <IamDashboard />}
+        {activeTab === "dashboard" && (
+          <IamDashboard setActiveTab={setActiveTab} />
+        )}
         {activeTab === "manage-users" && <ManageUsers />}
         {activeTab === "activity-logs" && <ActivityLogs />}
         {activeTab === "module-access" && <ModuleAccess />}

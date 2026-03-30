@@ -51,6 +51,8 @@ type UsersTableProps = {
   onDelete: (user: UserRecord) => void;
   onAdd: () => void;
   viewOnly?: boolean;
+  /** Dashboard preview: first 5 rows, no footer pagination. */
+  recentViewOnly?: boolean;
 };
 
 export default function UsersTable({
@@ -58,6 +60,7 @@ export default function UsersTable({
   onDelete,
   onAdd,
   viewOnly,
+  recentViewOnly,
 }: UsersTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("newest");
@@ -217,7 +220,9 @@ export default function UsersTable({
     return user.name || user.email;
   };
 
-  const displayUsers = viewOnly ? paginatedUsers.slice(0, 5) : paginatedUsers;
+  const displayUsers = recentViewOnly
+    ? filteredAndSorted.slice(0, 5)
+    : paginatedUsers;
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
@@ -354,6 +359,7 @@ export default function UsersTable({
       </div>
 
       {/* Table */}
+      <div className="overflow-x-auto scrollbar-hide min-w-0">
       <Table>
         <TableHeader className="bg-accent">
           <TableRow>
@@ -484,24 +490,27 @@ export default function UsersTable({
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
-        <p className="text-sm text-muted-foreground">
-          {activeFilterCount > 0
-            ? `${totalFiltered} matching users`
-            : `${totalFiltered} user${totalFiltered !== 1 ? "s" : ""} total`}
-        </p>
+      {!recentViewOnly && (
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+          <p className="text-sm text-muted-foreground">
+            {activeFilterCount > 0
+              ? `${totalFiltered} matching users`
+              : `${totalFiltered} user${totalFiltered !== 1 ? "s" : ""} total`}
+          </p>
 
-        {!viewOnly && (
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            activeClassName="bg-primary min-w-8"
-          />
-        )}
-      </div>
+          {!viewOnly && (
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              activeClassName="bg-primary min-w-8"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -334,8 +334,12 @@ export default function ProjectDetailPage({
         toast.error(err.error ?? "Failed to save inventory.");
         return;
       }
+      const nextInventory = (await res.json()) as InventoryUnit[];
+      if (Array.isArray(nextInventory)) {
+        setInventory(nextInventory);
+      }
       toast.success("Inventory saved.");
-      fetchData();
+      void queryClient.invalidateQueries({ queryKey: ["projects"] });
     } catch {
       toast.error("Network error.");
     } finally {

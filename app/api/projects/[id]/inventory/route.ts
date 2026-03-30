@@ -47,6 +47,7 @@ export async function PATCH(
       return { ...u, inventoryCode: code };
     });
 
+    const rowsToInsert: (typeof projectInventory.$inferInsert)[] = [];
     for (const u of unitsWithUniqueCodes) {
       const modelId = u.modelId;
       if (!modelId || !modelIdSet.has(modelId)) continue;
@@ -56,7 +57,7 @@ export async function PATCH(
       const preservedSoldTo = soldToMap.get(`${block}-${lot}-${modelId}`) ?? null;
       const inventoryId = crypto.randomUUID();
 
-      await db.insert(projectInventory).values({
+      rowsToInsert.push({
         id: inventoryId,
         projectId: id,
         modelId: String(modelId),
@@ -69,8 +70,26 @@ export async function PATCH(
       } as unknown as typeof projectInventory.$inferInsert);
     }
 
+    if (rowsToInsert.length > 0) {
+      await db.insert(projectInventory).values(rowsToInsert);
+    }
+
     revalidatePath("/home");
-    return NextResponse.json({ message: "Inventory updated successfully" });
+
+    const refreshed = await db
+      .select({
+        id: projectInventory.id,
+        modelId: projectInventory.modelId,
+        inventoryCode: projectInventory.inventoryCode,
+        block: projectInventory.block,
+        lot: projectInventory.lot,
+        sellingPrice: projectInventory.sellingPrice,
+        isFeatured: projectInventory.isFeatured,
+      })
+      .from(projectInventory)
+      .where(eq(projectInventory.projectId, id));
+
+    return NextResponse.json(refreshed);
   } catch (error) {
     console.error("[PATCH /api/projects/:id/inventory]", error);
     return NextResponse.json(

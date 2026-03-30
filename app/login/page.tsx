@@ -14,6 +14,7 @@ import { authClient } from "@/lib/auth-client";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import TextInput from "@/components/ui/TextInput";
 import { Label } from "@/components/ui/label";
+import rlinkLogo from "@/public/rlink_logo.png";
 
 type LoginStep = "credentials" | "totp" | "backup";
 
@@ -137,11 +138,8 @@ function LoginPage() {
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative space-y-6 px-12">
-          <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 rounded-full px-4 py-1.5">
-            <ShieldCheck size={13} className="text-blue-400" />
-            <span className="text-blue-400 text-xs font-medium tracking-wide uppercase">
-              RLink
-            </span>
+          <div className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 rounded-full p-4 px-8">
+            <Image src={rlinkLogo} alt="RLink Logo" width={200} height={200} />
           </div>
           <h1 className="text-5xl font-bold text-white leading-[1.1] tracking-tight">
             Centralized
