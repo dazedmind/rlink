@@ -11,6 +11,39 @@ const ALLOWED_ORIGIN =
 // Trusted image hosts already in use by the app
 const IMG_HOSTS = "https://www.rland.ph https://i.imgur.com";
 
+// Mintlify docs (proxied at /docs) load assets from Mint CDN + preview host (see vercel.json)
+const MINTLIFY_HOST = "https://sl-93697e20.mintlify.dev";
+const DOCS_IMG_HOSTS = `${IMG_HOSTS} https://mintcdn.com`;
+
+function mintlifyDocsHeaders(): { key: string; value: string }[] {
+  return [
+    { key: "X-Frame-Options", value: "DENY" },
+    { key: "X-Content-Type-Options", value: "nosniff" },
+    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    {
+      key: "Permissions-Policy",
+      value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    },
+    {
+      key: "Content-Security-Policy",
+      value: [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        `img-src 'self' data: blob: ${DOCS_IMG_HOSTS}`,
+        `connect-src 'self' ${ALLOWED_ORIGIN} https://fonts.googleapis.com ${MINTLIFY_HOST} https://mintcdn.com`,
+        "frame-src 'none'",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "upgrade-insecure-requests",
+      ].join("; "),
+    },
+  ];
+}
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -34,6 +67,9 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
+      // Docs (Mintlify rewrite): relax CSP so mintcdn.com images and Mintlify fetches work
+      { source: "/docs/:path*", headers: mintlifyDocsHeaders() },
+
       {
         // Apply to ALL routes
         source: "/:path*",

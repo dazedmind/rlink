@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/api/auth",   // better-auth handles its own auth
   "/api/config", // intentionally public
   "/api/health", // intentionally public
+  "/docs", // Mintlify proxy (vercel.json); public + skip API CORS rules for /docs/* API calls if any
 ];
 
 const isDev = process.env.NODE_ENV === "development";
