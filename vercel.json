@@ -4,5 +4,15 @@
       "path": "/api/cron/activity-logs-retention",
       "schedule": "0 3 * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/docs",
+      "destination": "https://sl-93697e20.mintlify.dev/docs"
+    },
+    {
+      "source": "/docs/:match*",
+      "destination": "https://sl-93697e20.mintlify.dev/docs/:match*"
+    }
   ]
 }
