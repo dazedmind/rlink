@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
         hostname: "i.imgur.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "sl-93697e20.mintlify.dev",
+        pathname: "/**",
+      },
     ],
   },
 
