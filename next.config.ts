@@ -8,41 +8,12 @@ const ALLOWED_ORIGIN =
   process.env.ALLOWED_ORIGIN ??
   (isDev ? "http://localhost:3000" : "https://rlink-dev.vercel.app");
 
-// Trusted image hosts already in use by the app
-const IMG_HOSTS = "https://www.rland.ph https://i.imgur.com";
-
-// Mintlify docs (proxied at /docs) load assets from Mint CDN + preview host (see vercel.json)
+// Image hosts: app + Mintlify /docs proxy (mintcdn hero assets, CloudFront icons).
+// Keep a single global CSP: Next merges headers from every matching `source`, so multiple
+// Content-Security-Policy headers intersect and a stricter rule would still block /docs assets.
 const MINTLIFY_HOST = "https://sl-93697e20.mintlify.dev";
-const DOCS_IMG_HOSTS = `${IMG_HOSTS} https://mintcdn.com`;
-
-function mintlifyDocsHeaders(): { key: string; value: string }[] {
-  return [
-    { key: "X-Frame-Options", value: "DENY" },
-    { key: "X-Content-Type-Options", value: "nosniff" },
-    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-    {
-      key: "Permissions-Policy",
-      value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
-    },
-    {
-      key: "Content-Security-Policy",
-      value: [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com",
-        `img-src 'self' data: blob: ${DOCS_IMG_HOSTS}`,
-        `connect-src 'self' ${ALLOWED_ORIGIN} https://fonts.googleapis.com ${MINTLIFY_HOST} https://mintcdn.com`,
-        "frame-src 'none'",
-        "frame-ancestors 'none'",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "upgrade-insecure-requests",
-      ].join("; "),
-    },
-  ];
-}
+const MINTLIFY_ICON_CDN = "https://d3gk2c5xim1je2.cloudfront.net";
+const IMG_HOSTS = `https://www.rland.ph https://i.imgur.com https://mintcdn.com ${MINTLIFY_ICON_CDN}`;
 
 const nextConfig: NextConfig = {
   images: {
@@ -62,14 +33,21 @@ const nextConfig: NextConfig = {
         hostname: "sl-93697e20.mintlify.dev",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "mintcdn.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "d3gk2c5xim1je2.cloudfront.net",
+        pathname: "/**",
+      },
     ],
   },
 
   async headers() {
     return [
-      // Docs (Mintlify rewrite): relax CSP so mintcdn.com images and Mintlify fetches work
-      { source: "/docs/:path*", headers: mintlifyDocsHeaders() },
-
       {
         // Apply to ALL routes
         source: "/:path*",
@@ -96,7 +74,7 @@ const nextConfig: NextConfig = {
           // ── Content Security Policy ───────────────────────────────────────
           // Tailored for RLink:
           //   - Figtree font from Google Fonts (fonts.googleapis.com + fonts.gstatic.com)
-          //   - Images from rland.ph and imgur (already whitelisted in next/image)
+          //   - Images: rland.ph, imgur, mintcdn.com + CloudFront (Mintlify /docs proxy)
           //   - 'unsafe-inline' + 'unsafe-eval' required by Next.js for hydration and dev
           //   - 'unsafe-inline' on style-src — required by Tailwind CSS / shadcn
           //   - connect-src covers Neon DB requests that may be made server-side and
@@ -109,7 +87,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               `img-src 'self' data: blob: ${IMG_HOSTS}`,
-              `connect-src 'self' ${ALLOWED_ORIGIN} https://fonts.googleapis.com`,
+              `connect-src 'self' ${ALLOWED_ORIGIN} https://fonts.googleapis.com ${MINTLIFY_HOST} https://mintcdn.com ${MINTLIFY_ICON_CDN}`,
               "frame-src 'none'",
               "frame-ancestors 'none'",
               "object-src 'none'",
