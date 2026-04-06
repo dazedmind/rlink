@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (!type || !["news", "blog"].includes(type)) {
+    if (!type || !["news", "blog", "announcement"].includes(type)) {
       return NextResponse.json(
         { error: "Type must be 'news' or 'blog'" },
         { status: 400 }
