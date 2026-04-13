@@ -17,6 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -26,7 +27,7 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [pending, setPending] = useState(false);
+  const { guard, release } = useSubmitGuard();
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
   const { requirements, metCount, isStrong, strengthLabel, barColor, total } =
@@ -61,7 +62,7 @@ function ResetPasswordForm() {
       toast.error("Passwords do not match.");
       return;
     }
-    setPending(true);
+    if (!guard()) return;
     try {
       const { error } = await authClient.resetPassword({
         newPassword: password,
@@ -78,7 +79,7 @@ function ResetPasswordForm() {
     } catch {
       toast.error("Something went wrong. Try again.");
     } finally {
-      setPending(false);
+      release();
     }
   };
 
@@ -178,9 +179,9 @@ function ResetPasswordForm() {
       <Button
         type="submit"
         className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-        disabled={pending || !isStrong || password !== confirm}
+        disabled={!isStrong || password !== confirm}
       >
-        {pending ? "Saving…" : "Set new password"}
+        Set new password
       </Button>
     </form>
   );

@@ -16,14 +16,15 @@ function ManageUsers() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
     if (!deletingUser) return;
-    setIsDeleting(true);
+    const user = deletingUser;
+    setDeletingUser(null);
     try {
       const { authClient } = await import("@/lib/auth-client");
       const { error } = await authClient.admin.removeUser({
-        userId: deletingUser.id,
+        userId: user.id,
       });
       if (error) {
         toast.error(error.message ?? "Failed to delete user.");
@@ -32,16 +33,13 @@ function ManageUsers() {
       await fetch("/api/activity-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activity: "User deleted: " + deletingUser.email }),
+        body: JSON.stringify({ activity: "User deleted: " + user.email }),
       }).catch(() => {});
       toast.success("User deleted.");
-      setDeletingUser(null);
       queryClient.invalidateQueries({ queryKey: qk.userManagementDashboard() });
       queryClient.invalidateQueries({ queryKey: qk.activityLogs() });
     } catch {
       toast.error("Network error. Please try again.");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -88,7 +86,6 @@ function ManageUsers() {
         onClose={() => setDeletingUser(null)}
         onConfirm={handleDelete}
         itemName={deletingUser?.name ?? deletingUser?.email ?? "this user"}
-        isDeleting={isDeleting}
         title="Delete User"
         confirmLabel="Delete User"
         warningMessage="This will permanently remove the user and all associated data."

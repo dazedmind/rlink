@@ -19,5 +19,6 @@ export const qk = {
   config:           ()                                  => ["config"] as const,
   health:           ()                                  => ["health"] as const,
   cmsDashboard:     ()                                  => ["cms-dashboard"] as const,
+  announcements:    ()                                  => ["announcements"] as const,
   userManagementDashboard: ()                           => ["user-management-dashboard"] as const,
 };

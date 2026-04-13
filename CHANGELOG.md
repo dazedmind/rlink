@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.16] - 2026-04-13
+
+### Added
+- Announcement Banner: Added banner for internal employees and system announcement
+
+### Changes
+- Removed loader for buttons/actions for instantaneous and smoother feel when doing actions
+- Minor refactor on codebase
+
 ## [0.0.15] - 2026-03-30
 
 ### Added

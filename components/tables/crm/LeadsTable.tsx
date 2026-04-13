@@ -123,7 +123,6 @@ function LeadsTable({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.leads() });
       toast.success("Lead deleted successfully");
-      setDeletingLead(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete lead");
@@ -471,9 +470,13 @@ function LeadsTable({
       <DeleteConfirmModal
         isOpen={deletingLead !== null}
         onClose={() => setDeletingLead(null)}
-        onConfirm={() => deletingLead && deleteMutation.mutate(deletingLead.id)}
+        onConfirm={() => {
+          if (!deletingLead) return;
+          const id = deletingLead.id;
+          setDeletingLead(null);
+          deleteMutation.mutate(id);
+        }}
         itemName={deletingLead ? `${deletingLead.firstName} ${deletingLead.lastName}` : ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Lead"
         confirmLabel="Delete Lead"
       />

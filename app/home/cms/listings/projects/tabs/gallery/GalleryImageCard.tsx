@@ -10,7 +10,6 @@ type GalleryImageCardProps = {
   isSelected: boolean;
   onToggleSelect: () => void;
   onDelete: () => void;
-  isDeleting?: boolean;
 };
 
 export function GalleryImageCard({
@@ -18,7 +17,6 @@ export function GalleryImageCard({
   isSelected,
   onToggleSelect,
   onDelete,
-  isDeleting = false,
 }: GalleryImageCardProps) {
   return (
     <div
@@ -36,11 +34,6 @@ export function GalleryImageCard({
         sizes="(max-width: 768px) 50vw, 25vw"
         unoptimized={image.imageUrl.startsWith("/uploads")}
       />
-      {isDeleting && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
-        </div>
-      )}
       <div className="absolute top-2 left-2">
         <div
           className={cn(
@@ -61,8 +54,7 @@ export function GalleryImageCard({
           e.stopPropagation();
           onDelete();
         }}
-        disabled={isDeleting}
-        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
         aria-label="Delete image"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

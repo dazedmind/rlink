@@ -8,10 +8,11 @@ import TextInput from "@/components/ui/TextInput";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import rlandLogo from "@/public/rland-logo.png";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [pending, setPending] = useState(false);
+  const { guard, release } = useSubmitGuard();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +21,7 @@ export default function ForgotPasswordPage() {
       toast.error("Enter a valid email address.");
       return;
     }
-    setPending(true);
+    if (!guard()) return;
     try {
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
@@ -37,7 +38,7 @@ export default function ForgotPasswordPage() {
     } catch {
       toast.error("Something went wrong. Try again.");
     } finally {
-      setPending(false);
+      release();
     }
   };
 
@@ -66,9 +67,8 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-            disabled={pending}
           >
-            {pending ? "Sending…" : "Send reset link"}
+            Send reset link
           </Button>
         </form>
         <p className="text-center text-sm">

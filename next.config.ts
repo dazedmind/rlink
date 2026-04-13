@@ -13,7 +13,7 @@ const ALLOWED_ORIGIN =
 // Content-Security-Policy headers intersect and a stricter rule would still block /docs assets.
 const MINTLIFY_HOST = "https://sl-93697e20.mintlify.dev";
 const MINTLIFY_ICON_CDN = "https://d3gk2c5xim1je2.cloudfront.net";
-const IMG_HOSTS = `https://www.rland.ph https://i.imgur.com https://mintcdn.com ${MINTLIFY_ICON_CDN}`;
+const IMG_HOSTS = `https://www.rland.ph https://rland.ph https://i.imgur.com https://mintcdn.com ${MINTLIFY_ICON_CDN}`;
 
 const nextConfig: NextConfig = {
   images: {
@@ -21,7 +21,13 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "www.rland.ph",
-        pathname: "/storage/images/**",
+        // CMS/media: images, downloads, and other public storage paths
+        pathname: "/storage/**",
+      },
+      {
+        protocol: "https",
+        hostname: "rland.ph",
+        pathname: "/storage/**",
       },
       {
         protocol: "https",

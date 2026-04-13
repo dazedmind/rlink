@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { articleType } from "@/lib/types";
 import { invalidateAfterCmsArticleMutation } from "@/lib/cms/cms-invalidation";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 export type Article = {
   id: number;
@@ -71,9 +72,9 @@ export default function ArticleFormModal({
   article?: Article | null;
 }) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const isEdit = !!article;
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (article) {
@@ -124,7 +125,7 @@ export default function ArticleFormModal({
       .map((t) => t.trim())
       .filter(Boolean);
 
-    setIsSubmitting(true);
+    if (!guard()) return;
     try {
       const url = isEdit ? `/api/articles/${article!.id}` : "/api/articles";
       const method = isEdit ? "PATCH" : "POST";
@@ -159,7 +160,7 @@ export default function ArticleFormModal({
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      release();
     }
   };
 
@@ -278,17 +279,11 @@ export default function ArticleFormModal({
         </div>
 
         <DialogFooter className="shrink-0 pt-3 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting
-              ? isEdit
-                ? "Saving..."
-                : "Adding..."
-              : isEdit
-                ? "Save Changes"
-                : "Add Article"}
+          <Button onClick={handleSubmit}>
+            {isEdit ? "Save Changes" : "Add Article"}
           </Button>
         </DialogFooter>
       </DialogContent>

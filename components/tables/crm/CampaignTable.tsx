@@ -86,7 +86,6 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.newsletterCampaigns() });
       toast.success("Campaign deleted");
-      setDeletingCampaign(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete campaign");
@@ -150,7 +149,10 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
   };
 
   const handleConfirmDelete = () => {
-    if (deletingCampaign) deleteMutation.mutate(deletingCampaign.id);
+    if (!deletingCampaign) return;
+    const id = deletingCampaign.id;
+    setDeletingCampaign(null);
+    deleteMutation.mutate(id);
   };
 
 
@@ -353,7 +355,6 @@ function CampaignTable({ onOpenComposer }: CampaignTableProps) {
         onClose={() => setDeletingCampaign(null)}
         onConfirm={handleConfirmDelete}
         itemName={deletingCampaign?.name ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Campaign"
         confirmLabel="Delete Campaign"
       />

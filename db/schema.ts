@@ -417,6 +417,27 @@ export const announcements = pgTable('announcements', {
 })
 
 /**
+ * announcement_acknowledgments — which user acknowledged which announcement (one row per pair).
+ * Keeps acknowledge_count on announcements in sync when a new row is inserted.
+ */
+export const announcementAcknowledgments = pgTable(
+  'announcement_acknowledgments',
+  {
+    id:             serial('id').primaryKey(),
+    userId:         text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    announcementId: integer('announcement_id')
+      .notNull()
+      .references(() => announcements.id, { onDelete: 'cascade' }),
+    createdAt:      timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqueUserAnnouncement: unique().on(t.userId, t.announcementId),
+  })
+)
+
+/**
  * brokers — external broker/agent records
  */
 export const brokers = pgTable('brokers', {

@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type SecuritySettings = {
   recaptchaSiteKey?: string;
@@ -67,6 +68,7 @@ const patchSettings = async (payload: {
 
 export default function SecurityToolsPage() {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [settings, setSettings] = useState<SecuritySettings>(DEFAULT_SECURITY);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -120,20 +122,24 @@ export default function SecurityToolsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guard()) return;
     const domains =
       settings.allowedEmbedDomains
         ?.split("\n")
         .map((d) => d.trim())
         .filter(Boolean) ?? [];
-    patchMutation.mutate({
-      section: "security",
-      value: {
-        recaptchaSiteKey: settings.recaptchaSiteKey ?? "",
-        enableRecaptcha: settings.enableRecaptcha ?? false,
-        honeypotEnabled: settings.honeypotEnabled ?? true,
-        allowedEmbedDomains: domains,
+    patchMutation.mutate(
+      {
+        section: "security",
+        value: {
+          recaptchaSiteKey: settings.recaptchaSiteKey ?? "",
+          enableRecaptcha: settings.enableRecaptcha ?? false,
+          honeypotEnabled: settings.honeypotEnabled ?? true,
+          allowedEmbedDomains: domains,
+        },
       },
-    });
+      { onSettled: release },
+    );
   };
 
   if (isLoading) {
@@ -188,12 +194,14 @@ export default function SecurityToolsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => clearCacheMutation.mutate()}
-              disabled={clearCacheMutation.isPending}
+              onClick={() => {
+                if (!guard()) return;
+                clearCacheMutation.mutate(undefined, { onSettled: release });
+              }}
               className="gap-2"
             >
               <Trash2 className="size-4" />
-              {clearCacheMutation.isPending ? "Clearing…" : "Clear Cache"}
+              Clear Cache
             </Button>
           </div>
 
@@ -202,7 +210,6 @@ export default function SecurityToolsPage() {
             description="Form protection and embed restrictions"
             icon={Shield}
             onSubmit={handleSubmit}
-            isSubmitting={patchMutation.isPending}
           >
             <FormField
               label="Google reCAPTCHA Site Key"

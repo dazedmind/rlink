@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type AnalyticsSettings = {
   googleTagManagerId?: string;
@@ -63,6 +64,7 @@ const patchSettings = async (payload: {
 
 export default function AnalyticsToolsPage() {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [settings, setSettings] = useState<AnalyticsSettings>(DEFAULT_ANALYTICS);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -95,7 +97,11 @@ export default function AnalyticsToolsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    patchMutation.mutate({ section: "analytics", value: settings });
+    if (!guard()) return;
+    patchMutation.mutate(
+      { section: "analytics", value: settings },
+      { onSettled: release },
+    );
   };
 
   // Conditional rendering after all hooks
@@ -146,7 +152,6 @@ export default function AnalyticsToolsPage() {
             description="Tracking IDs and event toggles"
             icon={BarChart3}
             onSubmit={handleSubmit}
-            isSubmitting={patchMutation.isPending}
           >
             <FormField
               label="Google Tag Manager Container ID"

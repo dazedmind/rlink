@@ -32,7 +32,6 @@ function NewsManager() {
       queryClient.invalidateQueries({ queryKey: qk.articles() });
       queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Article deleted.");
-      setDeletingArticle(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete article.");
@@ -41,7 +40,9 @@ function NewsManager() {
 
   const handleDelete = () => {
     if (!deletingArticle) return;
-    deleteMutation.mutate(deletingArticle.id);
+    const id = deletingArticle.id;
+    setDeletingArticle(null);
+    deleteMutation.mutate(id);
   };
 
   const goToEditor = (article: Article | null) => {
@@ -93,7 +94,6 @@ function NewsManager() {
         onClose={() => setDeletingArticle(null)}
         onConfirm={handleDelete}
         itemName={deletingArticle?.headline ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Article"
         confirmLabel="Delete Article"
       />

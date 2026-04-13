@@ -15,6 +15,7 @@ import {
 } from "@/lib/types";
 import type { Project } from "@/lib/types";
 import TextAreaField from "@/components/ui/TextAreaField";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 export type LeadFormData = {
   firstName: string;
@@ -59,6 +60,7 @@ type Props = {
 
 export function LeadGenerationForm({ onSuccess }: Props) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [formData, setFormData] = useState<LeadFormData>(EMPTY_FORM);
 
   const { data: projects } = useQuery({
@@ -112,7 +114,8 @@ export function LeadGenerationForm({ onSuccess }: Props) {
       toast.error("Please select a source.");
       return;
     }
-    submitMutation.mutate(formData);
+    if (!guard()) return;
+    submitMutation.mutate(formData, { onSettled: release });
   };
 
   return (
@@ -278,10 +281,9 @@ export function LeadGenerationForm({ onSuccess }: Props) {
         <span className="flex justify-end mt-4">
           <Button
             onClick={handleSubmitLead}
-            disabled={submitMutation.isPending}
             className="bg-primary hover:bg-primary/90 px-8"
           >
-            {submitMutation.isPending ? "Submitting..." : "Submit Lead"}
+            Submit Lead
           </Button>
         </span>
       </div>

@@ -18,10 +18,12 @@ import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
 import Footer from "@/components/layout/Footer";
 import { department } from "@/lib/types";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 function PersonalInfoTabContent() {
   const { data: session } = useSession();
-  
+  const { guard, release } = useSubmitGuard();
+
   const [formData, setFormData] = useState({
     firstName: session?.user.firstName ?? "",
     lastName: session?.user.lastName ?? "",
@@ -32,7 +34,6 @@ function PersonalInfoTabContent() {
     employeeId: session?.user.employeeId ?? "",
     birthdate: session?.user.birthdate ?? "",
   });
-  const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +43,7 @@ function PersonalInfoTabContent() {
   };
 
   const handleSaveProfile = async () => {
-    setIsSaving(true);
+    if (!guard()) return;
     try {
       const result = await updateProfile(formData);
       if (!result) throw new Error("Failed to update user");
@@ -50,7 +51,7 @@ function PersonalInfoTabContent() {
     } catch (error) {
       toast.error("Failed to save profile. Please try again.");
     } finally {
-      setIsSaving(false);
+      release();
     }
   };
 
@@ -204,10 +205,10 @@ function PersonalInfoTabContent() {
               <span className="col-span-2 flex justify-end">
                 <Button
                   onClick={handleSaveProfile}
-                  disabled={isSaving || !hasChanges}
+                  disabled={!hasChanges}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {isSaving ? "Saving..." : "Save Profile"}
+                  Save Profile
                 </Button>
               </span>
             </div>

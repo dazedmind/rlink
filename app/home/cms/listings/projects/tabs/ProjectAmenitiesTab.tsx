@@ -19,14 +19,12 @@ type ProjectAmenitiesTabProps = {
   amenities: ProjectAmenity[];
   setAmenities: React.Dispatch<React.SetStateAction<ProjectAmenity[]>>;
   onSave: () => void;
-  isSaving: boolean;
 };
 
 export default function ProjectAmenitiesTab({
   amenities,
   setAmenities,
   onSave,
-  isSaving,
 }: ProjectAmenitiesTabProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -163,8 +161,8 @@ export default function ProjectAmenitiesTab({
       />
 
       <div className="flex justify-end">
-        <Button onClick={onSave} disabled={isSaving} className="w-fit">
-          {isSaving ? "Saving..." : "Save Amenities"}
+        <Button onClick={onSave} className="w-fit">
+          Save Amenities
         </Button>
       </div>
     </div>

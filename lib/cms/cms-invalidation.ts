@@ -18,3 +18,9 @@ export function invalidateAfterCmsPromoMutation(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: qk.promos() });
   void qc.invalidateQueries({ queryKey: qk.cmsDashboard() });
 }
+
+/** After internal announcement create/update/delete. */
+export function invalidateAfterAnnouncementMutation(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: qk.announcements() });
+  void qc.invalidateQueries({ queryKey: qk.cmsDashboard() });
+}

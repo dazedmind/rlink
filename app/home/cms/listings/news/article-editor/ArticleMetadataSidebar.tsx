@@ -113,7 +113,6 @@ type ArticleMetadataSidebarProps = {
   setPhotoUrl: (v: string) => void;
   isFeatured: boolean;
   setIsFeatured: (v: boolean) => void;
-  isSubmitting: boolean;
   isEdit: boolean;
   onSubmit: () => void;
   onCancel: () => void;
@@ -134,7 +133,6 @@ export default function ArticleMetadataSidebar({
   setPhotoUrl,
   isFeatured,
   setIsFeatured,
-  isSubmitting,
   isEdit,
   onSubmit,
   onCancel,
@@ -200,7 +198,7 @@ export default function ArticleMetadataSidebar({
           </Label>
           <Popover open={schedulePopoverOpen} onOpenChange={setSchedulePopoverOpen}>
             <PopoverTrigger className="w-full text-start flex items-center justify-between" asChild>
-              <Button variant="outline" className="border-slate-200 font-medium gap-2" disabled={isSubmitting}>
+              <Button variant="outline" className="border-slate-200 font-medium gap-2">
                 {/* <CalendarIcon size={14} /> Select Publish Date */}
                 {publishDate ? (
                   <span className="text-sm">
@@ -269,21 +267,11 @@ export default function ArticleMetadataSidebar({
         </label>
 
         <div className="flex gap-2 pt-2 border-t border-border justify-end">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting
-              ? isEdit
-                ? "Saving..."
-                : "Publishing..."
-              : isEdit
-                ? "Save Changes"
-                : "Publish Article"}
+          <Button onClick={onSubmit}>
+            {isEdit ? "Save Changes" : "Publish Article"}
           </Button>
         </div>
       </div>

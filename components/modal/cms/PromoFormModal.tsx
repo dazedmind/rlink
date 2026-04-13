@@ -19,6 +19,7 @@ import { invalidateAfterCmsPromoMutation } from "@/lib/cms/cms-invalidation";
 import { promoStatus, type Promo } from "@/lib/types";
 import { FileUpload } from "@/components/ui/FileUpload";
 import TextAreaField from "@/components/ui/TextAreaField";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type FormData = {
   title: string;
@@ -58,9 +59,9 @@ export default function PromoFormModal({
   promo?: Promo | null;
 }) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const isEdit = !!promo;
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (promo) {
@@ -96,8 +97,8 @@ export default function PromoFormModal({
       toast.error("Title is required.");
       return;
     }
+    if (!guard()) return;
 
-    setIsSubmitting(true);
     try {
       const url = isEdit ? `/api/promos/${promo!.id}` : "/api/promos";
       const method = isEdit ? "PATCH" : "POST";
@@ -131,7 +132,7 @@ export default function PromoFormModal({
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      release();
     }
   };
 
@@ -224,17 +225,11 @@ export default function PromoFormModal({
         </div>
 
         <DialogFooter className="shrink-0 pt-3 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting
-              ? isEdit
-                ? "Saving..."
-                : "Adding..."
-              : isEdit
-                ? "Save Changes"
-                : "Add Promo"}
+          <Button onClick={handleSubmit}>
+            {isEdit ? "Save Changes" : "Add Promo"}
           </Button>
         </DialogFooter>
       </DialogContent>

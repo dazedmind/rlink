@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FaFacebook, FaTiktok, FaInstagram, FaYoutube, FaLinkedin } from "react-icons/fa6";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type SocialLinks = {
   facebookUrl?: string;
@@ -91,6 +92,7 @@ const patchSettings = async (payload: {
 
 export default function ManageLinksPage() {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [settings, setSettings] = useState<SocialLinks>(DEFAULT_SOCIAL_LINKS);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -123,7 +125,11 @@ export default function ManageLinksPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    patchMutation.mutate({ section: "social-links", value: settings });
+    if (!guard()) return;
+    patchMutation.mutate(
+      { section: "social-links", value: settings },
+      { onSettled: release },
+    );
   };
 
   // Conditional rendering after all hooks
@@ -174,7 +180,6 @@ export default function ManageLinksPage() {
             description="Public profile URLs for the landing page"
             // icon={BarChart3}
             onSubmit={handleSubmit}
-            isSubmitting={patchMutation.isPending}
           >
             <SocialLinkInput
               label="Facebook"

@@ -10,6 +10,7 @@ import { nameToSlug } from "@/app/utils/nameToSlug";
 import ArticleBodyEditor from "./article-editor/ArticleBodyEditor";
 import ArticleMetadataSidebar from "./article-editor/ArticleMetadataSidebar";
 import BackButton from "@/components/ui/BackButton";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 function getInitialState(article: Article | null) {
   if (article) {
@@ -60,6 +61,7 @@ export default function ArticleEditor({
   const [mdTab, setMdTab] = useState<"write" | "preview">("write");
 
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
 
   const saveMutation = useMutation({
     mutationFn: async (payload: {
@@ -113,16 +115,20 @@ export default function ArticleEditor({
       return;
     }
 
-    saveMutation.mutate({
-      headline: headline.trim(),
-      slug: slug.trim() || nameToSlug(headline),
-      body: body.trim(),
-      publishDate,
-      tags,
-      type,
-      photoUrl: photoUrl.trim() || null,
-      isFeatured,
-    });
+    if (!guard()) return;
+    saveMutation.mutate(
+      {
+        headline: headline.trim(),
+        slug: slug.trim() || nameToSlug(headline),
+        body: body.trim(),
+        publishDate,
+        tags,
+        type,
+        photoUrl: photoUrl.trim() || null,
+        isFeatured,
+      },
+      { onSettled: release },
+    );
   };
 
   return (
@@ -162,7 +168,6 @@ export default function ArticleEditor({
           setPhotoUrl={setPhotoUrl}
           isFeatured={isFeatured}
           setIsFeatured={setIsFeatured}
-          isSubmitting={saveMutation.isPending}
           isEdit={isEdit}
           onSubmit={handleSubmit}
           onCancel={onCancel}

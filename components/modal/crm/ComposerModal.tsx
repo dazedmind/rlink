@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { renderMarkdown } from "@/app/utils/markdown";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 const ToolbarBtn = ({ onClick, title, children }: { onClick: () => void; title: string; children: React.ReactNode }) => (
   <button
@@ -74,6 +75,7 @@ type ComposerModalProps = {
 
 function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }: ComposerModalProps) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const defaultTab = mode === "view" ? "preview" : "write";
   const isEdit = mode === "edit" || mode === "view";
   const isCreate = mode === "create";
@@ -83,7 +85,6 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
   const [schedulePopoverOpen, setSchedulePopoverOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState<Date | undefined>();
   const [scheduleTime, setScheduleTime] = useState("10:00");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
         return;
       }
 
-      setIsSubmitting(true);
+      if (!guard()) return;
       try {
         if (status === "sent" && isEdit && campaign) {
           const patchRes = await fetch(`/api/newsletter/campaigns/${campaign.id}`, {
@@ -225,10 +226,10 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to save campaign");
       } finally {
-        setIsSubmitting(false);
+        release();
       }
     },
-    [form, onClose, onSuccess, isEdit, campaign, queryClient]
+    [form, onClose, onSuccess, isEdit, campaign, queryClient, guard, release]
   );
 
   const handleSaveDraft = () => submitCampaign("draft");
@@ -357,16 +358,16 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-accent shrink-0">
-          <Button variant="ghost" onClick={onClose} className="text-muted-foreground font-medium" disabled={isSubmitting}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose} className="text-muted-foreground font-medium">Cancel</Button>
           
           <div className="flex gap-2">
-            <Button variant="outline" className="text-foreground border-border font-medium" onClick={handleSaveDraft} disabled={isSubmitting}>
+            <Button variant="outline" className="text-foreground border-border font-medium" onClick={handleSaveDraft}>
               Save as Draft
             </Button>
 
             <Popover open={schedulePopoverOpen} onOpenChange={setSchedulePopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="text-foreground border-border font-medium gap-2" disabled={isSubmitting}>
+                <Button variant="outline" className="text-foreground border-border font-medium gap-2">
                   <Clock size={14} /> Schedule Send
                   {scheduleDate && (
                     <span className="text-xs text-muted-foreground">
@@ -407,8 +408,8 @@ function ComposerModal({ isOpen, onClose, onSuccess, mode = "create", campaign }
               </PopoverContent>
             </Popover>
 
-            <Button className="bg-info hover:bg-info/90 text-white gap-2 px-6 font-semibold" onClick={handleSendNow} disabled={isSubmitting}>
-              <Mail size={14} /> {isSubmitting ? "Sending…" : "Send Campaign"}
+            <Button className="bg-info hover:bg-info/90 text-white gap-2 px-6 font-semibold" onClick={handleSendNow}>
+              <Mail size={14} /> Send Campaign
             </Button>
           </div>
         </div>

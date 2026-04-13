@@ -22,8 +22,6 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
     images,
     selectedIds,
     isLoading,
-    isUploading,
-    isDeleting,
     addImages,
     deleteImages,
     toggleSelect,
@@ -37,7 +35,7 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
   });
 
   const handleUploadClick = () => {
-    if (isLoading || isUploading) return;
+    if (isLoading) return;
     fileInputRef.current?.click();
   };
 
@@ -111,20 +109,10 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
           variant="default"
           size="lg"
           onClick={handleUploadClick}
-          disabled={isUploading}
           className="gap-2"
         >
-          {isUploading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Upload className="size-5" />
-              Upload Photos
-            </>
-          )}
+          <Upload className="size-5" />
+          Upload Photos
         </Button>
       </div>
 
@@ -141,7 +129,6 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
             onSelectAll={selectAll}
             onClearSelection={clearSelection}
             onDeleteSelected={deleteSelected}
-            isDeleting={isDeleting}
           />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
             {images.map((image) => (
@@ -151,7 +138,6 @@ export default function ProjectGalleryTab({ projectId, models }: ProjectGalleryT
                 isSelected={selectedIds.has(image.id)}
                 onToggleSelect={() => toggleSelect(image.id)}
                 onDelete={() => deleteImages([image.id])}
-                isDeleting={isDeleting}
               />
             ))}
           </div>

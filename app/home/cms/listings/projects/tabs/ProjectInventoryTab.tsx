@@ -112,7 +112,6 @@ type ProjectInventoryTabProps = {
   setInventory: React.Dispatch<React.SetStateAction<InventoryUnit[]>>;
   models: ProjectModel[];
   onSave: () => void;
-  isSaving: boolean;
 };
 
 export default function ProjectInventoryTab({
@@ -120,7 +119,6 @@ export default function ProjectInventoryTab({
   setInventory,
   models,
   onSave,
-  isSaving,
 }: ProjectInventoryTabProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -318,9 +316,7 @@ export default function ProjectInventoryTab({
       />
 
       <div className="flex justify-end">
-        <Button onClick={onSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Inventory"}
-        </Button>
+        <Button onClick={onSave}>Save Inventory</Button>
       </div>
     </div>
   );

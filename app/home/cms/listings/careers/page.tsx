@@ -34,7 +34,6 @@ function CareersManager() {
       queryClient.invalidateQueries({ queryKey: qk.careers() });
       queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Job posting deleted.");
-      setDeletingCareer(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete posting.");
@@ -43,7 +42,9 @@ function CareersManager() {
 
   const handleDelete = () => {
     if (!deletingCareer) return;
-    deleteMutation.mutate(deletingCareer.id);
+    const id = deletingCareer.id;
+    setDeletingCareer(null);
+    deleteMutation.mutate(id);
   };
 
   const handleSuccess = useCallback(() => {
@@ -96,7 +97,6 @@ function CareersManager() {
         onClose={() => setDeletingCareer(null)}
         onConfirm={handleDelete}
         itemName={deletingCareer?.position ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Job Posting"
         confirmLabel="Delete Posting"
       />

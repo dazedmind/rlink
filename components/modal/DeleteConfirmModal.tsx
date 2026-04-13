@@ -15,7 +15,8 @@ type DeleteConfirmModalProps = {
   onClose: () => void;
   onConfirm: () => void;
   itemName: string;
-  isDeleting: boolean;
+  /** @deprecated No longer affects UI — confirm is instant; close the modal in onConfirm before mutating. */
+  isDeleting?: boolean;
   title?: string;
   confirmLabel?: string;
   warningMessage?: string;
@@ -26,7 +27,6 @@ export default function DeleteConfirmModal({
   onClose,
   onConfirm,
   itemName,
-  isDeleting,
   title = "Delete",
   confirmLabel = "Delete",
   warningMessage,
@@ -46,19 +46,14 @@ export default function DeleteConfirmModal({
           {message}
         </p>
         <DialogFooter className="pt-2">
-          <Button variant="outline" onClick={onClose} disabled={isDeleting}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : confirmLabel}
+          <Button variant="destructive" onClick={onConfirm}>
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-  

@@ -14,6 +14,7 @@ import DropSelect from "@/components/ui/DropSelect";
 import { toast } from "sonner";
 import { department, userRole } from "@/lib/types";
 import { RefreshCcw } from "lucide-react";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 export type UserRecord = {
   id: string;
@@ -71,8 +72,8 @@ export default function UserFormModal({
   user?: UserRecord | null;
 }) {
   const isEdit = !!user;
+  const { guard, release } = useSubmitGuard();
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -129,7 +130,7 @@ export default function UserFormModal({
       return;
     }
 
-    setIsSubmitting(true);
+    if (!guard()) return;
     try {
       const { authClient } = await import("@/lib/auth-client");
 
@@ -201,7 +202,7 @@ export default function UserFormModal({
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      release();
     }
   };
 
@@ -353,17 +354,11 @@ export default function UserFormModal({
         </div>
 
         <DialogFooter className="shrink-0 pt-3 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting
-              ? isEdit
-                ? "Saving..."
-                : "Adding..."
-              : isEdit
-                ? "Save Changes"
-                : "Add User"}
+          <Button onClick={handleSubmit}>
+            {isEdit ? "Save Changes" : "Add User"}
           </Button>
         </DialogFooter>
       </DialogContent>

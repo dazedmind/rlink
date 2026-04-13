@@ -2,6 +2,9 @@
 import { useSession } from "@/lib/auth-client";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { fetchAnnouncements } from "@/lib/cms/announcements-fetchers";
+import { cmsDashboardQueryOptions } from "@/lib/cms/cms-query-options";
+import AnnouncementTicker from "@/components/home/AnnouncementTicker";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import ProtectedRoute from "@/components/providers/ProtectedRoute";
 import Footer from "@/components/layout/Footer";
@@ -18,7 +21,6 @@ import {
   FileText,
   Folder,
   type LucideIcon,
-  Loader2,
 } from "lucide-react";
 import type { ModuleAccessConfig } from "@/lib/iam/module-access-types";
 import {
@@ -99,7 +101,14 @@ function Home() {
   const filteredModules = modules.filter((module) =>
     canAccessModule(moduleAccessConfig, module.configKey, userRole, userDept)
   );
-  
+
+  const { data: announcements = [] } = useQuery({
+    queryKey: qk.announcements(),
+    queryFn: fetchAnnouncements,
+    ...cmsDashboardQueryOptions,
+    enabled: !!session?.user,
+  });
+
   return (
     <ProtectedRoute>
       <div className="h-screen overflow-y-auto w-full bg-accent">
@@ -121,6 +130,8 @@ function Home() {
             </div>
 
             {/* Module Grid */}
+            <AnnouncementTicker items={announcements} />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {isLoading && (
                 <ModuleCardSkeleton />

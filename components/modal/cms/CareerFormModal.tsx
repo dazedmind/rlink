@@ -18,6 +18,7 @@ import type { Career } from "@/lib/types";
 import { careerStatus, department, location } from "@/lib/types";
 import { nameToSlug } from "@/app/utils/nameToSlug";
 import { Label } from "@/components/ui/label";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 // ─── Field Label ──────────────────────────────────────────────────────────────
 
@@ -73,10 +74,10 @@ export default function CareerFormModal({
   career?: Career | null;
 }) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const isEdit = !!career;
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (career) {
@@ -135,7 +136,7 @@ export default function CareerFormModal({
       return;
     }
 
-    setIsSubmitting(true);
+    if (!guard()) return;
     try {
       const url = isEdit ? `/api/careers/${career!.id}` : "/api/careers";
       const method = isEdit ? "PATCH" : "POST";
@@ -175,7 +176,7 @@ export default function CareerFormModal({
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      release();
     }
   };
 
@@ -341,17 +342,11 @@ export default function CareerFormModal({
         </div>
 
         <DialogFooter className="shrink-0 pt-3 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting
-              ? isEdit
-                ? "Saving..."
-                : "Adding..."
-              : isEdit
-                ? "Save Changes"
-                : "Add Posting"}
+          <Button onClick={handleSubmit}>
+            {isEdit ? "Save Changes" : "Add Posting"}
           </Button>
         </DialogFooter>
       </DialogContent>

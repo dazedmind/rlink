@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
 import { cmsDashboardQueryOptions } from "@/lib/cms/cms-query-options";
@@ -27,6 +27,10 @@ import type {
   RecentPromo,
   RecentCareer,
 } from "./types";
+import { Plus } from "lucide-react";
+import AnnouncementModal from "@/components/modal/cms/AnnouncementModal";
+import AnnouncementsManager from "@/app/home/cms/dashboard/components/AnnouncementsManager";
+import type { Announcement } from "@/lib/cms/cms_types";
 
 const EMPTY_STATS = { projects: 0, articles: 0, promos: 0, careers: 0 };
 const EMPTY_RECENT = { articles: [] as RecentArticle[], promos: [] as RecentPromo[], careers: [] as RecentCareer[] };
@@ -70,6 +74,19 @@ export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
   const handleRetryStats = () => {
     void statsQuery.refetch();
     void recentQuery.refetch();
+  };
+
+  const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+
+  const openAnnouncementModal = (row: Announcement | null) => {
+    setEditingAnnouncement(row);
+    setAnnouncementModalOpen(true);
+  };
+
+  const closeAnnouncementModal = () => {
+    setAnnouncementModalOpen(false);
+    setEditingAnnouncement(null);
   };
 
   return (
@@ -154,6 +171,20 @@ export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
               </div>
 
               <div className="flex flex-col gap-4">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="text-xs gap-1"
+                  onClick={() => openAnnouncementModal(null)}
+                >
+                  <Plus className="size-4" />
+                  Create Announcement
+                </Button>
+
+                <AnnouncementsManager
+                  onEdit={(a) => openAnnouncementModal(a)}
+                />
+
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Quick Links
                 </p>
@@ -164,7 +195,14 @@ export default function CMSDashboard({ onNavigate }: CMSDashboardProps) {
                 </p>
                 <ActivityFeedCard />
               </div>
+
             </div>
+
+            <AnnouncementModal
+              isOpen={announcementModalOpen}
+              onClose={closeAnnouncementModal}
+              announcement={editingAnnouncement}
+            />
           </div>
         )}
       </div>

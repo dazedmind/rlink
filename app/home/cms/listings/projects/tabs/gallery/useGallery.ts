@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { GalleryImage } from "./types";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type UseGalleryOptions = {
   projectId: string;
@@ -12,12 +13,11 @@ type UseGalleryOptions = {
 export function useGallery({ projectId, modelId = null, onError }: UseGalleryOptions) {
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
+  const { guard, release } = useSubmitGuard();
 
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchImages = useCallback(async () => {
     if (!projectId || projectId === "new") {
@@ -52,7 +52,7 @@ export function useGallery({ projectId, modelId = null, onError }: UseGalleryOpt
       if (!projectId || projectId === "new") return;
       const valid = urls.filter((u) => u?.trim());
       if (valid.length === 0) return;
-      setIsUploading(true);
+      if (!guard()) return;
       try {
         const res = await fetch(`/api/projects/${projectId}/gallery`, {
           method: "POST",
@@ -67,16 +67,16 @@ export function useGallery({ projectId, modelId = null, onError }: UseGalleryOpt
         const msg = err instanceof Error ? err.message : "Failed to add images";
         onErrorRef.current?.(msg);
       } finally {
-        setIsUploading(false);
+        release();
       }
     },
-    [projectId, modelId, fetchImages]
+    [projectId, modelId, fetchImages, guard, release]
   );
 
   const deleteImages = useCallback(
     async (ids: string[]) => {
       if (!projectId || projectId === "new" || ids.length === 0) return;
-      setIsDeleting(true);
+      if (!guard()) return;
       try {
         const res = await fetch(
           `/api/projects/${projectId}/gallery?ids=${ids.join(",")}`,
@@ -94,10 +94,10 @@ export function useGallery({ projectId, modelId = null, onError }: UseGalleryOpt
         const msg = err instanceof Error ? err.message : "Failed to delete images";
         onErrorRef.current?.(msg);
       } finally {
-        setIsDeleting(false);
+        release();
       }
     },
-    [projectId, fetchImages]
+    [projectId, fetchImages, guard, release]
   );
 
   const toggleSelect = useCallback((id: string) => {
@@ -126,8 +126,6 @@ export function useGallery({ projectId, modelId = null, onError }: UseGalleryOpt
     images,
     selectedIds,
     isLoading,
-    isUploading,
-    isDeleting,
     fetchImages,
     addImages,
     deleteImages,

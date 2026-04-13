@@ -33,14 +33,12 @@ type ProjectModelsTabProps = {
   models: ProjectModel[];
   setModels: React.Dispatch<React.SetStateAction<ProjectModel[]>>;
   onSave: () => void;
-  isSaving: boolean;
 };
 
 export default function ProjectModelsTab({
   models,
   setModels,
   onSave,
-  isSaving,
 }: ProjectModelsTabProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -197,9 +195,7 @@ export default function ProjectModelsTab({
       />
 
       <div className="flex justify-end">
-        <Button onClick={onSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Models"}
-        </Button>
+        <Button onClick={onSave}>Save Models</Button>
       </div>
     </div>
   );

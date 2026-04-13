@@ -165,7 +165,6 @@ type ProjectOverviewTabProps = {
   form: OverviewForm;
   setForm: React.Dispatch<React.SetStateAction<OverviewForm>>;
   onSave: () => void;
-  isSaving: boolean;
   saveLabel?: string;
 };
 
@@ -173,7 +172,6 @@ export default function ProjectOverviewTab({
   form,
   setForm,
   onSave,
-  isSaving,
   saveLabel = "Save Changes",
 }: ProjectOverviewTabProps) {
   return (
@@ -486,8 +484,8 @@ export default function ProjectOverviewTab({
         </div>
       </div>
       <span className="flex justify-end">
-        <Button onClick={onSave} disabled={isSaving} className="mt-2 w-fit">
-          {isSaving ? "Saving..." : saveLabel}
+        <Button onClick={onSave} className="mt-2 w-fit">
+          {saveLabel}
         </Button>
       </span>
     </div>

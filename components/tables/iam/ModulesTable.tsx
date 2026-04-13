@@ -35,6 +35,7 @@ import AddModuleModal, {
 import { clearModuleAccessCache } from "@/lib/module-access-cache";
 import { department, userRole, deptBadgeClass, userRoleMeta } from "@/lib/types";
 import type { ModuleAccessConfig, ModuleEntry } from "@/lib/iam/module-access-types";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 export type { ModuleEntry, ModuleAccessConfig };
 
@@ -46,6 +47,7 @@ function toggleInArray(arr: string[], value: string): string[] {
 
 export default function ModulesTable() {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [draft, setDraft] = useState<ModuleAccessConfig>({});
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -207,7 +209,8 @@ export default function ModulesTable() {
         icon: m.icon,
       };
     }
-    saveMutation.mutate(payload);
+    if (!guard()) return;
+    saveMutation.mutate(payload, { onSettled: release });
   };
 
   const handleAddModule = (module: NewModulePayload) => {
@@ -255,11 +258,7 @@ export default function ModulesTable() {
         <h3 className="font-semibold text-xl">Module Access</h3>
         <span className="flex items-center gap-2">
           {hasChanges() && (
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={saveMutation.isPending}
-            >
+            <Button size="sm" onClick={handleSave}>
               <Save className="size-4" />
               Save changes
             </Button>

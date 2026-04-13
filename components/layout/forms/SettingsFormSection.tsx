@@ -11,6 +11,7 @@ type SettingsFormSectionProps = {
   icon?: React.ElementType;
   children: React.ReactNode;
   onSubmit: (e: React.FormEvent) => void;
+  /** @deprecated Ignored — submit stays instant; use useSubmitGuard in the page if you need to block double-post. */
   isSubmitting?: boolean;
   submitLabel?: string;
 };
@@ -21,7 +22,6 @@ export function SettingsFormSection({
   icon: Icon,
   children,
   onSubmit,
-  isSubmitting = false,
   submitLabel = "Save Changes",
 }: SettingsFormSectionProps) {
   return (
@@ -41,9 +41,7 @@ export function SettingsFormSection({
       </div>
       <div className="p-6 flex flex-col gap-4">{children}</div>
       <div className="px-6 py-4 border-t  flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : submitLabel}
-        </Button>
+        <Button type="submit">{submitLabel}</Button>
       </div>
     </form>
   );

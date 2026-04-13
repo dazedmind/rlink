@@ -131,7 +131,6 @@ function InquiryTable({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.inquiries() });
       toast.success("Inquiry deleted successfully");
-      setDeletingInquiry(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete inquiry");
@@ -489,9 +488,13 @@ function InquiryTable({
       <DeleteConfirmModal
         isOpen={deletingInquiry !== null}
         onClose={() => setDeletingInquiry(null)}
-        onConfirm={() => deletingInquiry && deleteMutation.mutate(deletingInquiry.id)}
+        onConfirm={() => {
+          if (!deletingInquiry) return;
+          const id = deletingInquiry.id;
+          setDeletingInquiry(null);
+          deleteMutation.mutate(id);
+        }}
         itemName={deletingInquiry ? `${deletingInquiry.firstName} ${deletingInquiry.lastName}` : ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Inquiry"
         confirmLabel="Delete Inquiry"
       />

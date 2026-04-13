@@ -230,3 +230,14 @@ export type Article = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Announcement = {
+  id: number;
+  headline: string;
+  body: string;
+  acknowledgeCount: number;
+  /** Present on API list responses for the signed-in user. */
+  acknowledgedByMe?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};

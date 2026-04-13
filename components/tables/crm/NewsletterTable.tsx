@@ -75,7 +75,6 @@ function NewsletterTable() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.newsletter() });
       toast.success("Subscriber removed successfully");
-      setDeletingSubscriber(null);
     },
     onError: () => {
       toast.error("Failed to remove subscriber");
@@ -101,7 +100,10 @@ function NewsletterTable() {
   });
 
   const handleConfirmDelete = () => {
-    if (deletingSubscriber) deleteMutation.mutate(deletingSubscriber.email);
+    if (!deletingSubscriber) return;
+    const email = deletingSubscriber.email;
+    setDeletingSubscriber(null);
+    deleteMutation.mutate(email);
   };
 
   const toggleFilter = (
@@ -316,7 +318,6 @@ function NewsletterTable() {
                         variant="secondary"
                         size="sm"
                         className="bg-neutral-500/10 text-foreground flex flex-1 items-center gap-2 px-2"
-                        disabled={subscribeMutation.isPending}
                       >
                         <UserMinus size={18} />
                         Unsubscribe
@@ -328,7 +329,6 @@ function NewsletterTable() {
                         variant="secondary"
                         size="sm"
                         className="bg-green-600/10 text-green-700 flex flex-1 items-center gap-2 px-2"
-                        disabled={subscribeMutation.isPending}
                       >
                         <Plus size={18} />
                         Re-subscribe
@@ -371,7 +371,6 @@ function NewsletterTable() {
         onClose={() => setDeletingSubscriber(null)}
         onConfirm={handleConfirmDelete}
         itemName={deletingSubscriber?.email ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Remove Subscriber"
         confirmLabel="Remove Subscriber"
       />

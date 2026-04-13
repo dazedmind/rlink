@@ -34,7 +34,6 @@ function PromosManager() {
       queryClient.invalidateQueries({ queryKey: qk.promos() });
       queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Promo deleted.");
-      setDeletingPromo(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete promo.");
@@ -43,7 +42,9 @@ function PromosManager() {
 
   const handleDelete = () => {
     if (!deletingPromo) return;
-    deleteMutation.mutate(deletingPromo.id);
+    const id = deletingPromo.id;
+    setDeletingPromo(null);
+    deleteMutation.mutate(id);
   };
 
   const handleSuccess = useCallback(() => {
@@ -96,7 +97,6 @@ function PromosManager() {
         onClose={() => setDeletingPromo(null)}
         onConfirm={handleDelete}
         itemName={deletingPromo?.title ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Promo"
         confirmLabel="Delete Promo"
       />

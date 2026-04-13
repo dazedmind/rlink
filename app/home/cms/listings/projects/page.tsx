@@ -33,7 +33,6 @@ function ProjectsManager() {
       queryClient.invalidateQueries({ queryKey: qk.projectInventory() });
       queryClient.invalidateQueries({ queryKey: qk.cmsDashboard() });
       toast.success("Project deleted successfully.");
-      setDeletingProject(null);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete project.");
@@ -42,7 +41,9 @@ function ProjectsManager() {
 
   const handleDelete = () => {
     if (!deletingProject) return;
-    deleteMutation.mutate(deletingProject.id);
+    const id = deletingProject.id;
+    setDeletingProject(null);
+    deleteMutation.mutate(id);
   };
 
   const goToDetail = (project: Project) => {
@@ -103,7 +104,6 @@ function ProjectsManager() {
         onClose={() => setDeletingProject(null)}
         onConfirm={handleDelete}
         itemName={deletingProject?.projectName ?? ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Project"
         confirmLabel="Delete Project"
         warningMessage="This action cannot be undone and will also remove all associated inventory records."

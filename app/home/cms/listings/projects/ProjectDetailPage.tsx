@@ -22,6 +22,7 @@ import type {
 import { LANDMARK_CATEGORIES, EMPTY_LANDMARKS } from "./tabs/project-types";
 import BackButton from "@/components/ui/BackButton";
 import { nameToSlug } from "@/app/utils/nameToSlug";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Tab = "overview" | "amenities" | "models" | "inventory" | "gallery";
 
@@ -105,6 +106,7 @@ export default function ProjectDetailPage({
   onProjectCreated,
 }: ProjectDetailPageProps) {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const id = projectId;
   const isCreateMode = id === "new";
 
@@ -114,7 +116,6 @@ export default function ProjectDetailPage({
   const [models, setModels] = useState<ProjectModel[]>([]);
   const [inventory, setInventory] = useState<InventoryUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [savingSection, setSavingSection] = useState<string | null>(null);
 
   const [form, setForm] = useState<OverviewForm>({
     ...EMPTY_FORM,
@@ -207,7 +208,7 @@ export default function ProjectDetailPage({
       amenities: amenities,
       landmarks: form.landmarks,
     };
-    setSavingSection("overview");
+    if (!guard()) return;
     try {
       if (isCreateMode) {
         const res = await fetch("/api/projects", {
@@ -243,13 +244,13 @@ export default function ProjectDetailPage({
     } catch {
       toast.error("Network error.");
     } finally {
-      setSavingSection(null);
+      release();
     }
   };
 
   const saveAmenities = async () => {
     if (!id || id === "new") return;
-    setSavingSection("amenities");
+    if (!guard()) return;
     try {
       const res = await fetch(`/api/projects/${id}/amenities`, {
         method: "PATCH",
@@ -267,13 +268,13 @@ export default function ProjectDetailPage({
     } catch {
       toast.error("Network error.");
     } finally {
-      setSavingSection(null);
+      release();
     }
   };
 
   const saveModels = async () => {
     if (!id) return;
-    setSavingSection("models");
+    if (!guard()) return;
     try {
       const payload = models.map((m) => ({
         id: m.id,
@@ -305,13 +306,13 @@ export default function ProjectDetailPage({
     } catch {
       toast.error("Network error.");
     } finally {
-      setSavingSection(null);
+      release();
     }
   };
 
   const saveInventory = async () => {
     if (!id) return;
-    setSavingSection("inventory");
+    if (!guard()) return;
     try {
       const payload = inventory
         .filter((u) => u.modelId)
@@ -343,7 +344,7 @@ export default function ProjectDetailPage({
     } catch {
       toast.error("Network error.");
     } finally {
-      setSavingSection(null);
+      release();
     }
   };
 
@@ -420,7 +421,6 @@ export default function ProjectDetailPage({
             form={form}
             setForm={setForm}
             onSave={saveProjectDetails}
-            isSaving={savingSection === "overview"}
             saveLabel={isCreateMode ? "Create Project" : "Save"}
           />
         )}
@@ -430,7 +430,6 @@ export default function ProjectDetailPage({
             amenities={amenities}
             setAmenities={setAmenities}
             onSave={saveAmenities}
-            isSaving={savingSection === "amenities"}
           />
         )}
 
@@ -439,7 +438,6 @@ export default function ProjectDetailPage({
             models={models}
             setModels={setModels}
             onSave={saveModels}
-            isSaving={savingSection === "models"}
           />
         )}
 
@@ -449,7 +447,6 @@ export default function ProjectDetailPage({
             setInventory={setInventory}
             models={models}
             onSave={saveInventory}
-            isSaving={savingSection === "inventory"}
           />
         )}
 

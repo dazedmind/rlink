@@ -108,7 +108,6 @@ function ReservationTable({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.reservations() });
       toast.success("Reservation deleted successfully");
-      setDeletingReservation(null);
     },
     onError: () => {
       toast.error("Failed to delete reservation");
@@ -465,9 +464,13 @@ function ReservationTable({
       <DeleteConfirmModal
         isOpen={deletingReservation !== null}
         onClose={() => setDeletingReservation(null)}
-        onConfirm={() => deletingReservation && deleteMutation.mutate(deletingReservation.id)}
+        onConfirm={() => {
+          if (!deletingReservation) return;
+          const id = deletingReservation.id;
+          setDeletingReservation(null);
+          deleteMutation.mutate(id);
+        }}
         itemName={deletingReservation ? `${deletingReservation.reservationId}` : ""}
-        isDeleting={deleteMutation.isPending}
         title="Delete Reservation"
         confirmLabel="Delete Reservation"
       />

@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type SeoSettings = {
   defaultSiteTitle?: string;
@@ -66,6 +67,7 @@ const patchSettings = async (payload: {
 
 export default function SeoToolsPage() {
   const queryClient = useQueryClient();
+  const { guard, release } = useSubmitGuard();
   const [settings, setSettings] = useState<SeoSettings>(DEFAULT_SEO);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -95,7 +97,11 @@ export default function SeoToolsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    patchMutation.mutate({ section: "seo", value: settings });
+    if (!guard()) return;
+    patchMutation.mutate(
+      { section: "seo", value: settings },
+      { onSettled: release },
+    );
   };
 
   // Conditional rendering after all hooks
@@ -146,7 +152,6 @@ export default function SeoToolsPage() {
             description="Default meta tags and indexing behavior"
             icon={Search}
             onSubmit={handleSubmit}
-            isSubmitting={patchMutation.isPending}
           >
             <FormField
               label="Default Site Title"

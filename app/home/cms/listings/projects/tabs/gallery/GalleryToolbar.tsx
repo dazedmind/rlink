@@ -10,7 +10,6 @@ type GalleryToolbarProps = {
   onSelectAll: () => void;
   onClearSelection: () => void;
   onDeleteSelected: () => void;
-  isDeleting: boolean;
 };
 
 export function GalleryToolbar({
@@ -19,7 +18,6 @@ export function GalleryToolbar({
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  isDeleting,
 }: GalleryToolbarProps) {
   if (selectedCount === 0) return null;
 
@@ -41,11 +39,10 @@ export function GalleryToolbar({
         variant="destructive"
         size="sm"
         onClick={onDeleteSelected}
-        disabled={isDeleting}
         className="gap-1.5"
       >
         <Trash2 size={14} />
-        {isDeleting ? "Deleting..." : "Delete selected"}
+        Delete selected
       </Button>
       <Button variant="ghost" size="sm" onClick={onClearSelection} className="gap-1.5 ml-auto">
         <X size={14} />
